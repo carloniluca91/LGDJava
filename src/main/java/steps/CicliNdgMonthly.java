@@ -10,10 +10,13 @@ import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.*;
 
+import java.util.logging.Logger;
+
 
 public class CicliNdgMonthly extends AbstractStep{
 
     private final Options options = new Options();
+    private final Logger logger = Logger.getLogger(CicliNdgMonthly.class.getName());
 
     public CicliNdgMonthly(String[] parameters) {
 
