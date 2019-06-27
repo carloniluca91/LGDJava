@@ -1,26 +1,37 @@
 package steps;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
-import properties.LGDProperties;
+import java.util.logging.Logger;
 import org.apache.spark.sql.SparkSession;
 
-public abstract class AbstractStep extends LGDProperties {
+abstract class AbstractStep{
 
-    private Properties stepParameters = new Properties();      // parameters for the class
-    public final static SparkSession sparkSession = new SparkSession.Builder()
+    // initialize logger and sparSession
+    final Logger logger = Logger.getLogger(CicliLavStep1.class.getName());
+    final static SparkSession sparkSession = new SparkSession.Builder()
             .appName("LGDApp").master("local").getOrCreate();
 
-    AbstractStep(String[] parameters){
+    private static Properties configProperties = new Properties();
+    private static final String CONFIG_FILE_PATH = "src/main/resources/config.properties";
 
-        // retrieve step parameters by means of LGDProperties
-        for (String parameter: parameters){
-            stepParameters.setProperty(parameter, super.getProperty(parameter));
+    AbstractStep(){
+
+        try{
+            configProperties = new Properties();
+            InputStream inputConfigFile = new FileInputStream(CONFIG_FILE_PATH);
+            configProperties.load(inputConfigFile);
         }
+        catch (IOException ex){
+            ex.printStackTrace();
+        }
+
     }
 
-    @Override
-    public String getProperty(String key) {
-        return stepParameters.getProperty(key);
+    String getProperty(String key) {
+        return configProperties.getProperty(key);
     }
 
 }

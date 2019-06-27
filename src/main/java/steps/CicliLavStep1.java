@@ -1,7 +1,6 @@
 package steps;
 
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
+import org.apache.commons.cli.*;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -10,36 +9,61 @@ import org.apache.spark.sql.types.*;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
-public class CicliLavStep1 extends AbstractStep{
 
-    private final Options options = new Options();
-    private final Logger logger = Logger.getLogger(CicliLavStep1.class.getName());
+class CicliLavStep1 extends AbstractStep{
 
-    public CicliLavStep1(String[] parameters) {
+    private String dataDa;
+    private String dataA;
 
-        super(parameters);
-        Option dataDa = new Option("dd", "dataDa", true, "parametro dataDa");
-        Option dataA = new Option("da", "dataA", true, "parametro dataA");
-        dataDa.setRequired(true);
-        dataA.setRequired(true);
-        options.addOption(dataDa);
-        options.addOption(dataA);
+    CicliLavStep1(String[] args) {
+
+        // define options dataDa and dataA and set them as required
+        Option dataDaOption = new Option("dd", "dataDa", true, "parametro dataDa");
+        Option dataAOption = new Option("da", "dataA", true, "parametro dataA");
+        dataDaOption.setRequired(true);
+        dataAOption.setRequired(true);
+
+        // add the two previously defined options
+        Options options = new Options();
+        options.addOption(dataDaOption);
+        options.addOption(dataAOption);
+
+        CommandLineParser parser = new BasicParser();
+
+        // try to parse and retrieve command line arguments
+        try {
+            CommandLine cmd = parser.parse(options, args);
+            dataDa = cmd.getOptionValue("dataDa");
+            dataA = cmd.getOptionValue("dataA");
+
+        } catch (ParseException e) {
+
+            logger.info("ParseException: " + e.getMessage());
+            dataDa = "2015-01-01";
+            dataA = "2019-01-01";
+            logger.info("Setting dataA to :" + dataDa);
+            logger.info("Setting dataA to :" + dataA);
+        }
     }
 
-    public void run(){
+    void run(){
 
-        String dataDa = options.getOption("dd").getValue();
-        String dataA = options.getOption("da").getValue();
         logger.info("dataDa: " + dataDa + ", dataA: " + dataA);
 
-        String csvFormat = getProperty("csv_format");  // retrieve csv_format from config.properties
-        logger.info("csv format: " + csvFormat);
+        // retrieve csv_format, input data directory and file name from configuration.properties file
+        String csvFormat = getProperty("csv_format");
+        String ciclilavStep1InputDir = getProperty("CICLILAV_STEP1_INPUT_DIR");
+        String tlbcidef_name = getProperty("TLBCIDEF_CSV");
 
-        String tlbcdefPath = getProperty("TLBCDEF_PATH");
+        logger.info("csv format: " + csvFormat);
+        logger.info("tlbcdefPath: " + ciclilavStep1InputDir);
+        logger.info("tlbcidef_name: " +  tlbcidef_name);
+
+        String tlbcdefPath = Paths.get(ciclilavStep1InputDir, tlbcidef_name).toString();
         logger.info("tlbcdefPath: " + tlbcdefPath);
 
         // 22
@@ -48,7 +72,7 @@ public class CicliLavStep1 extends AbstractStep{
                 new StructField("cd_isti", DataTypes.StringType, true, Metadata.empty()),
                 new StructField("ndg_principale", DataTypes.StringType, true, Metadata.empty()),
                 new StructField("cod_cr", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("dt_inizio_ciclo", DataTypes.IntegerType, true, Metadata.empty()),
+                new StructField("dt_inizio_ciclo", DataTypes.StringType, true, Metadata.empty()),
                 new StructField("dt_ingresso_status", DataTypes.IntegerType, true, Metadata.empty()),
                 new StructField("status_ingresso", DataTypes.StringType, true, Metadata.empty()),
                 new StructField("dt_uscita_status", DataTypes.StringType, true, Metadata.empty()),
@@ -65,7 +89,7 @@ public class CicliLavStep1 extends AbstractStep{
 
         // 40
         // column condition that selects records with dataDa<= dt_inizio ciclo <= dataA
-        Column dtInizioCicloFilterCol = functions.unix_timestamp(functions.col("dt_inizio_ciclo"), "yyyy-MM-dd")
+        Column dtInizioCicloFilterCol = functions.unix_timestamp(functions.col("dt_inizio_ciclo"), "yyyyMMdd")
                 .between(functions.unix_timestamp(functions.lit(dataDa), "yyyy-MM-dd"),
                         functions.unix_timestamp(functions.lit(dataA), "yyyy-MM-dd"));
         logger.info("Filter condition for dt_inizio_ciclo: " + dtInizioCicloFilterCol.toString());
@@ -94,7 +118,7 @@ public class CicliLavStep1 extends AbstractStep{
         logger.info("dataInizioSoffCol: " + dataInizioSoffCol.toString());
 
         Dataset<Row> tlbcidefUnpivot = tlbcidef.filter(dtInizioCicloFilterCol).select(functions.col("cd_isti"),
-                functions.col("ndg_principale"), functions.col("dt_fine_ciclo"),
+                functions.col("ndg_principale"), functions.col("dt_inizio_ciclo"), functions.col("dt_fine_ciclo"),
                 dataInizioPdCol.as("datainiziopd"), dataInizioIncCol.as("datainizioinc"),
                 dataInizioRistruttCol.as("datainizioristrutt"), dataInizioSoffCol.as("datainiziosoff"));
 
@@ -109,7 +133,7 @@ public class CicliLavStep1 extends AbstractStep{
         // 71
 
         // 78
-        String tlbcraccPath = getProperty("TLBCRACC_PATH");
+        String tlbcraccPath = Paths.get(ciclilavStep1InputDir, getProperty("TLBCRACC_CSV")).toString();
         logger.info("tlbcraccPath: " + tlbcdefPath);
         StructField[] tlbcraccColumns = new StructField[]{
 
@@ -131,6 +155,8 @@ public class CicliLavStep1 extends AbstractStep{
         logger.info("tlbraccFilterCol: " + tlbraccFilterCol.toString());
 
         Dataset<Row> tlbcracc = tlbcraccLoad.filter(tlbraccFilterCol);
+        Dataset<Row> tlbcraccClone1 = tlbcracc.toDF().withColumnRenamed("cd_isti", "cd_isti_clone");
+        Dataset<Row> tlbcraccClone2 = tlbcraccClone1.withColumnRenamed("ndg", "ndg_clone");
         // 90
 
         // 97
@@ -148,19 +174,23 @@ public class CicliLavStep1 extends AbstractStep{
         logger.info("convertion to scala Seq");
         Seq<String> joinColsSeq = JavaConverters.asScalaIteratorConverter(joinCols.iterator()).asScala().toSeq();  // conversion to scala Seq
 
-        Column cdIstiCedCol = functions.when(tlbcracc.col("cd_isti").isNotNull(), tlbcracc.col("cd_isti"))
+        Column cdIstiCedCol = functions.when(tlbcraccClone2.col("cd_isti_clone").isNotNull(), tlbcraccClone2.col("cd_isti_clone"))
                 .otherwise(cicliRacc1.col("cd_isti")).as("cd_isti_ced");
         logger.info("cdIstiCedCol: " + cdIstiCedCol.toString());
 
-        Column ndgCedCol = functions.when(tlbcracc.col("ndg").isNotNull(), tlbcracc.col("ndg"))
+        Column ndgCedCol = functions.when(tlbcraccClone2.col("ndg_clone").isNotNull(), tlbcraccClone2.col("ndg_clone"))
                 .otherwise(cicliRacc1.col("ndg_principale")).as("ndg_ced");
         logger.info("ndgCedCol: " + ndgCedCol.toString());
 
-        Dataset<Row> ciclilavStep1 = cicliRacc1.join(tlbcracc, joinColsSeq, "left").select(
+        logger.info("cicliRacc1 columns: " + Arrays.toString(cicliRacc1.columns()));
+        logger.info("tlbcraccClone columns: " + Arrays.toString(tlbcracc.columns()));
+
+        Dataset<Row> ciclilavStep1 = cicliRacc1.join(tlbcraccClone2, joinColsSeq, "left").select(
                 cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
                 cicliRacc1.col("dt_fine_ciclo"), cicliRacc1.col("datainiziopd"), cicliRacc1.col("datainizioristrutt"),
                 cicliRacc1.col("datainizioinc"), cicliRacc1.col("datainiziosoff"), functions.lit(0).as("progr"),
                 cdIstiCedCol, ndgCedCol).distinct();
+
         // 149
 
         // 155
@@ -170,16 +200,21 @@ public class CicliLavStep1 extends AbstractStep{
 
         Dataset<Row> ciclilavStep1Filecracc = cicliRacc1.join(tlbcracc, joinColsSeq, "left").select(
                 cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
-                cicliRacc1.col("dt_fine_ciclo"), cdIstiCedCol, ndgCedCol, dtRifCraccCol);
+                cicliRacc1.col("dt_fine_ciclo")//,cdIstiCedCol, ndgCedCol, dtRifCraccCol);
+        );
         // 176
 
-        String ciclilavStep1Outdir = getProperty("CICLILAV_STEP1_OUTDIR");
-        logger.info("ciclilavStep1Outdir: " + ciclilavStep1Outdir);
+        String ciclilavStep1OutputDir = getProperty("CICLILAV_STEP1_OUTPUT_DIR");
+        String ciclilavStep1OutCsv = getProperty("CICLILAV_STEP1_OUT_CSV");
+        logger.info("ciclilavStep1OutputDir: " + ciclilavStep1OutputDir);
+        logger.info("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
 
-        String ciclilavStep1Outcracc = getProperty("CICLILAV_STEP1_OUTCRACC");
-        logger.info("ciclilavStep1Outcracc: " + ciclilavStep1Outcracc);
+        String ciclilavStep1FilecraccCsv = getProperty("CICLILAV_STEP1_FILECRACC_CSV");
+        logger.info("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
-        ciclilavStep1.write().format(csvFormat).option("delimiter", ",").csv(ciclilavStep1Outdir);
-        ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").csv(ciclilavStep1Outcracc);
+        ciclilavStep1.write().format(csvFormat).option("delimiter", ",").csv(
+                Paths.get(ciclilavStep1OutputDir, ciclilavStep1OutCsv).toString());
+        ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").csv(
+                Paths.get(ciclilavStep1OutputDir, ciclilavStep1FilecraccCsv).toString());
     }
 }

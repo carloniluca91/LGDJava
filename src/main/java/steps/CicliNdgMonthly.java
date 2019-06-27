@@ -20,7 +20,7 @@ public class CicliNdgMonthly extends AbstractStep{
 
     public CicliNdgMonthly(String[] parameters) {
 
-        super(parameters);
+        super();
         Option periodo = new Option("p", "periodo", true, "parametro periodo");
         periodo.setRequired(true);
         options.addOption(periodo);
