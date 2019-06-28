@@ -16,6 +16,7 @@ import java.util.List;
 
 class CicliLavStep1 extends AbstractStep{
 
+    // required parameters
     private String dataDa;
     private String dataA;
 
@@ -36,12 +37,14 @@ class CicliLavStep1 extends AbstractStep{
 
         // try to parse and retrieve command line arguments
         try {
+
             CommandLine cmd = parser.parse(options, args);
             dataDa = cmd.getOptionValue("dataDa");
             dataA = cmd.getOptionValue("dataA");
 
         } catch (ParseException e) {
 
+            // assign some default values
             logger.info("ParseException: " + e.getMessage());
             dataDa = "2015-01-01";
             dataA = "2019-01-01";
@@ -171,7 +174,6 @@ class CicliLavStep1 extends AbstractStep{
         // 119
         List<String> joinCols = Arrays.asList("cod_raccordo", "data_rif");
         logger.info("join columns: " + joinCols.toString());
-        logger.info("convertion to scala Seq");
         Seq<String> joinColsSeq = JavaConverters.asScalaIteratorConverter(joinCols.iterator()).asScala().toSeq();  // conversion to scala Seq
 
         Column cdIstiCedCol = functions.when(tlbcraccClone2.col("cd_isti_clone").isNotNull(), tlbcraccClone2.col("cd_isti_clone"))

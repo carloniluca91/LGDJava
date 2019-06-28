@@ -3,9 +3,11 @@ package steps;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.*;
 
 abstract class AbstractStep{
 
@@ -32,6 +34,16 @@ abstract class AbstractStep{
 
     String getProperty(String key) {
         return configProperties.getProperty(key);
+    }
+
+    StructType setDfSchema(List<String> columnNames){
+
+        StructType schema = new StructType();
+        for (String columnName: columnNames){
+            schema.add(new StructField(columnName, DataTypes.StringType, true, Metadata.empty()));
+        }
+
+        return schema;
     }
 
 }
