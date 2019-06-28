@@ -6,7 +6,8 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
-import org.apache.spark.sql.SparkSession;
+
+import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
 
 abstract class AbstractStep{
@@ -36,6 +37,7 @@ abstract class AbstractStep{
         return configProperties.getProperty(key);
     }
 
+    // create a schema with one String column for each name provided
     StructType setDfSchema(List<String> columnNames){
 
         StructType schema = new StructType();
@@ -44,6 +46,14 @@ abstract class AbstractStep{
         }
 
         return schema;
+    }
+
+    Column getUnixTimeStampCol(Dataset<Row> df, String columnName, String dateFormat){
+        return functions.unix_timestamp(df.col(columnName), dateFormat);
+    }
+
+    Column getUnixTimeStampCol(Column column, String dateFormat){
+        return functions.unix_timestamp(column, dateFormat);
     }
 
 }

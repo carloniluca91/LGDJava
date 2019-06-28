@@ -5,6 +5,7 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
 import java.nio.file.Paths;
@@ -62,9 +63,8 @@ public class CicliPreview extends AbstractStep{
 
         // define dataset schema
         List<String> fposiColumns = Arrays.asList(
-                "codicebanca", "ndgprincipale", "datainiziodef", "datafinedef", "datainiziopd",
-                "datainizioinc", "datainizioristrutt", "datasofferenza", "totaccordatodatdef",
-                "totutilizzdatdef", "segmento", "naturagiuridica_segm");
+                "codicebanca", "ndgprincipale", "datainiziodef", "datafinedef", "datainiziopd", "datainizioinc",
+                "datainizioristrutt", "datasofferenza", "totaccordatodatdef", "totutilizzdatdef", "segmento", "naturagiuridica_segm");
         StructType fposiLoadSchema = setDfSchema(fposiColumns);
 
         String csvFormat = getProperty("CSV_FORMAT");
@@ -80,16 +80,23 @@ public class CicliPreview extends AbstractStep{
         //53
         // (naturagiuridica_segm != 'CO' AND segmento in ('01','02','03','21')?'IM': (segmento == '10'?'PR':'AL')) as segmento_calc
         Column segmentoCalcCol = functions.when(fposiLoad.col("naturagiuridica_segm").notEqual(functions.lit("CO"))
-                .and(fposiLoad.col("segmento").isin("01", "02", "03", "21")), functions.lit("IM")).otherwise(
-                        functions.when(fposiLoad.col("segmento").equalTo(functions.lit("10")), functions.lit("PR"))
-                                .otherwise(functions.lit("AL"))).as("segmento_calc");
+                .and(fposiLoad.col("segmento").isin("01", "02", "03", "21")), "IM").otherwise(functions.when(
+                        fposiLoad.col("segmento").equalTo(functions.lit("10")), "PR")
+                                .otherwise("AL")).as("segmento_calc");
 
-        Column cicloSoffCol = functions.when(fposiLoad.col("datasofferenza").isNull(), functions.lit("N")).otherwise(functions.lit("S"));
+        Column cicloSoffCol = functions.when(fposiLoad.col("datasofferenza").isNull(), "N").otherwise("S");
 
+        // define filtering column conditions ...
         Column dataInizioPdFilterCol = getDateColumnCondition(fposiLoad, "datainiziopd");
         Column dataInizioIncFilterCol = getDateColumnCondition(fposiLoad, "datainizioinc");
         Column dataInizioRistruttFilterCol = getDateColumnCondition(fposiLoad, "datainizioristrutt");
         Column dataSofferenzaFilterCol = getDateColumnCondition(fposiLoad, "datasofferenza");
+
+        // as well as their "timestamp" counterparts
+        Column dataInizioPdFilterTSCol = getUnixTimeStampCol(dataInizioPdFilterCol, "yyyyMMdd");
+        Column dataInizioIncFilterTSCol = getUnixTimeStampCol(dataInizioIncFilterCol, "yyyyMMdd");
+        Column dataInizioRistruttFilterTSCol = getUnixTimeStampCol(dataInizioRistruttFilterCol, "yyyyMMdd");
+        Column dataSofferenzaFilterTSCol = getUnixTimeStampCol(dataSofferenzaFilterCol, "yyyyMMdd");
 
          /*
         PIG 73
@@ -99,10 +106,12 @@ public class CicliPreview extends AbstractStep{
          datasofferenza<(datainizioristrutt is null?'99999999':datainizioristrutt))? 'SOFF': 'PASTDUE')
         */
 
+        Column dataSofferenzaTSCol = getUnixTimeStampCol(fposiLoad, "datasofferenza", "yyyyMMdd");
         Column dataSofferenzaCaseWhenCol = functions.when(fposiLoad.col("datasofferenza").isNotNull()
-                .and(fposiLoad.col("datasofferenza").$less(dataInizioPdFilterCol))
-                .and(fposiLoad.col("datasofferenza").$less(dataInizioIncFilterCol))
-                .and(fposiLoad.col("datasofferenza").$less(dataInizioRistruttFilterCol)), "SOFF").otherwise("PASTDUE");
+                .and(dataSofferenzaTSCol.$less(dataInizioPdFilterTSCol))
+                .and(dataSofferenzaTSCol.$less(dataInizioIncFilterTSCol))
+                .and(dataSofferenzaTSCol.$less(dataInizioRistruttFilterTSCol)),
+                "SOFF").otherwise("PASTDUE");
 
         /*
         datainizioristrutt is not null and
@@ -110,10 +119,13 @@ public class CicliPreview extends AbstractStep{
         datainizioristrutt<(datainizioinc is null?'99999999':datainizioinc) and
         datainizioristrutt<(datasofferenza is null?'99999999':datasofferenza))? 'RISTR'
          */
+
+        Column datainizioRistruttTSCol = getUnixTimeStampCol(fposiLoad, "datainizioristrutt", "yyyyMMdd");
         Column dataInizioRistruttCaseWhenCol = functions.when(fposiLoad.col("datainizioristrutt").isNotNull()
-                .and(fposiLoad.col("datainizioristrutt").$less(dataInizioPdFilterCol))
-                .and(fposiLoad.col("datainizioristrutt").$less(dataInizioIncFilterCol))
-                .and(fposiLoad.col("datainizioristrutt").$less(dataSofferenzaFilterCol)), "RISTR").otherwise(dataSofferenzaCaseWhenCol);
+                .and(datainizioRistruttTSCol.$less(dataInizioPdFilterTSCol))
+                .and(datainizioRistruttTSCol.$less(dataInizioIncFilterTSCol))
+                .and(datainizioRistruttTSCol.$less(dataSofferenzaFilterTSCol)),
+                "RISTR").otherwise(dataSofferenzaCaseWhenCol);
 
         /*
         ( datainizioinc is not null and
@@ -121,10 +133,12 @@ public class CicliPreview extends AbstractStep{
           datainizioinc<(datasofferenza is null?'99999999':datasofferenza) and
           datainizioinc<(datainizioristrutt is null?'99999999':datainizioristrutt))? 'INCA':
          */
+        Column dataInizioIncTSCol = getUnixTimeStampCol(fposiLoad, "datainizioinc", "yyyMMdd");
         Column dataInizioIncCaseWhenCol = functions.when(fposiLoad.col("datainizioinc").isNotNull()
-                .and(fposiLoad.col("datainizioinc").$less(dataInizioPdFilterCol))
-                .and(fposiLoad.col("datainizioinc").$less(dataSofferenzaFilterCol))
-                .and(fposiLoad.col("datainizioinc").$less(dataInizioRistruttFilterCol)), "INCA").otherwise(dataInizioRistruttCaseWhenCol);
+                .and(dataInizioIncTSCol.$less(dataInizioPdFilterTSCol))
+                .and(dataInizioIncTSCol.$less(dataSofferenzaFilterTSCol))
+                .and(dataInizioIncTSCol.$less(dataInizioRistruttFilterTSCol)),
+                "INCA").otherwise(dataInizioRistruttCaseWhenCol);
 
         /*
         ( datainiziopd is not null and
@@ -133,10 +147,12 @@ public class CicliPreview extends AbstractStep{
           datainiziopd<(datainizioristrutt is null?'99999999':datainizioristrutt))? 'PASTDUE':
 
          */
+        Column dataInizioPdTSCol = getUnixTimeStampCol(fposiLoad, "datainiziopd", "yyyyMMdd");
         Column dataInizioPdNotNullCaseWhenCol = functions.when(fposiLoad.col("datainiziopd").isNotNull()
-                .and(fposiLoad.col("datainiziopd").$less(dataSofferenzaFilterCol))
-                .and(fposiLoad.col("datainiziopd").$less(dataInizioIncFilterCol))
-                .and(fposiLoad.col("datainiziopd").$less(dataInizioRistruttFilterCol)), "PASTDUE").otherwise(dataInizioIncCaseWhenCol);
+                .and(dataInizioPdTSCol.$less(dataSofferenzaFilterTSCol))
+                .and(dataInizioPdTSCol.$less(dataInizioIncFilterTSCol))
+                .and(dataInizioPdTSCol.$less(dataInizioRistruttFilterTSCol)),
+                "PASTDUE").otherwise(dataInizioIncCaseWhenCol);
 
         /*
         (datainiziopd is null and
@@ -151,8 +167,9 @@ public class CicliPreview extends AbstractStep{
                 .and(fposiLoad.col("datasofferenza").isNull()), "PASTDUE").otherwise(dataInizioPdNotNullCaseWhenCol)
                 .as("stato_anagrafico");
 
-        Column flagApertoCol = functions.when(fposiLoad.col("datafinedef").$greater(functions.unix_timestamp(
-                functions.lit(dataA), "yyyy-MM-dd")), "A").otherwise("C").as("flag_aperto");
+        Column dataFineDefTSCol = getUnixTimeStampCol(fposiLoad, "datafinedef", "yyyyMMdd");
+        Column flagApertoCol = functions.when(dataFineDefTSCol.$greater(functions.unix_timestamp(functions.lit(dataA), "yyyy-MM-dd")),
+                "A").otherwise("C").as("flag_aperto");
 
         Dataset<Row> fposiBase = fposiLoad.select(functions.lit(ufficio).as("ufficio"), functions.col("codicebanca"),
                 functions.lit(dataA).as("datarif"), functions.col("ndgprincipale"), functions.col("datainiziodef"),
@@ -221,10 +238,31 @@ public class CicliPreview extends AbstractStep{
         fposi_sint_grp = GROUP fposi_base BY ( ufficio, datarif, codicebanca, segmento_calc,
             SUBSTRING(datainiziodef,0,6), SUBSTRING(datafinedef,0,6), stato_anagrafico, ciclo_soff, flag_aperto );
          */
-        Dataset<Row> fposiSintGen = fposiBase.groupBy(fposiBase.col("ufficio"), fposiBase.col("datarif"),
-                fposiBase.col("codicebanca"), fposiBase.col("segmento_calc"), functions.substring(fposiBase.col("datainiziodef"),
-                        0, 7), functions.substring(fposiBase.col("datafinedef"), 0, 7), fposiBase.col("stato_anagrafico"),
-                fposiBase.col("ciclo_soff"), fposiBase.col("flag_aperto")).max();
+
+        Row fposiBageAggregates = fposiBase.agg(functions.sum(fposiBase.col("totaccordatodatdef")).as("totaccordatodatdef"),
+                functions.sum(fposiBase.col("totutilizzdatdef")).as("totutilizzdatdef")).collect()[0];
+        int totAccordatoDatDef = fposiBageAggregates.getInt(0);
+        int totUtilizzDatDef = fposiBageAggregates.getInt(1);
+        logger.info("totaccordatodatdef: " + totAccordatoDatDef);
+        logger.info("totutilizzdatdef: " + totUtilizzDatDef);
+
+        Dataset<Row> fposiSintGen2 = fposiBase.select(fposiBase.col("ufficio"), fposiBase.col("datarif"),
+                fposiBase.col("codicebanca"), fposiBase.col("segmento_calc"),
+                functions.substring(fposiBase.col("datainiziodef"), 0, 7).as("mese_apertura"),
+                functions.substring(fposiBase.col("datafinedef"), 0, 7).as("mese_chiusura"),
+                fposiBase.col("stato_anagrafico"), fposiBase.col("ciclo_soff"),
+                functions.lit(fposiBase.count()).as("row_count"),
+                functions.lit(totAccordatoDatDef).cast(DataTypes.DoubleType).as("totaccordatodatdef"),
+                functions.lit(totUtilizzDatDef).cast(DataTypes.DoubleType).as("totutilizzdatdef"));
+
+        // 169
+
+        String fposiSintGen2Csv = getProperty("FPOSI_SINT_GEN2");
+        logger.info("fposiSintGen2Csv: " + fposiSintGen2Csv);
+
+        fposiSintGen2.write().format(csvFormat).option("delimiter", ",").csv(Paths.get(
+                cicliPreviewOutputDir, fposiSintGen2Csv).toString());
+
     }
 
     private Column getDateColumnCondition(Dataset<Row> df, String colName){
