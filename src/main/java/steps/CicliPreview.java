@@ -250,10 +250,10 @@ public class CicliPreview extends AbstractStep{
                 fposiBase.col("codicebanca"), fposiBase.col("segmento_calc"),
                 functions.substring(fposiBase.col("datainiziodef"), 0, 7).as("mese_apertura"),
                 functions.substring(fposiBase.col("datafinedef"), 0, 7).as("mese_chiusura"),
-                fposiBase.col("stato_anagrafico"), fposiBase.col("ciclo_soff"),
-                functions.lit(fposiBase.count()).as("row_count"),
-                functions.lit(totAccordatoDatDef).cast(DataTypes.DoubleType).as("totaccordatodatdef"),
-                functions.lit(totUtilizzDatDef).cast(DataTypes.DoubleType).as("totutilizzdatdef"));
+                fposiBase.col("stato_anagrafico"), fposiBase.col("ciclo_soff")).distinct()
+                .withColumn("row_count", functions.lit(fposiBase.count()))
+                .withColumn("totaccordatodatdef", functions.lit(totAccordatoDatDef).cast(DataTypes.DoubleType))
+                .withColumn("totutilizzdatdef", functions.lit(totUtilizzDatDef).cast(DataTypes.DoubleType));
 
         // 169
 
