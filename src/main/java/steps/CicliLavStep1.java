@@ -1,10 +1,7 @@
 package steps;
 
 import org.apache.commons.cli.*;
-import org.apache.spark.sql.Column;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.functions;
+import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
@@ -53,7 +50,7 @@ class CicliLavStep1 extends AbstractStep{
         }
     }
 
-    void run(){
+    public void run(){
 
         logger.info("dataDa: " + dataDa + ", dataA: " + dataA);
 
@@ -214,9 +211,9 @@ class CicliLavStep1 extends AbstractStep{
         String ciclilavStep1FilecraccCsv = getProperty("CICLILAV_STEP1_FILECRACC_CSV");
         logger.info("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
-        ciclilavStep1.write().format(csvFormat).option("delimiter", ",").csv(
+        ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(ciclilavStep1OutputDir, ciclilavStep1OutCsv).toString());
-        ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").csv(
+        ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(ciclilavStep1OutputDir, ciclilavStep1FilecraccCsv).toString());
     }
 }

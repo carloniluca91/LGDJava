@@ -1,10 +1,7 @@
 package steps;
 
 import org.apache.commons.cli.*;
-import org.apache.spark.sql.Column;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.functions;
+import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
@@ -53,7 +50,7 @@ public class CicliPreview extends AbstractStep{
         }
     }
 
-    void run(){
+    public void run(){
 
         // input path and file name
         String cicliPreviewInputDir = getProperty("CICLI_PREVIEW_INPUT_DIR");
@@ -64,10 +61,11 @@ public class CicliPreview extends AbstractStep{
         // define dataset schema
         List<String> fposiColumns = Arrays.asList(
                 "codicebanca", "ndgprincipale", "datainiziodef", "datafinedef", "datainiziopd", "datainizioinc",
-                "datainizioristrutt", "datasofferenza", "totaccordatodatdef", "totutilizzdatdef", "segmento", "naturagiuridica_segm");
+                "datainizioristrutt", "datasofferenza", "totaccordatodatdef", "totutilizzdatdef", "segmento",
+                "naturagiuridica_segm");
         StructType fposiLoadSchema = setDfSchema(fposiColumns);
 
-        String csvFormat = getProperty("CSV_FORMAT");
+        String csvFormat = getProperty("csv_format");
         logger.info("csvFormat: " + csvFormat);
 
         // 21
@@ -75,6 +73,7 @@ public class CicliPreview extends AbstractStep{
         logger.info("fposiOutdirCsvPath: " + fposiOutdirCsvPath);
         Dataset<Row> fposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").
                 schema(fposiLoadSchema).csv(fposiOutdirCsvPath);
+
         //36
 
         //53
@@ -84,7 +83,7 @@ public class CicliPreview extends AbstractStep{
                         fposiLoad.col("segmento").equalTo(functions.lit("10")), "PR")
                                 .otherwise("AL")).as("segmento_calc");
 
-        Column cicloSoffCol = functions.when(fposiLoad.col("datasofferenza").isNull(), "N").otherwise("S");
+        Column cicloSoffCol = functions.when(fposiLoad.col("datasofferenza").isNull(), "N").otherwise("S").as("ciclo_soff");
 
         // define filtering column conditions ...
         Column dataInizioPdFilterCol = getDateColumnCondition(fposiLoad, "datainiziopd");
@@ -189,8 +188,8 @@ public class CicliPreview extends AbstractStep{
         // clone fposiBase to avoid Analysis exception
         Dataset<Row> fposiBaseClone = fposiBase.toDF(fposiBaseCloneColumnNames.toArray(new String[0]));
         Dataset<Row> fposiGrp = fposiBaseClone.groupBy("codicebanca_clone", "ndgprincipale_clone", "datainiziodef_clone").agg(
-                functions.sum(fposiBase.col("totaccordatodatdef_clone")).as("totaccordatodatdef"),
-                functions.sum(fposiBase.col("totutilizzdatdef_clone")).as("totutilizzdatdef"));
+                functions.sum(fposiBaseClone.col("totaccordatodatdef_clone")).as("totaccordatodatdef"),
+                functions.sum(fposiBaseClone.col("totutilizzdatdef_clone")).as("totutilizzdatdef"));
 
         /*
         FLATTEN(fposi_base.ufficio)             as ufficio
@@ -231,7 +230,7 @@ public class CicliPreview extends AbstractStep{
         logger.info("fposiGen2OutCsv: " + fposiGen2OutCsv);
 
         // 129
-        fposiGen2.write().format(csvFormat).option("delimiter", ",").csv(Paths.get(cicliPreviewOutputDir, fposiGen2OutCsv).toString());
+        fposiGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(cicliPreviewOutputDir, fposiGen2OutCsv).toString());
 
         // 136
         /*
@@ -239,10 +238,11 @@ public class CicliPreview extends AbstractStep{
             SUBSTRING(datainiziodef,0,6), SUBSTRING(datafinedef,0,6), stato_anagrafico, ciclo_soff, flag_aperto );
          */
 
-        Row fposiBageAggregates = fposiBase.agg(functions.sum(fposiBase.col("totaccordatodatdef")).as("totaccordatodatdef"),
-                functions.sum(fposiBase.col("totutilizzdatdef")).as("totutilizzdatdef")).collect()[0];
-        int totAccordatoDatDef = fposiBageAggregates.getInt(0);
-        int totUtilizzDatDef = fposiBageAggregates.getInt(1);
+        List<Row> fposiBageAggregateList = fposiBase.agg(functions.sum(castCol(fposiBase, "totaccordatodatdef", DataTypes.IntegerType)).as("totaccordatodatdef"),
+                functions.sum(castCol(fposiBase, "totutilizzdatdef", DataTypes.IntegerType)).as("totutilizzdatdef")).collectAsList();
+        Row fposiBageAggregates = fposiBageAggregateList.get(0);
+        long totAccordatoDatDef = fposiBageAggregates.getLong(0);
+        long totUtilizzDatDef = fposiBageAggregates.getLong(1);
         logger.info("totaccordatodatdef: " + totAccordatoDatDef);
         logger.info("totutilizzdatdef: " + totUtilizzDatDef);
 
@@ -260,9 +260,8 @@ public class CicliPreview extends AbstractStep{
         String fposiSintGen2Csv = getProperty("FPOSI_SINT_GEN2");
         logger.info("fposiSintGen2Csv: " + fposiSintGen2Csv);
 
-        fposiSintGen2.write().format(csvFormat).option("delimiter", ",").csv(Paths.get(
+        fposiSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(
                 cicliPreviewOutputDir, fposiSintGen2Csv).toString());
-
     }
 
     private Column getDateColumnCondition(Dataset<Row> df, String colName){

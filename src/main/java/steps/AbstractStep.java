@@ -10,7 +10,7 @@ import java.util.logging.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
 
-abstract class AbstractStep{
+abstract class AbstractStep implements StepInterface{
 
     // initialize logger and sparSession
     final Logger logger = Logger.getLogger(CicliLavStep1.class.getName());
@@ -42,7 +42,9 @@ abstract class AbstractStep{
 
         StructType schema = new StructType();
         for (String columnName: columnNames){
-            schema.add(new StructField(columnName, DataTypes.StringType, true, Metadata.empty()));
+
+            schema = schema.add(new StructField(columnName, DataTypes.StringType, true, Metadata.empty()));
+            logger.info("added column " + columnName + " to schema");
         }
 
         return schema;
@@ -54,6 +56,14 @@ abstract class AbstractStep{
 
     Column getUnixTimeStampCol(Column column, String dateFormat){
         return functions.unix_timestamp(column, dateFormat);
+    }
+
+    Column castCol(Dataset<Row> df, String columnName, DataType dataType){
+        return df.col(columnName).cast(dataType);
+    }
+
+    Column castCol(Column column, DataType dataType){
+        return column.cast(dataType);
     }
 
 }
