@@ -66,4 +66,11 @@ abstract class AbstractStep implements StepInterface{
         return column.cast(dataType);
     }
 
+    Column leastDate(Column dateColumn1, Column dateColumn2, String dateFormat){
+
+        Column column1Ts = getUnixTimeStampCol(dateColumn1, dateFormat);
+        Column column2Ts = getUnixTimeStampCol(dateColumn2, dateFormat);
+        return functions.least(column1Ts, column2Ts);
+    }
+
 }
