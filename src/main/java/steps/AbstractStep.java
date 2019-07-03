@@ -3,12 +3,15 @@ package steps;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Logger;
 
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
+import scala.collection.JavaConverters;
+import scala.collection.Seq;
 
 abstract class AbstractStep implements StepInterface{
 
@@ -73,4 +76,14 @@ abstract class AbstractStep implements StepInterface{
         return functions.least(column1Ts, column2Ts);
     }
 
+    List<Column> selectDfColumns(Dataset<Row> df, List<String> columnNames){
+
+        List<Column> dfCols = new ArrayList<Column>();
+        for (String columnName: columnNames){
+            dfCols.add(df.col(columnName));
+        }
+
+        return dfCols;  // conversion to scala Seq
+
+    }
 }
