@@ -22,10 +22,10 @@ public class FrappNdgMonthly extends AbstractStep{
 
         // define option dataA, periodo, numeroMesi1, numeroMesi2
         Option dataAOption = new Option("da", "dataA", true, "parametro dataA");
-        Option numeroMesi1Option = new Option("nm1", "numero-mesi-1", true, "parametro numero-mesi-1");
-        Option numeroMesi2Option = new Option("nm2", "numero-mesi-2", true, "parametro numero-mesi-2");
+        Option numeroMesi1Option = new Option("nm_uno", "numero_mesi_1", true, "parametro numero_mesi_1");
+        Option numeroMesi2Option = new Option("nm_due", "numero_mesi_2", true, "parametro numero_mesi_2");
 
-        // et them as required
+        // set them as required
         dataAOption.setRequired(true);
         numeroMesi1Option.setRequired(true);
         numeroMesi2Option.setRequired(true);
@@ -44,8 +44,8 @@ public class FrappNdgMonthly extends AbstractStep{
 
             CommandLine cmd = commandLineParser.parse(options, args);
             dataA = cmd.getOptionValue("dataA");
-            numeroMesi1 = Integer.parseInt(cmd.getOptionValue("numero-mesi-1"));
-            numeroMesi2 = Integer.parseInt(cmd.getOptionValue("numero-mesi-2"));
+            numeroMesi1 = Integer.parseInt(cmd.getOptionValue("numero_mesi_1"));
+            numeroMesi2 = Integer.parseInt(cmd.getOptionValue("numero_mesi_2"));
 
             logger.info("dataA: " + dataA);
             logger.info("numeroMesi1: " + numeroMesi1);
@@ -63,7 +63,6 @@ public class FrappNdgMonthly extends AbstractStep{
             logger.info("Setting numeroMesi1 to:" + numeroMesi1);
             logger.info("Setting numeroMesi2 to: " + numeroMesi2);
         }
-
     }
 
     public void run() {
@@ -113,17 +112,41 @@ public class FrappNdgMonthly extends AbstractStep{
         Dataset<Row> tlburttFilter = tlburtt.filter(castCol(tlburtt, "progr_segmento", DataTypes.IntegerType).equalTo(0));
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
+        // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         Column dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(cicliNdgPrinc.col("datainiziodef"), -numeroMesi1), "yyyyMMdd"));
+                getUnixTimeStampCol(functions.add_months(convertStringColToDateCol(cicliNdgPrinc.col("datainiziodef"),
+                        "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
 
-        Column dataFineDefCol = functions.substring(functions.add_months(leastDate(functions.add_months(cicliNdgPrinc.col("datafinedef"), -1),
-                functions.date_format(functions.lit(dataA), "yyyyMMdd"), "yyyyMMdd"), numeroMesi2), 0, 6);
+        /*
+        AddDuration(
+            ToDate(
+                (chararray)LeastDate(
+                            (int)ToString(
+                                    SubtractDuration(ToDate((chararray)
+                                        datafinedef,'yyyyMMdd' ),
+                                        'P1M'),
+                                    'yyyyMMdd')
+                            ,$data_a),
+                'yyyyMMdd' ),
+            '$numero_mesi_2' )
+;
+         */
 
-        Column dataFineDefFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$less$eq(
-                getUnixTimeStampCol(dataFineDefCol, "yyyyMMdd"));
+        // dataFineDefCol in format "yyyy-MM-dd" due to add_months
+        Column dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
+                // datafinedef -1 in format "yyyy-MM-dd"
+                functions.add_months(convertStringColToDateCol(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
+                        "yyyy-MM-dd"), -1),
+                // dataA, already in format "yyyy-MM-dd"
+                functions.lit(dataA), "yyyy-MM-dd"),
+                "yyyy-MM-dd"), numeroMesi2).cast(DataTypes.StringType);
+
+        // dt_riferimento in format "yyyyMMdd", dataFineDefCol in format "yyyy-MM-dd" due to add_months
+        Column dataFineDefFilterCol = getUnixTimeStampCol(functions.substring(tlburttFilter.col("dt_riferimento"), 0, 6),
+                "yyyyMM").$less$eq(getUnixTimeStampCol(functions.substring(dataFineDefCol, 0, 7),"yyyy-MM"));
 
         // list of columns to be selected on cicliNdgPrinc
-        List<String> cicliNdgPrincSelectColNames = Arrays.asList("codicebanca", "cicli_ndg_princ",  "ndgprincipale", "codicebanca_collegato",
+        List<String> cicliNdgPrincSelectColNames = Arrays.asList("codicebanca", "ndgprincipale", "codicebanca_collegato",
                 "ndg_collegato", "datainiziodef", "datafinedef");
         List<Column> tlbcidefUrttPrincCols = selectDfColumns(cicliNdgPrinc, cicliNdgPrincSelectColNames);
 
@@ -140,20 +163,30 @@ public class FrappNdgMonthly extends AbstractStep{
                 tlburttFilter.col("cd_istituto")).and(cicliNdgPrinc.col("ndg_collegato").equalTo(tlburttFilter.col("ndg"))))
                 .filter(dtRiferimentoFilterCol.and(dataFineDefFilterCol))
                 .select(tlbcidefUrttPrincColSeq);
+
         // 158
 
         // as tlbcidefUrttColl follows the same pipeline of tlbcidefUrttPrinc, except for the fact that
         // we tlbcidefUrttColl uses cicliNdgColl as opposed to tlbcidefUrttPrinc that uses cicliNdgPrinc,
         // we simplt slightly modify the previously defined column conditions and select columns
 
+        // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(cicliNdgColl.col("datainiziodef"), -numeroMesi1), "yyyyMMdd"));
+                getUnixTimeStampCol(functions.add_months(convertStringColToDateCol(cicliNdgColl.col("datainiziodef"),
+                        "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
 
-        dataFineDefCol = functions.substring(functions.add_months(leastDate(functions.add_months(cicliNdgColl.col("datafinedef"), -1),
-                functions.date_format(functions.lit(dataA), "yyyyMMdd"), "yyyyMMdd"), numeroMesi2), 0, 6);
+        // dataFineDefCol in format "yyyy-MM-dd" due to add_months
+        dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
+                // datafinedef -1 in format "yyyy-MM-dd"
+                functions.add_months(convertStringColToDateCol(cicliNdgColl.col("datafinedef"), "yyyyMMdd",
+                        "yyyy-MM-dd"), -1),
+                // dataA, already in format "yyyy-MM-dd"
+                functions.lit(dataA), "yyyy-MM-dd"),
+                "yyyy-MM-dd"), numeroMesi2).cast(DataTypes.StringType);
 
-        dataFineDefFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$less$eq(
-                getUnixTimeStampCol(dataFineDefCol, "yyyyMMdd"));
+        // dt_riferimento in format "yyyyMMdd", dataFineDefCol in format "yyyy-MM-dd" due to add_months
+        dataFineDefFilterCol = getUnixTimeStampCol(functions.substring(tlburttFilter.col("dt_riferimento"), 0, 6),
+                "yyyyMM").$less$eq(getUnixTimeStampCol(functions.substring(dataFineDefCol, 0, 7),"yyyy-MM"));
 
         List<Column> tlbcidefUrttCollCols = selectDfColumns(cicliNdgColl, cicliNdgPrincSelectColNames);
         tlbcidefUrttCollCols.addAll(tlburttFilterSelectCols);
@@ -172,7 +205,9 @@ public class FrappNdgMonthly extends AbstractStep{
         logger.info("frappNdgMonthlyOutputDir: " + frappNdgMonthlyOutputDir);
         logger.info("tlbcidefTlburttCsv: " + tlbcidefTlburttCsv);
 
+        logger.info("tlbcidefTlburtt count: " + tlbcidefTlburtt.count());
         tlbcidefTlburtt.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(
                 frappNdgMonthlyOutputDir, tlbcidefTlburttCsv).toString());
+
     }
 }

@@ -76,6 +76,10 @@ abstract class AbstractStep implements StepInterface{
         return functions.least(column1Ts, column2Ts);
     }
 
+    Column convertStringColToDateCol(Column col, String inputDateFormat, String outputDateFormat){
+        return functions.from_unixtime(functions.unix_timestamp(col, inputDateFormat), outputDateFormat);
+    }
+
     List<Column> selectDfColumns(Dataset<Row> df, List<String> columnNames){
 
         List<Column> dfCols = new ArrayList<Column>();
