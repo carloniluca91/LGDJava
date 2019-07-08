@@ -80,7 +80,7 @@ public class FrappNdgMonthly extends AbstractStep{
                 "tp_ndg", "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg", "ndg_collegato", "codicebanca_collegato",
                 "cd_collegamento", "cd_fiscale", "dt_rif_udct");
 
-        StructType tlbcidefSchema = setDfSchema(tlbcidefColumns);
+        StructType tlbcidefSchema = getDfSchema(tlbcidefColumns);
         String cicliNdgPathCsvPath = Paths.get(frappNdgMonthlyInputDir, cicliNdgPathCsv).toString();
         logger.info("cicliNdgPathCsvPath: " + cicliNdgPathCsvPath);
 
@@ -99,7 +99,7 @@ public class FrappNdgMonthly extends AbstractStep{
                 "freq_remargining", "cd_prodotto_ris", "durata_originaria", "divisa", "score_erogaz", "durata_residua", "categoria_sof",
                 "categoria_inc", "dur_res_default", "flag_margine", "dt_entrata_def", "tp_contr_rapp", "cd_eplus", "r792_tipocartol");
 
-        StructType tlburttSchema = setDfSchema(tlburttColumns);
+        StructType tlburttSchema = getDfSchema(tlburttColumns);
         String tlburttCsv = getProperty("TLBURTT_CSV");
         String tlburttCsvPath = Paths.get(frappNdgMonthlyInputDir, tlburttCsv).toString();
         logger.info("tlburttCsv: " + tlburttCsv);

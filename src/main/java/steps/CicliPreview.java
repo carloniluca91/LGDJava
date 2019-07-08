@@ -63,7 +63,7 @@ public class CicliPreview extends AbstractStep{
                 "codicebanca", "ndgprincipale", "datainiziodef", "datafinedef", "datainiziopd", "datainizioinc",
                 "datainizioristrutt", "datasofferenza", "totaccordatodatdef", "totutilizzdatdef", "segmento",
                 "naturagiuridica_segm");
-        StructType fposiLoadSchema = setDfSchema(fposiColumns);
+        StructType fposiLoadSchema = getDfSchema(fposiColumns);
 
         String csvFormat = getProperty("csv_format");
         logger.info("csvFormat: " + csvFormat);

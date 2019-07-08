@@ -41,7 +41,7 @@ abstract class AbstractStep implements StepInterface{
     }
 
     // create a schema with one String column for each name provided
-    StructType setDfSchema(List<String> columnNames){
+    StructType getDfSchema(List<String> columnNames){
 
         StructType schema = new StructType();
         for (String columnName: columnNames){
