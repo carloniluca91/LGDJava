@@ -107,10 +107,10 @@ public class Fpasperd extends AbstractStep{
         // 109
 
         Row top = fpasperdBetweenGen.orderBy(functions.col("days_diff")).groupBy().agg(
-                functions.first("top_importo").as("importo"),
+                functions.first("importo").as("importo"),
                 functions.first("datainiziodef").as("datainiziodef")).collect()[0];
 
-        int topImporto = top.getAs("top_importo");
+        int topImporto = top.getAs("importo");
         String topDataInizioDef = top.getAs("datainiziodef");
         logger.info("topImporto: " + topImporto);
         logger.info("topDataInizioDef: " + topDataInizioDef);
@@ -118,7 +118,8 @@ public class Fpasperd extends AbstractStep{
         Dataset<Row> fpasperdBetweenOut = fpasperdBetweenGen.select(functions.col("cd_istituto"),
                 functions.col("ndg"), functions.col("datacont"), functions.col("causale"),
                 functions.lit(topImporto).as("importo"), functions.col("codicebanca"),
-                functions.col("ndgprincipale"), functions.lit(topDataInizioDef).as("datainiziodef"));
+                functions.col("ndgprincipale"), functions.lit(topDataInizioDef).as("datainiziodef"))
+                .distinct();
         // 127
 
         // 132
@@ -191,14 +192,48 @@ public class Fpasperd extends AbstractStep{
         Seq<Column> principFpasperdBetweenGenColsSeq = JavaConverters.asScalaIteratorConverter(principFpasperdBetweenGenCols
                 .iterator()).asScala().toSeq();
 
-        Dataset<Row> principFpasperdBetweenGen = fpasperdNullOut.join(tlbcidef, joinCondition).filter(
+        Dataset<Row> principFpasperdBetweenGen = fpasperdNullOut.join(tlbcidef, joinCondition, "left").filter(
                 dataContDataInizioDefFilterCol.and(dataContDataFineDefFIlterCol)).select(principFpasperdBetweenGenColsSeq);
 
         // 222
 
         // 227
-        // TODO
+        top = principFpasperdBetweenGen.orderBy(functions.col("days_diff")).groupBy().agg(
+                functions.first(functions.col("importo")).as("importo"),
+                functions.first(functions.col("datainiziodef")).as("datainiziodef")).collect()[0];
+
+        topImporto = top.getAs("importo");
+        topDataInizioDef = top.getAs("datainiziodef");
+        logger.info("topImporto: " + topImporto);
+        logger.info("topDataInizioDef: " + topDataInizioDef);
+
+        Dataset<Row> principFpasperdBetweenOut = principFpasperdBetweenGen.select(functions.col("cd_istituto"),
+                functions.col("ndg"), functions.col("datacont"), functions.col("causale"),
+                functions.lit(topImporto).as("importo"), functions.col("codicebanca"),
+                functions.col("ndgprincipale"), functions.col("datainiziodef").as("datainiziodef"))
+                .distinct();
+
         // 245
+
+        // 250
+
+        selectCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
+
+        selectCols.add(functions.lit(null).as("codicebanca"));
+        selectCols.add(functions.lit(null).as("ndgprincipale"));
+        selectCols.add(functions.lit(null).as("datainiziodef"));
+
+        selectColsSeq = JavaConverters.asScalaIteratorConverter(selectCols.iterator()).asScala().toSeq();
+        Dataset<Row> principFpasperdOtherGen = fpasperdNullOut.join(tlbcidef, joinCondition, "left").filter(
+                tlbcidef.col("codicebanca").isNotNull()).select(selectColsSeq);
+
+        // 265
+
+        // 270
+
+
+
+        // 288
 
 
     }
