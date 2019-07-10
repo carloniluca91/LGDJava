@@ -231,10 +231,103 @@ public class Fpasperd extends AbstractStep{
 
         // 270
 
+        List<String> principFpasperdOtherOutColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale",
+                "importo", "codicebanca", "ndgprincipale", "datainiziodef");
+        List<Column> principFpasperdOtherGenSelectCols = selectDfColumns(principFpasperdOtherGen,
+                principFpasperdOtherOutColNames);
 
+        selectColsSeq = JavaConverters.asScalaIteratorConverter(principFpasperdOtherGenSelectCols.iterator()).asScala().toSeq();
+        Dataset<Row> principFpasperdOtherOut = principFpasperdOtherGen.join(principFpasperdBetweenOut, joinColumnsSeq, "left")
+                .filter(principFpasperdBetweenOut.col("cd_istituto").isNull()).select(selectColsSeq);
 
         // 288
 
+        // 293
+        joinCondition = fpasperdNullOut.col("cd_istituto").equalTo(tlbcidef.col("codicebanca")).and(
+                fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
+        List<Column> principFpasperdNullOutCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
+        principFpasperdNullOutCols.add(functions.lit(null).as("codicebanca"));
+        principFpasperdNullOutCols.add(functions.lit(null).as("ndgprincipale"));
+        principFpasperdNullOutCols.add(functions.lit(null).as("datainiziodef"));
 
+        selectColsSeq = JavaConverters.asScalaIteratorConverter(principFpasperdNullOutCols.iterator()).asScala().toSeq();
+        Dataset<Row> principFpasperdNullOut = fpasperdNullOut.join(tlbcidef, joinCondition, "left").filter(
+                tlbcidef.col("codicebanca").isNull()).select(selectColsSeq);
+
+        // 308
+
+        // 313
+
+        Dataset<Row> fpasperdOutDistinct = fpasperdBetweenOut.union(fpasperdOtherOut).union(principFpasperdBetweenOut)
+                .union(principFpasperdOtherOut).union(principFpasperdNullOut).distinct();
+
+        // 331
+
+        // 336
+
+        String tlbpaspeossCsv = getProperty("TLBPASPEOSS");
+        String tlbpaspeossCsvPath = Paths.get(fpasPerdInputDir, tlbpaspeossCsv).toString();
+        logger.info("tlbpaspeossCsv: " + tlbpaspeossCsv);
+        logger.info("tlbpaspeossCsvPath: " + tlbpaspeossCsvPath);
+
+        List<String> tlbpaspeossCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
+        StructType tlbpaspeossSchema = getDfSchema(tlbpaspeossCols);
+        Dataset<Row> tlbpaspeoss = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(tlbpaspeossSchema).csv(tlbpaspeossCsvPath);
+        // 344
+
+
+        // 346
+
+        Column cdIstitutoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
+                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("cd_istituto")).otherwise(
+                        fpasperdOutDistinct.col("cd_istituto"))).otherwise(tlbpaspeoss.col("cd_istituto"))
+                .as("cd_istituto");
+
+        Column ndgCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
+                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("ndg")).otherwise(
+                fpasperdOutDistinct.col("ndg"))).otherwise(tlbpaspeoss.col("ndg"))
+                .as("ndg");
+
+        Column dataContCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
+                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("datacont")).otherwise(
+                fpasperdOutDistinct.col("datacont"))).otherwise(tlbpaspeoss.col("datacont"))
+                .as("datacont");
+
+        Column causaleCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
+                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("causale")).otherwise(
+                fpasperdOutDistinct.col("causale"))).otherwise(tlbpaspeoss.col("causale"))
+                .as("causale");
+
+        Column importoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
+                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("importo")).otherwise(
+                fpasperdOutDistinct.col("importo"))).otherwise(tlbpaspeoss.col("importo"))
+                .as("importo");
+
+        Column codiceBancaCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
+                fpasperdOutDistinct.col("codicebanca")).otherwise(null).as("codicebanca");
+
+        Column ndgPrincipaleCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
+                fpasperdOutDistinct.col("ndgprincipale")).otherwise(null).as("ndgprincipale");
+
+        Column dataInizioDefCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
+                fpasperdOutDistinct.col("datainiziodef")).otherwise(null).as("datainiziodef");
+
+        joinColumns = Arrays.asList("cd_istituto", "ndg", "datacont");
+        joinColumnsSeq = JavaConverters.asScalaIteratorConverter(joinColumns.iterator()).asScala().toSeq();
+        Dataset<Row> paspePaspeossGenDist = fpasperdOutDistinct.join(tlbpaspeoss, joinColumnsSeq, "full_outer")
+                .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol,
+                        ndgPrincipaleCol, dataInizioDefCol);
+
+        String fpasperdOutDir = getProperty("FPASPERD_OUTPUT_DIR");
+        String paspePaspeossGenDistCsv = getProperty("PASPE_PASPEOSS_GEN_DIST_CSV");
+        logger.info("fpasperdOutDir:" + fpasperdOutDir);
+        logger.info("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);
+
+        String paspePaspeossGenDistCsvPath = Paths.get(fpasperdOutDir, paspePaspeossGenDistCsv).toString();
+        logger.info("paspePaspeossGenDistCsvPath: " + paspePaspeossGenDistCsvPath);
+
+        paspePaspeossGenDist.write().format(csvFormat).option("delimiter", ",").csv(paspePaspeossGenDistCsvPath);
+        // 379
     }
 }
