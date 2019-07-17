@@ -134,11 +134,12 @@ public class FrappNdgMonthly extends AbstractStep{
 
         // dataFineDefCol in format "yyyy-MM-dd" due to add_months
         Column dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
-                // datafinedef -1 in format "yyyy-MM-dd"
+                // datafinedef -1 month in format "yyyy-MM-dd"
                 functions.add_months(convertStringColToDateCol(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
                         "yyyy-MM-dd"), -1),
                 // dataA, already in format "yyyy-MM-dd"
                 functions.lit(dataA), "yyyy-MM-dd"),
+                // convert to StringType as we must apply SUBSTRING to it
                 "yyyy-MM-dd"), numeroMesi2).cast(DataTypes.StringType);
 
         // dt_riferimento in format "yyyyMMdd", dataFineDefCol in format "yyyy-MM-dd" due to add_months
@@ -167,8 +168,8 @@ public class FrappNdgMonthly extends AbstractStep{
         // 158
 
         // as tlbcidefUrttColl follows the same pipeline of tlbcidefUrttPrinc, except for the fact that
-        // we tlbcidefUrttColl uses cicliNdgColl as opposed to tlbcidefUrttPrinc that uses cicliNdgPrinc,
-        // we simplt slightly modify the previously defined column conditions and select columns
+        // tlbcidefUrttColl uses cicliNdgColl as opposed to tlbcidefUrttPrinc that uses cicliNdgPrinc,
+        // we simply slightly modify the previously defined column conditions and select columns
 
         // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(

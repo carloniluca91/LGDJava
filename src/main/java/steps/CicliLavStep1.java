@@ -67,65 +67,47 @@ class CicliLavStep1 extends AbstractStep{
         logger.info("tlbcdefPath: " + tlbcdefPath);
 
         // 22
-        StructField[] tlbcidefColumns = new StructField[]{
-
-                new StructField("cd_isti", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("ndg_principale", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("cod_cr", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("dt_inizio_ciclo", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("dt_ingresso_status", DataTypes.IntegerType, true, Metadata.empty()),
-                new StructField("status_ingresso", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("dt_uscita_status", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("status_uscita", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("dt_fine_ciclo", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("indi_pastdue", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("indi_impr_priv", DataTypes.StringType, true, Metadata.empty())};
-
-        StructType tlbcidefSchema = new StructType(tlbcidefColumns);
+        List<String> tlbcidefColumns = Arrays.asList("cd_isti", "ndg_principale", "cod_cr", "dt_inizio_ciclo", "dt_ingresso_status",
+                "status_ingresso", "dt_uscita_status", "status_uscita", "dt_fine_ciclo", "indi_pastdue", "indi_impr_priv");
+        StructType tlbcidefSchema = getDfSchema(tlbcidefColumns);
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcidefSchema).csv(tlbcdefPath);
 
         // 37
 
         // 40
-        // column condition that selects records with dataDa<= dt_inizio ciclo <= dataA
+        // FILTER tlbcidef BY dt_inizio_ciclo >= $data_da AND dt_inizio_ciclo <= $data_a;
         Column dtInizioCicloFilterCol = functions.unix_timestamp(functions.col("dt_inizio_ciclo"), "yyyyMMdd")
                 .between(functions.unix_timestamp(functions.lit(dataDa), "yyyy-MM-dd"),
                         functions.unix_timestamp(functions.lit(dataA), "yyyy-MM-dd"));
-        logger.info("Filter condition for dt_inizio_ciclo: " + dtInizioCicloFilterCol.toString());
 
         Column statusIngressoTrimCol = functions.trim(functions.col("status_ingresso"));
 
-        // definition of column datainiziopd
+        // (TRIM(status_ingresso)=='PASTDUE'?dt_ingresso_status:null) as datainiziopd,
         Column dataInizioPdCol = functions.when(statusIngressoTrimCol.equalTo(functions.lit("PASTDUE")),
-                functions.col("dt_ingresso_status")).otherwise(null);
-        logger.info("dataInizioPdCol: " + dataInizioPdCol);
+                functions.col("dt_ingresso_status")).otherwise(null).as("datainiziopd");
 
-        // definition of column datainizioinc
+        // (TRIM(status_ingresso)=='INCA' or TRIM(status_ingresso)=='INADPRO'?dt_ingresso_status:null) as datainizioinc,
         Column dataInizioIncCol = functions.when(statusIngressoTrimCol.equalTo(functions.lit("INCA")).or(
                 statusIngressoTrimCol.equalTo(functions.lit("INADPRO"))), functions.col("dt_ingresso_status"))
-                .otherwise(null);
-        logger.info("dataInizioIncCol: " + dataInizioIncCol.toString());
+                .otherwise(null).as("datainizioinc");
 
-        // definition of column datainizioristrutt
+        // (TRIM(status_ingresso)=='RISTR'?dt_ingresso_status:null) as datainizioristrutt,
         Column dataInizioRistruttCol = functions.when(statusIngressoTrimCol.equalTo(functions.lit("RISTR")),
-                functions.col("dt_ingresso_status")).otherwise(null);
-        logger.info("dataInizioRistruttCol: " + dataInizioRistruttCol.toString());
+                functions.col("dt_ingresso_status")).otherwise(null).as("datainizioristrutt");
 
-        // definition of column datainiziosoff
+        // (TRIM(status_ingresso)=='SOFF'?dt_ingresso_status:null) as datainiziosoff
         Column dataInizioSoffCol = functions.when(statusIngressoTrimCol.equalTo(functions.lit("SOFF")),
-                functions.col("dt_ingresso_status")).otherwise(null);
-        logger.info("dataInizioSoffCol: " + dataInizioSoffCol.toString());
+                functions.col("dt_ingresso_status")).otherwise(null).as("datainiziosoff");
 
         Dataset<Row> tlbcidefUnpivot = tlbcidef.filter(dtInizioCicloFilterCol).select(functions.col("cd_isti"),
                 functions.col("ndg_principale"), functions.col("dt_inizio_ciclo"), functions.col("dt_fine_ciclo"),
-                dataInizioPdCol.as("datainiziopd"), dataInizioIncCol.as("datainizioinc"),
-                dataInizioRistruttCol.as("datainizioristrutt"), dataInizioSoffCol.as("datainiziosoff"));
+                dataInizioPdCol, dataInizioIncCol, dataInizioRistruttCol, dataInizioSoffCol);
 
         // 55
-        Dataset<Row> tlbcidefMax = tlbcidefUnpivot.groupBy(functions.col("cd_isti"),
-                functions.col("ndg_principale"), functions.col("dt_inizio_ciclo")).agg(
-                        functions.max("dt_fine_ciclo").as("dt_fine_ciclo"),
+        Dataset<Row> tlbcidefMax = tlbcidefUnpivot.groupBy(
+                functions.col("cd_isti"), functions.col("ndg_principale"), functions.col("dt_inizio_ciclo"))
+                .agg(functions.max("dt_fine_ciclo").as("dt_fine_ciclo"),
                         functions.min("datainiziopd").as("datainiziopd"),
                         functions.min("datainizioristrutt").as("datainizioristrutt"),
                         functions.min("datainizioinc").as("datainizioinc"),
@@ -135,28 +117,21 @@ class CicliLavStep1 extends AbstractStep{
         // 78
         String tlbcraccPath = Paths.get(ciclilavStep1InputDir, getProperty("TLBCRACC_CSV")).toString();
         logger.info("tlbcraccPath: " + tlbcdefPath);
-        StructField[] tlbcraccColumns = new StructField[]{
+        List<String> tlbcraccColumns = Arrays.asList("data_rif", "cd_isti", "ndg", "cod_raccordo", "data_val");
+        StructType tlbcraccSchema = getDfSchema(tlbcraccColumns);
 
-                new StructField("data_rif", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("cd_isti", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("ndg", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("cod_raccordo", DataTypes.StringType, true, Metadata.empty()),
-                new StructField("data_val", DataTypes.StringType, true, Metadata.empty())};
-
-        StructType tlbcraccSchema = new StructType(tlbcraccColumns);
         Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcraccSchema).csv(tlbcraccPath);
 
-        Column tlbraccFilterCol = functions.unix_timestamp(functions.col("data_rif"), "yyyy-MM-dd").lt(
-                functions.when(functions.unix_timestamp(functions.lit(dataA), "yyyy-MM-dd").lt(
-                        functions.unix_timestamp(functions.lit("2015-07-31"), "yyyy-MM-dd")),
-                        functions.unix_timestamp(functions.lit("2015-07-31"), "yyyy-MM-dd")).otherwise(
-                                functions.unix_timestamp(functions.lit(dataA), "yyyy-MM-dd")));
-        logger.info("tlbraccFilterCol: " + tlbraccFilterCol.toString());
+        // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
+        Column tlbraccFilterCol = functions.unix_timestamp(functions.col("data_rif"), "yyyy-MM-dd").leq(
+                greatestDate(functions.lit(dataA), functions.lit("20150731"), "yyyy-MM-dd", "yyyyMMdd"));
 
         Dataset<Row> tlbcracc = tlbcraccLoad.filter(tlbraccFilterCol);
-        Dataset<Row> tlbcraccClone1 = tlbcracc.toDF().withColumnRenamed("cd_isti", "cd_isti_clone");
-        Dataset<Row> tlbcraccClone2 = tlbcraccClone1.withColumnRenamed("ndg", "ndg_clone");
+
+        // clone tlbcracc to avoid Analysis exception
+        Dataset<Row> tlbcraccClone = tlbcracc.toDF().withColumnRenamed("cd_isti", "cd_isti_clone")
+                .withColumnRenamed("ndg", "ndg_clone");
         // 90
 
         // 97
@@ -173,34 +148,30 @@ class CicliLavStep1 extends AbstractStep{
         logger.info("join columns: " + joinCols.toString());
         Seq<String> joinColsSeq = JavaConverters.asScalaIteratorConverter(joinCols.iterator()).asScala().toSeq();  // conversion to scala Seq
 
-        Column cdIstiCedCol = functions.when(tlbcraccClone2.col("cd_isti_clone").isNotNull(), tlbcraccClone2.col("cd_isti_clone"))
+        // (tlbcracc::cd_isti is not null ? tlbcracc::cd_isti : cicli_racc_1::cd_isti) as cd_isti_ced
+        Column cdIstiCedCol = functions.when(tlbcraccClone.col("cd_isti_clone").isNotNull(), tlbcraccClone.col("cd_isti_clone"))
                 .otherwise(cicliRacc1.col("cd_isti")).as("cd_isti_ced");
-        logger.info("cdIstiCedCol: " + cdIstiCedCol.toString());
 
-        Column ndgCedCol = functions.when(tlbcraccClone2.col("ndg_clone").isNotNull(), tlbcraccClone2.col("ndg_clone"))
+        // (tlbcracc::ndg     is not null ? tlbcracc::ndg     : cicli_racc_1::ndg_principale) as ndg_ced
+        Column ndgCedCol = functions.when(tlbcraccClone.col("ndg_clone").isNotNull(), tlbcraccClone.col("ndg_clone"))
                 .otherwise(cicliRacc1.col("ndg_principale")).as("ndg_ced");
-        logger.info("ndgCedCol: " + ndgCedCol.toString());
 
-        logger.info("cicliRacc1 columns: " + Arrays.toString(cicliRacc1.columns()));
-        logger.info("tlbcraccClone columns: " + Arrays.toString(tlbcracc.columns()));
-
-        Dataset<Row> ciclilavStep1 = cicliRacc1.join(tlbcraccClone2, joinColsSeq, "left").select(
+        Dataset<Row> ciclilavStep1 = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left").select(
                 cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
                 cicliRacc1.col("dt_fine_ciclo"), cicliRacc1.col("datainiziopd"), cicliRacc1.col("datainizioristrutt"),
-                cicliRacc1.col("datainizioinc"), cicliRacc1.col("datainiziosoff"), functions.lit(0).as("progr"),
-                cdIstiCedCol, ndgCedCol).distinct();
+                cicliRacc1.col("datainizioinc"), cicliRacc1.col("datainiziosoff"),
+                functions.lit(0).as("progr"), cdIstiCedCol, ndgCedCol).distinct();
 
         // 149
 
         // 155
-        Column dtRifCraccCol = functions.when(tlbcracc.col("data_rif").isNotNull(), tlbcracc.col("data_rif"))
+        // (tlbcracc::data_rif is not null ? tlbcracc::data_rif : cicli_racc_1::dt_inizio_ciclo) as dt_rif_cracc
+        Column dtRifCraccCol = functions.when(tlbcraccClone.col("data_rif").isNotNull(), tlbcraccClone.col("data_rif"))
                 .otherwise(cicliRacc1.col("dt_inizio_ciclo")).as("dt_rif_cracc");
-        logger.info("dtRifCraccCol: " + dtRifCraccCol.toString());
 
-        Dataset<Row> ciclilavStep1Filecracc = cicliRacc1.join(tlbcracc, joinColsSeq, "left").select(
+        Dataset<Row> ciclilavStep1Filecracc = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left").select(
                 cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
-                cicliRacc1.col("dt_fine_ciclo")//,cdIstiCedCol, ndgCedCol, dtRifCraccCol);
-        );
+                cicliRacc1.col("dt_fine_ciclo"), cdIstiCedCol, ndgCedCol, dtRifCraccCol);
         // 176
 
         String ciclilavStep1OutputDir = getProperty("CICLILAV_STEP1_OUTPUT_DIR");
@@ -213,6 +184,7 @@ class CicliLavStep1 extends AbstractStep{
 
         ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(ciclilavStep1OutputDir, ciclilavStep1OutCsv).toString());
+
         ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(ciclilavStep1OutputDir, ciclilavStep1FilecraccCsv).toString());
     }

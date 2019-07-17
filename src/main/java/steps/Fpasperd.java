@@ -3,6 +3,8 @@ package steps;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.expressions.Window;
+import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
@@ -40,13 +42,15 @@ public class Fpasperd extends AbstractStep{
         Dataset<Row> tlbcidefLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(
                 tlbcidefLoadSchema).csv(tlbcidefLoadPath);
 
-        // datafinedef in format "yyyy-MM-dd"
-        Column dataFineDefDateCol = convertStringColToDateCol(
-                tlbcidefLoad.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd");
+        // // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
+        // tlbcidef::datafinedef in format "yyyyMMdd"
+        Column dataFineDefCol = convertStringColToDateCol(tlbcidefLoad.col("datafinedef"),
+                "yyyyMMdd", "yyyy-MM-dd");
+        dataFineDefCol = functions.date_format(functions.add_months(dataFineDefCol, 2), "yyyyMMdd").as("datafinedef");
 
         Dataset<Row> tlbcidef = tlbcidefLoad.select(functions.col("codicebanca"), functions.col("ndgprincipale"),
-                functions.col("datainiziodef"), functions.add_months(dataFineDefDateCol, 2).as("datafinedef"),
-                functions.col("codicebanca_collegato"), functions.col("ndg_collegato"));
+                functions.col("datainiziodef"), dataFineDefCol, functions.col("codicebanca_collegato"),
+                functions.col("ndg_collegato"));
         // 56
 
         // 63
@@ -65,21 +69,24 @@ public class Fpasperd extends AbstractStep{
 
         // 77
 
+        // JOIN tlbpaspe_filter BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca_collegato, ndg_collegato);
         Column joinCondition = tlbpaspeFilter.col("cd_istituto").equalTo(tlbcidef.col("codicebanca_collegato"))
                 .and(tlbpaspeFilter.col("ndg").equalTo(tlbcidef.col("ndg_collegato")));
 
+        // BY (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
         Column dataContDataInizioDefFilterCol = getUnixTimeStampCol(
-                functions.substring(tlbpaspeFilter.col("datacont"), 0, 6), "yyyyMM").$greater$eq(
-                        getUnixTimeStampCol(functions.substring(tlbcidef.col("datainiziodef"), 0, 6),
-                                "yyyyMM"));
+                functions.substring(tlbpaspeFilter.col("datacont"), 0, 6), "yyyyMM")
+                .$greater$eq(getUnixTimeStampCol(functions.substring(tlbcidef.col("datainiziodef"), 0, 6), "yyyyMM"));
 
+        // AND (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
         Column dataContDataFineDefFIlterCol = getUnixTimeStampCol(
-                functions.substring(tlbpaspeFilter.col("datacont"), 0, 6), "yyyyMM").$less(
-                getUnixTimeStampCol(functions.substring(tlbcidef.col("datafinedef"), 0, 7),
-                        "yyyy-MM"));
+                functions.substring(tlbpaspeFilter.col("datacont"), 0, 6), "yyyyMM")
+                .$less(getUnixTimeStampCol(functions.substring(tlbcidef.col("datafinedef"), 0, 6), "yyyyMM"));
 
-        Column daysDiffColl = functions.datediff(tlbcidef.col("datafinedef"), convertStringColToDateCol(
-                tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"))
+        // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
+        Column daysDiffColl = functions.datediff(
+                convertStringColToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
+                convertStringColToDateCol(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"))
                 .as("days_diff");
 
         // list of columns to be selected from dataframe tlbpaspeFilter
@@ -105,21 +112,16 @@ public class Fpasperd extends AbstractStep{
         // 104
 
         // 109
-
-        Row top = fpasperdBetweenGen.orderBy(functions.col("days_diff")).groupBy().agg(
-                functions.first("importo").as("importo"),
-                functions.first("datainiziodef").as("datainiziodef")).collect()[0];
-
-        int topImporto = top.getAs("importo");
-        String topDataInizioDef = top.getAs("datainiziodef");
-        logger.info("topImporto: " + topImporto);
-        logger.info("topDataInizioDef: " + topDataInizioDef);
+        // GROUP fpasperd_between_gen BY ( cd_istituto, ndg, datacont, causale, codicebanca, ndgprincipale );
+        // ... ORDER fpasperd_between_gen by days_diff ASC
+        WindowSpec w = Window.partitionBy("cd_istituto", "ndg", "datacont", "causale", "codicebanca", "ndgprincipale")
+                .orderBy("days_diff");
 
         Dataset<Row> fpasperdBetweenOut = fpasperdBetweenGen.select(functions.col("cd_istituto"),
                 functions.col("ndg"), functions.col("datacont"), functions.col("causale"),
-                functions.lit(topImporto).as("importo"), functions.col("codicebanca"),
-                functions.col("ndgprincipale"), functions.lit(topDataInizioDef).as("datainiziodef"))
-                .distinct();
+                functions.first("importo").over(w).as("importo"),
+                functions.col("codicebanca"), functions.col("ndgprincipale"),
+                functions.first("datainiziodef").over(w).as("datainiziodef"));
         // 127
 
         // 132
@@ -131,7 +133,6 @@ public class Fpasperd extends AbstractStep{
         selectCols.add(functions.lit(null).as("ndgprincipale"));
         selectCols.add(functions.lit(null).as("datainiziodef"));
 
-        // conversion to scala Seq
         selectColsSeq = JavaConverters.asScalaIteratorConverter(selectCols.iterator()).asScala().toSeq();
         Dataset<Row> fpasperdOtherGen = tlbcidefTlbpaspeFilterJoin.filter(tlbcidef.col("codicebanca").isNotNull())
                 .select(selectColsSeq);
@@ -163,21 +164,26 @@ public class Fpasperd extends AbstractStep{
 
         // 198
 
+        // JOIN fpasperd_null_out BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca, ndgprincipale);
         joinCondition = fpasperdNullOut.col("cd_istituto").equalTo(tlbcidef.col("codicebanca"))
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
+        //  BY (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
         dataContDataInizioDefFilterCol = getUnixTimeStampCol(functions.substring(
                 fpasperdNullOut.col("datacont"), 0, 6), "yyyyMM").$greater$eq(
                         getUnixTimeStampCol(functions.substring(tlbcidef.col("datainiziodef"), 0, 6),
                                 "yyyyMM"));
 
+        // AND (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
         dataContDataFineDefFIlterCol = getUnixTimeStampCol(functions.substring(
                 fpasperdNullOut.col("datacont"), 0, 6), "yyyyMM").$less(
-                        getUnixTimeStampCol(functions.substring(tlbcidef.col("datafinedef"), 0, 7),
-                                "yyyy-MM"));
+                        getUnixTimeStampCol(functions.substring(tlbcidef.col("datafinedef"), 0, 6),
+                                "yyyyMM"));
 
-        daysDiffColl = functions.datediff(tlbcidef.col("datafinedef"), convertStringColToDateCol(
-                fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"))
+        // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
+        daysDiffColl = functions.datediff(
+                convertStringColToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
+                convertStringColToDateCol(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"))
                 .as("days_diff");
 
         // columns to be selected from dataframe fpasperdNullOut
@@ -187,8 +193,6 @@ public class Fpasperd extends AbstractStep{
         // add columns to be selected from tlbcidef as wel as days_diff column
         principFpasperdBetweenGenCols.addAll(selectDfColumns(tlbcidef, tlbcidefSelectCols));
         principFpasperdBetweenGenCols.add(daysDiffColl);
-
-        // conversion to scala Seq
         Seq<Column> principFpasperdBetweenGenColsSeq = JavaConverters.asScalaIteratorConverter(principFpasperdBetweenGenCols
                 .iterator()).asScala().toSeq();
 
@@ -198,24 +202,18 @@ public class Fpasperd extends AbstractStep{
         // 222
 
         // 227
-        top = principFpasperdBetweenGen.orderBy(functions.col("days_diff")).groupBy().agg(
-                functions.first(functions.col("importo")).as("importo"),
-                functions.first(functions.col("datainiziodef")).as("datainiziodef")).collect()[0];
-
-        topImporto = top.getAs("importo");
-        topDataInizioDef = top.getAs("datainiziodef");
-        logger.info("topImporto: " + topImporto);
-        logger.info("topDataInizioDef: " + topDataInizioDef);
-
         Dataset<Row> principFpasperdBetweenOut = principFpasperdBetweenGen.select(functions.col("cd_istituto"),
                 functions.col("ndg"), functions.col("datacont"), functions.col("causale"),
-                functions.lit(topImporto).as("importo"), functions.col("codicebanca"),
-                functions.col("ndgprincipale"), functions.col("datainiziodef").as("datainiziodef"))
-                .distinct();
+                functions.first("importo").over(w).as("importo"),
+                functions.col("codicebanca"), functions.col("ndgprincipale"),
+                functions.first("datainiziodef").over(w).as("datainiziodef"));
 
         // 245
 
         // 250
+        // JOIN fpasperd_null_out BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca, ndgprincipale);
+        joinCondition = fpasperdNullOut.col("cd_istituto").equalTo(tlbcidef.col("codicebanca"))
+                .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
         selectCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
 
@@ -243,8 +241,9 @@ public class Fpasperd extends AbstractStep{
         // 288
 
         // 293
-        joinCondition = fpasperdNullOut.col("cd_istituto").equalTo(tlbcidef.col("codicebanca")).and(
-                fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
+        joinCondition = fpasperdNullOut.col("cd_istituto").equalTo(tlbcidef.col("codicebanca"))
+                .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
+
         List<Column> principFpasperdNullOutCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
         principFpasperdNullOutCols.add(functions.lit(null).as("codicebanca"));
         principFpasperdNullOutCols.add(functions.lit(null).as("ndgprincipale"));
@@ -279,37 +278,50 @@ public class Fpasperd extends AbstractStep{
 
         // 346
 
-        Column cdIstitutoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
-                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("cd_istituto")).otherwise(
-                        fpasperdOutDistinct.col("cd_istituto"))).otherwise(tlbpaspeoss.col("cd_istituto"))
-                .as("cd_istituto");
+        // ( fpasperd_out_distinct::cd_istituto is not null?
+        //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::cd_istituto : fpasperd_out_distinct::cd_istituto ):
+        //      tlbpaspeoss::cd_istituto ) as cd_istituto
+        Column cdIstitutoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
+                functions.coalesce(tlbpaspeoss.col("cd_istituto"), fpasperdOutDistinct.col("cd_istituto")))
+                .otherwise(tlbpaspeoss.col("cd_istituto")).as("cd_istituto");
 
-        Column ndgCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
-                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("ndg")).otherwise(
-                fpasperdOutDistinct.col("ndg"))).otherwise(tlbpaspeoss.col("ndg"))
-                .as("ndg");
+        // ( fpasperd_out_distinct::cd_istituto is not null?
+        //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::ndg : fpasperd_out_distinct::ndg ) :
+        //      tlbpaspeoss::ndg ) as ndg
+        Column ndgCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
+                functions.coalesce(tlbpaspeoss.col("ndg"), fpasperdOutDistinct.col("ndg")))
+                .otherwise(tlbpaspeoss.col("ndg")).as("ndg");
 
-        Column dataContCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
-                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("datacont")).otherwise(
-                fpasperdOutDistinct.col("datacont"))).otherwise(tlbpaspeoss.col("datacont"))
-                .as("datacont");
+        // ( fpasperd_out_distinct::cd_istituto is not null?
+        //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::datacont : fpasperd_out_distinct::datacont ) :
+        //      tlbpaspeoss::datacont ) as datacont
+        Column dataContCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
+                functions.coalesce(tlbpaspeoss.col("datacont"), fpasperdOutDistinct.col("datacont")))
+                .otherwise(tlbpaspeoss.col("datacont")).as("datacont");
 
-        Column causaleCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
-                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("causale")).otherwise(
-                fpasperdOutDistinct.col("causale"))).otherwise(tlbpaspeoss.col("causale"))
-                .as("causale");
+        // ( fpasperd_out_distinct::cd_istituto is not null?
+        //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::causale : fpasperd_out_distinct::causale ) :
+        //      tlbpaspeoss::causale ) as causale
+        Column causaleCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
+                functions.coalesce(tlbpaspeoss.col("causale"), fpasperdOutDistinct.col("causale")))
+                .otherwise(tlbpaspeoss.col("causale")).as("causale");
 
-        Column importoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(), functions.when(
-                tlbpaspeoss.col("cd_istituto").isNotNull(), tlbpaspeoss.col("importo")).otherwise(
-                fpasperdOutDistinct.col("importo"))).otherwise(tlbpaspeoss.col("importo"))
-                .as("importo");
+        // ( fpasperd_out_distinct::cd_istituto is not null?
+        //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::importo : fpasperd_out_distinct::importo ) :
+        //      tlbpaspeoss::importo ) as importo
+        Column importoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
+                functions.coalesce(tlbpaspeoss.col("importo"),  fpasperdOutDistinct.col("importo")))
+                .otherwise(tlbpaspeoss.col("importo")).as("importo");
 
+        // ( fpasperd_out_distinct::cd_istituto is not null? fpasperd_out_distinct::codicebanca : NULL ) as codicebanca
         Column codiceBancaCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 fpasperdOutDistinct.col("codicebanca")).otherwise(null).as("codicebanca");
 
+        // ( fpasperd_out_distinct::cd_istituto is not null? fpasperd_out_distinct::ndgprincipale : NULL ) as ndgprincipale
         Column ndgPrincipaleCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 fpasperdOutDistinct.col("ndgprincipale")).otherwise(null).as("ndgprincipale");
 
+        // ( fpasperd_out_distinct::cd_istituto is not null? fpasperd_out_distinct::datainiziodef : NULL ) as datainiziodef
         Column dataInizioDefCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 fpasperdOutDistinct.col("datainiziodef")).otherwise(null).as("datainiziodef");
 
