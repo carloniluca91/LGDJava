@@ -1,11 +1,8 @@
 package steps;
 
-import org.apache.spark.sql.Column;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
-import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
@@ -57,7 +54,7 @@ public class Fpasperd extends AbstractStep{
         List<String> tlbpaspeColumns = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
         StructType tlbpaspeSchema = getDfSchema(tlbpaspeColumns);
 
-        String tlbpaspeCsv = getProperty("TLBPASPE_CSV");
+        String tlbpaspeCsv = getProperty("TLBPASPE_FILTER_CSV");
         String tlbpaspeCsvPath = Paths.get(fpasPerdInputDir, tlbpaspeCsv).toString();
         logger.info("tlbpaspeCsv:" + tlbpaspeCsv);
         logger.info("tlbpaspeCsvPath: " + tlbpaspeCsvPath);
@@ -86,8 +83,7 @@ public class Fpasperd extends AbstractStep{
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
         Column daysDiffColl = functions.datediff(
                 convertStringColToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                convertStringColToDateCol(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"))
-                .as("days_diff");
+                convertStringColToDateCol(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
 
         // list of columns to be selected from dataframe tlbpaspeFilter
         List<String> tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -99,15 +95,13 @@ public class Fpasperd extends AbstractStep{
         logger.info("tlbcidef columns to be selected: " + tlbcidefSelectCols.toString());
         selectCols.addAll(selectDfColumns(tlbcidef, tlbcidefSelectCols));
 
-        // add days_diff column
-        selectCols.add(daysDiffColl);
-
         // conversion to scala Seq
         Seq<Column> selectColsSeq = JavaConverters.asScalaIteratorConverter(selectCols.iterator()).asScala().toSeq();
 
         Dataset<Row> tlbcidefTlbpaspeFilterJoin = tlbpaspeFilter.join(tlbcidef, joinCondition, "left");
-        Dataset<Row> fpasperdBetweenGen = tlbcidefTlbpaspeFilterJoin.filter(dataContDataInizioDefFilterCol.and(
-                dataContDataFineDefFIlterCol)).select(selectColsSeq);
+        Dataset<Row> fpasperdBetweenGen = tlbpaspeFilter.join(tlbcidef, joinCondition, "left")
+                .filter(dataContDataInizioDefFilterCol.and(dataContDataFineDefFIlterCol))
+                .select(selectColsSeq).withColumn("days_diff", daysDiffColl);
 
         // 104
 
@@ -183,21 +177,20 @@ public class Fpasperd extends AbstractStep{
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
         daysDiffColl = functions.datediff(
                 convertStringColToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                convertStringColToDateCol(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"))
-                .as("days_diff");
+                convertStringColToDateCol(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
 
         // columns to be selected from dataframe fpasperdNullOut
         List<String> fpasperdNullOutSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
         List<Column> principFpasperdBetweenGenCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
 
-        // add columns to be selected from tlbcidef as wel as days_diff column
+        // add columns to be selected from tlbcidef
         principFpasperdBetweenGenCols.addAll(selectDfColumns(tlbcidef, tlbcidefSelectCols));
-        principFpasperdBetweenGenCols.add(daysDiffColl);
         Seq<Column> principFpasperdBetweenGenColsSeq = JavaConverters.asScalaIteratorConverter(principFpasperdBetweenGenCols
                 .iterator()).asScala().toSeq();
 
-        Dataset<Row> principFpasperdBetweenGen = fpasperdNullOut.join(tlbcidef, joinCondition, "left").filter(
-                dataContDataInizioDefFilterCol.and(dataContDataFineDefFIlterCol)).select(principFpasperdBetweenGenColsSeq);
+        Dataset<Row> principFpasperdBetweenGen = fpasperdNullOut.join(tlbcidef, joinCondition, "left")
+                .filter(dataContDataInizioDefFilterCol.and(dataContDataFineDefFIlterCol))
+                .select(principFpasperdBetweenGenColsSeq).withColumn("days_diff", daysDiffColl);
 
         // 222
 
@@ -257,61 +250,61 @@ public class Fpasperd extends AbstractStep{
 
         // 313
 
-        Dataset<Row> fpasperdOutDistinct = fpasperdBetweenOut.union(fpasperdOtherOut).union(principFpasperdBetweenOut)
-                .union(principFpasperdOtherOut).union(principFpasperdNullOut).distinct();
+        Dataset<Row> fpasperdOutDistinct = fpasperdBetweenOut.union(fpasperdOtherOut.union(principFpasperdBetweenOut
+                .union(principFpasperdOtherOut.union(principFpasperdNullOut)))).distinct();
 
         // 331
 
         // 336
 
-        String tlbpaspeossCsv = getProperty("TLBPASPEOSS");
+        String tlbpaspeossCsv = getProperty("TLBPASPEOSS_CSV");
         String tlbpaspeossCsvPath = Paths.get(fpasPerdInputDir, tlbpaspeossCsv).toString();
         logger.info("tlbpaspeossCsv: " + tlbpaspeossCsv);
         logger.info("tlbpaspeossCsvPath: " + tlbpaspeossCsvPath);
 
-        List<String> tlbpaspeossCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
+        // slightly change the field names for tlbpaspeoss in order to avoid implicit coalesce operator
+        // triggered by performing "full_outer" join on columns with same name
+        List<String> tlbpaspeossCols = Arrays.asList("_cd_istituto", "_ndg", "_datacont", "_causale", "_importo");
         StructType tlbpaspeossSchema = getDfSchema(tlbpaspeossCols);
         Dataset<Row> tlbpaspeoss = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbpaspeossSchema).csv(tlbpaspeossCsvPath);
         // 344
 
-
         // 346
-
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::cd_istituto : fpasperd_out_distinct::cd_istituto ):
         //      tlbpaspeoss::cd_istituto ) as cd_istituto
         Column cdIstitutoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("cd_istituto"), fpasperdOutDistinct.col("cd_istituto")))
-                .otherwise(tlbpaspeoss.col("cd_istituto")).as("cd_istituto");
+                functions.coalesce(tlbpaspeoss.col("_cd_istituto"), fpasperdOutDistinct.col("cd_istituto")))
+                .otherwise(tlbpaspeoss.col("_cd_istituto")).as("cd_istituto");
 
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::ndg : fpasperd_out_distinct::ndg ) :
         //      tlbpaspeoss::ndg ) as ndg
         Column ndgCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("ndg"), fpasperdOutDistinct.col("ndg")))
-                .otherwise(tlbpaspeoss.col("ndg")).as("ndg");
+                functions.coalesce(tlbpaspeoss.col("_ndg"), fpasperdOutDistinct.col("ndg")))
+                .otherwise(tlbpaspeoss.col("_ndg")).as("ndg");
 
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::datacont : fpasperd_out_distinct::datacont ) :
         //      tlbpaspeoss::datacont ) as datacont
         Column dataContCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("datacont"), fpasperdOutDistinct.col("datacont")))
-                .otherwise(tlbpaspeoss.col("datacont")).as("datacont");
+                functions.coalesce(tlbpaspeoss.col("_datacont"), fpasperdOutDistinct.col("datacont")))
+                .otherwise(tlbpaspeoss.col("_datacont")).as("datacont");
 
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::causale : fpasperd_out_distinct::causale ) :
         //      tlbpaspeoss::causale ) as causale
         Column causaleCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("causale"), fpasperdOutDistinct.col("causale")))
-                .otherwise(tlbpaspeoss.col("causale")).as("causale");
+                functions.coalesce(tlbpaspeoss.col("_causale"), fpasperdOutDistinct.col("causale")))
+                .otherwise(tlbpaspeoss.col("_causale")).as("causale");
 
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::importo : fpasperd_out_distinct::importo ) :
         //      tlbpaspeoss::importo ) as importo
         Column importoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("importo"),  fpasperdOutDistinct.col("importo")))
-                .otherwise(tlbpaspeoss.col("importo")).as("importo");
+                functions.coalesce(tlbpaspeoss.col("_importo"),  fpasperdOutDistinct.col("importo")))
+                .otherwise(tlbpaspeoss.col("_importo")).as("importo");
 
         // ( fpasperd_out_distinct::cd_istituto is not null? fpasperd_out_distinct::codicebanca : NULL ) as codicebanca
         Column codiceBancaCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
@@ -325,11 +318,12 @@ public class Fpasperd extends AbstractStep{
         Column dataInizioDefCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 fpasperdOutDistinct.col("datainiziodef")).otherwise(null).as("datainiziodef");
 
-        joinColumns = Arrays.asList("cd_istituto", "ndg", "datacont");
-        joinColumnsSeq = JavaConverters.asScalaIteratorConverter(joinColumns.iterator()).asScala().toSeq();
-        Dataset<Row> paspePaspeossGenDist = fpasperdOutDistinct.join(tlbpaspeoss, joinColumnsSeq, "full_outer")
-                .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol,
-                        ndgPrincipaleCol, dataInizioDefCol);
+        joinCondition = fpasperdOutDistinct.col("cd_istituto").equalTo(tlbpaspeoss.col("_cd_istituto"))
+                .and(fpasperdOutDistinct.col("ndg").equalTo(tlbpaspeoss.col("_ndg")))
+                .and(fpasperdOutDistinct.col("datacont").equalTo(tlbpaspeoss.col("_datacont")));
+
+        Dataset<Row> paspePaspeossGenDist = fpasperdOutDistinct.join(tlbpaspeoss, joinCondition, "full_outer")
+                .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol, ndgPrincipaleCol, dataInizioDefCol);
 
         String fpasperdOutDir = getProperty("FPASPERD_OUTPUT_DIR");
         String paspePaspeossGenDistCsv = getProperty("PASPE_PASPEOSS_GEN_DIST_CSV");
@@ -339,7 +333,7 @@ public class Fpasperd extends AbstractStep{
         String paspePaspeossGenDistCsvPath = Paths.get(fpasperdOutDir, paspePaspeossGenDistCsv).toString();
         logger.info("paspePaspeossGenDistCsvPath: " + paspePaspeossGenDistCsvPath);
 
-        paspePaspeossGenDist.write().format(csvFormat).option("delimiter", ",").csv(paspePaspeossGenDistCsvPath);
+        paspePaspeossGenDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(paspePaspeossGenDistCsvPath);
         // 379
     }
 }
