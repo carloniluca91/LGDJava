@@ -52,8 +52,6 @@ class CicliLavStep1 extends AbstractStep{
 
     public void run(){
 
-        logger.info("dataDa: " + dataDa + ", dataA: " + dataA);
-
         // retrieve csv_format, input data directory and file name from configuration.properties file
         String csvFormat = getProperty("csv_format");
         String ciclilavStep1InputDir = getProperty("CICLILAV_STEP1_INPUT_DIR");
