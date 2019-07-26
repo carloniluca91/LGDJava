@@ -101,11 +101,12 @@ public class Posaggr extends AbstractStep {
         List<String> joinColumnList = Arrays.asList("dt_riferimento", "cd_istituto", "ndg");
         Seq<String> joinColumnSeq = JavaConverters.asScalaIteratorConverter(joinColumnList.iterator()).asScala().toSeq();
 
-        List<String> selectColumnNames = Arrays.asList("dt_riferimento", "cd_istituto", "ndg", "c_key_aggr", "tipo_segmne_aggr");
+        List<String> selectColumnNames = Arrays.asList(
+                "dt_riferimento", "cd_istituto", "ndg", "c_key_aggr", "tipo_segmne_aggr", "segmento", "tp_ndg");
         List<Column> selectColumnList = selectDfColumns(tlbcompTlbaggr, selectColumnNames);
 
         // TRIM(tblcomp_tlbaggr::tp_ndg) as tp_ndg
-        selectColumnList.add(functions.trim(tlbcompTlbaggr.col("tp_ndg")).as("tp_ndg"));
+        // selectColumnList.add(functions.trim(tlbcompTlbaggr.col("tp_ndg")).as("tp_ndg"));
 
         selectColumnNames = Arrays.asList("bo_acco", "bo_util", "tot_add_sosp", "tot_val_intr", "ca_acco", "ca_util",
                 "util_cassa", "fido_op_cassa", "utilizzo_titoli", "esposizione_titoli");
@@ -141,18 +142,30 @@ public class Posaggr extends AbstractStep {
         sumWindowColumns.put("esposizione_titoli", "esposizione_titoli");
 
         // GROUP tblcomp_tlbaggr_tlbposi BY (dt_riferimento, cd_istituto, c_key_aggr, tipo_segmne_aggr)
-        List<String> partitionByColumnList = Arrays.asList("dt_riferimento", "cd_istituto", "c_key_aggr", "tipo_segmne_aggr");
-        List<Column> partitionByCols = selectDfColumns(tblcompTlbaggrTlbposi, partitionByColumnList);
-        Seq<Column> partitionByColumnSeq = JavaConverters.asScalaIteratorConverter(partitionByCols.iterator()).asScala().toSeq();
-        WindowSpec w = Window.partitionBy(partitionByColumnSeq);
+        WindowSpec w = Window.partitionBy(tblcompTlbaggrTlbposi.col("dt_riferimento"),
+                tblcompTlbaggrTlbposi.col("cd_istituto"), tblcompTlbaggrTlbposi.col("c_key_aggr"),
+                        tblcompTlbaggrTlbposi.col("tipo_segmne_aggr"));
 
-        selectColumnList = partitionByCols;
-        selectColumnList.add(tblcompTlbaggrTlbposi.col("segmento"));
-        selectColumnList.add(tblcompTlbaggrTlbposi.col("tp_ndg"));
-        selectColumnList.addAll(windowSum(sumWindowColumns, w));
+        /* group.dt_riferimento,
+            group.cd_istituto,
+            group.c_key_aggr,
+            group.tipo_segmne_aggr
+         */
+        List<Column> tblcompTlbaggrTlbposiSelectList = selectDfColumns(tblcompTlbaggrTlbposi, Arrays.asList("dt_riferimento",
+                "cd_istituto", "c_key_aggr", "tipo_segmne_aggr"));
 
-        selectColumnSeq = JavaConverters.asScalaIteratorConverter(selectColumnList.iterator()).asScala().toSeq();
-        Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(selectColumnSeq);
+        /*
+        FLATTEN(tblcomp_tlbaggr_tlbposi.segmento) as segmento,
+		FLATTEN(tblcomp_tlbaggr_tlbposi.tp_ndg) as tp_ndg
+         */
+        tblcompTlbaggrTlbposiSelectList.add(tblcompTlbaggrTlbposi.col("segmento"));
+        tblcompTlbaggrTlbposiSelectList.add(functions.trim(tblcompTlbaggrTlbposi.col("tp_ndg")).as("tp_ndg"));
+        List<Column> windowSumCols = windowSum(tblcompTlbaggrTlbposi, sumWindowColumns, w);
+        tblcompTlbaggrTlbposiSelectList.addAll(windowSumCols);
+
+        Seq<Column> tblcompTlbaggrTlbposiSelectListselectColumnSeq =
+                JavaConverters.asScalaIteratorConverter(selectColumnList.iterator()).asScala().toSeq();
+        Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(tblcompTlbaggrTlbposiSelectListselectColumnSeq);
 
         String posaggrOutputDir = getProperty("POSAGGR_OUTPUT_DIR");
         String posaggrCsvPath = getProperty("POSAGGR_CSV");
@@ -169,14 +182,14 @@ public class Posaggr extends AbstractStep {
                 .cast(DataTypes.DoubleType).as(columnName);
     }
 
-    private List<Column> windowSum(Map <String,String> columnMap, WindowSpec w){
+    private List<Column> windowSum(Dataset<Row> df, Map <String,String> columnMap, WindowSpec w){
 
         List<Column> columnList = new ArrayList<>();
         Set<Map.Entry<String, String>> entryList = columnMap.entrySet();
 
         for (Map.Entry<String, String> entry: entryList){
 
-            columnList.add(functions.sum(entry.getKey()).over(w).alias(entry.getValue()));
+            columnList.add(functions.sum(df.col(entry.getKey())).over(w).alias(entry.getValue()));
         }
         return columnList;
     }
