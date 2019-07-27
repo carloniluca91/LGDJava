@@ -8,6 +8,8 @@ import org.apache.spark.sql.types.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 abstract class StepUtils {
 
@@ -83,7 +85,7 @@ abstract class StepUtils {
         return functions.least(column1Ts, column2Ts);
     }
 
-    // create a list of columns to select from the given dataset
+    // create a list of columns to be selected from the given dataset
     List<Column> selectDfColumns(Dataset<Row> df, List<String> columnNames){
 
         List<Column> dfCols = new ArrayList<Column>();
@@ -93,6 +95,19 @@ abstract class StepUtils {
 
         return dfCols;
 
+    }
+
+    // create a list of columns to be selected from the given dataset, giving an alias to each column
+    List<Column> selectDfColumns(Dataset<Row> df, Map<String,String> columnMap){
+
+        List<Column> dfCols = new ArrayList<Column>();
+        Set<Map.Entry<String, String>> entryList = columnMap.entrySet();
+        for (Map.Entry<String, String> entry: entryList){
+
+            dfCols.add(df.col(entry.getKey()).alias(entry.getValue()));
+        }
+
+        return dfCols;
     }
 }
 

@@ -13,8 +13,6 @@ import java.util.List;
 
 public class Fpasperd extends AbstractStep{
 
-    Fpasperd(String[] args){}
-
     @Override
     public void run() {
 

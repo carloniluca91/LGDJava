@@ -13,8 +13,6 @@ import java.util.*;
 
 public class Posaggr extends AbstractStep {
 
-    Posaggr(String[] args){}
-
     @Override
     public void run() {
 
@@ -186,7 +184,6 @@ public class Posaggr extends AbstractStep {
 
         List<Column> columnList = new ArrayList<>();
         Set<Map.Entry<String, String>> entryList = columnMap.entrySet();
-
         for (Map.Entry<String, String> entry: entryList){
 
             columnList.add(functions.sum(df.col(entry.getKey())).over(w).alias(entry.getValue()));

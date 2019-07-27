@@ -4,7 +4,7 @@ public class PosaggrMain {
 
     public static void main(String[] args){
 
-        Posaggr posaggr = new Posaggr(args);
+        Posaggr posaggr = new Posaggr();
         posaggr.run();
     }
 }
