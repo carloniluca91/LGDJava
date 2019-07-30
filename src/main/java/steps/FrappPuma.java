@@ -30,9 +30,11 @@ public class FrappPuma extends AbstractStep{
             dataA = commandLine.getOptionValue("dataA");
         }
         catch (ParseException e) {
-            e.printStackTrace();
-        }
 
+            // assign some default values
+            logger.info("ParseException: " + e.getMessage());
+            dataA = "20190101";
+        }
     }
 
 
@@ -98,12 +100,28 @@ public class FrappPuma extends AbstractStep{
                 functions.substring(tlbgaran.col("dt_riferimento"), 0, 6), "yyyyMM").$less$eq(
                         getUnixTimeStampCol(subStringLeastDateCol, "yyyyMM"));
 
+        /*
+          tlbgaran::cd_istituto			 AS cd_isti
+         ,tlbgaran::ndg					 AS ndg
+         ,tlbgaran::sportello			 AS sportello
+         ,tlbgaran::dt_riferimento		 AS dt_riferimento
+         ,tlbgaran::conto_esteso		 AS conto_esteso
+         ,tlbgaran::cd_puma2			 AS cd_puma2
+         ,tlbgaran::ide_garanzia		 AS ide_garanzia
+         ,tlbgaran::importo				 AS importo
+         ,tlbgaran::fair_value			 AS fair_value
+         ,cicli_ndg_princ::codicebanca	 AS codicebanca
+         ,cicli_ndg_princ::ndgprincipale AS ndgprincipale
+         ,cicli_ndg_princ::datainiziodef AS	datainiziodef
+         */
         List<Column> selectColsList = new ArrayList<>(Collections.singletonList(tlbgaran.col("cd_istituto").alias("cd_isti")));
+
         List<String> tlbgaranSelectColNames = Arrays.asList("ndg", "sportello", "dt_riferimento", "conto_esteso",
                 "cd_puma2", "ide_garanzia", "importo", "fair_value");
-        List<String> cicliNdgSelectColNames = Arrays.asList("codicebanca", "sportello", "dt_riferimento");
+        List<String> cicliNdgSelectColNames = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef");
         selectColsList.addAll(selectDfColumns(tlbgaran, tlbgaranSelectColNames));
         selectColsList.addAll(selectDfColumns(cicliNdgPrinc, cicliNdgSelectColNames));
+
         Seq<Column> selectColsSeq = JavaConverters.asScalaIteratorConverter(selectColsList.iterator()).asScala().toSeq();
 
         Dataset<Row> tlbcidefTlbgaranPrinc = tlbgaran.join(cicliNdgPrinc, joinCondition, "inner").filter(
