@@ -1,27 +1,31 @@
-package steps;
+package steps.lgdstep;
 
 import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
+import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
 
-class CicliLavStep1 extends AbstractStep{
+public class CicliLavStep1 extends AbstractStep {
+
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     // required parameters
     private String dataDa;
     private String dataA;
 
-    CicliLavStep1(String[] args) {
+    public CicliLavStep1(String[] args) {
 
         // define options dataDa and dataA and set them as required
-        Option dataDaOption = new Option("dd", "dataDa", true, "parametro dataDa");
-        Option dataAOption = new Option("da", "dataA", true, "parametro dataA");
+        Option dataDaOption = new Option("dd", "dataDa", true, "parametro $data_da");
+        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
         dataDaOption.setRequired(true);
         dataAOption.setRequired(true);
 
@@ -38,6 +42,7 @@ class CicliLavStep1 extends AbstractStep{
             CommandLine cmd = parser.parse(options, args);
             dataDa = cmd.getOptionValue("dataDa");
             dataA = cmd.getOptionValue("dataA");
+            logger.info("Arguments parsed correctly");
 
         } catch (ParseException e) {
 

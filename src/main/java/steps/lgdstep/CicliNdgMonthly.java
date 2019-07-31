@@ -1,4 +1,4 @@
-package steps;
+package steps.lgdstep;
 
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -9,11 +9,12 @@ import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.*;
+import steps.abstractstep.AbstractStep;
 
 import java.util.logging.Logger;
 
 
-public class CicliNdgMonthly extends AbstractStep{
+public class CicliNdgMonthly extends AbstractStep {
 
     private final Options options = new Options();
     private final Logger logger = Logger.getLogger(CicliNdgMonthly.class.getName());

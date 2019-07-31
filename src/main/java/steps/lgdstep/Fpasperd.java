@@ -1,4 +1,4 @@
-package steps;
+package steps.lgdstep;
 
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
@@ -6,12 +6,16 @@ import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
+import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
-public class Fpasperd extends AbstractStep{
+public class Fpasperd extends AbstractStep {
+
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     @Override
     public void run() {
@@ -39,7 +43,7 @@ public class Fpasperd extends AbstractStep{
 
         // // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
         // tlbcidef::datafinedef in format "yyyyMMdd"
-        Column dataFineDefCol = convertStringColToDateCol(tlbcidefLoad.col("datafinedef"),
+        Column dataFineDefCol = castToDateCol(tlbcidefLoad.col("datafinedef"),
                 "yyyyMMdd", "yyyy-MM-dd");
         dataFineDefCol = functions.date_format(functions.add_months(dataFineDefCol, 2), "yyyyMMdd").as("datafinedef");
 
@@ -80,8 +84,8 @@ public class Fpasperd extends AbstractStep{
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
         Column daysDiffColl = functions.datediff(
-                convertStringColToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                convertStringColToDateCol(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
+                castToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
+                castToDateCol(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
 
         // list of columns to be selected from dataframe tlbpaspeFilter
         List<String> tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -174,8 +178,8 @@ public class Fpasperd extends AbstractStep{
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
         daysDiffColl = functions.datediff(
-                convertStringColToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                convertStringColToDateCol(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
+                castToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
+                castToDateCol(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
 
         // columns to be selected from dataframe fpasperdNullOut
         List<String> fpasperdNullOutSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");

@@ -1,4 +1,4 @@
-package steps;
+package steps.lgdstep;
 
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -7,6 +7,7 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
+import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -17,12 +18,7 @@ import java.util.logging.Logger;
 
 public class RaccSoff extends AbstractStep {
 
-    private Logger logger;
-
-    RaccSoff(){
-
-        logger = Logger.getLogger(RaccSoff.class.getName());
-    }
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     @Override
     public void run() {

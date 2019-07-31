@@ -1,30 +1,30 @@
-package steps;
+package steps.lgdstep;
 
 import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
-import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
-import scala.collection.JavaConverters;
-import scala.collection.Seq;
+import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
-public class CicliPreview extends AbstractStep{
+public class CicliPreview extends AbstractStep {
+
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     // required parameters
     private String dataA;
     private String ufficio;
 
-    CicliPreview(String[] args){
+    public CicliPreview(String[] args){
 
         // define options dataA, ufficio and set them as required
-        Option dataAOption = new Option("da", "dataA", true, "parametro dataA");
-        Option ufficioOption = new Option("u", "ufficio", true, "parametro ufficio");
+        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
+        Option ufficioOption = new Option("u", "ufficio", true, "parametro $ufficio");
         dataAOption.setRequired(true);
         ufficioOption.setRequired(true);
 
@@ -41,6 +41,7 @@ public class CicliPreview extends AbstractStep{
             CommandLine cmd = commandLineParser.parse(options, args);
             dataA = cmd.getOptionValue("dataA");
             ufficio = cmd.getOptionValue("ufficio");
+            logger.info("Arguments parsed correctly");
 
         } catch (ParseException e) {
 
@@ -200,27 +201,27 @@ public class CicliPreview extends AbstractStep{
          */
 
         // ToString(ToDate(datainiziodef,'yyyyMMdd'),'yyyy-MM-dd') as datainiziodef
-        Column dataInizioDefCol = convertStringColToDateCol(
+        Column dataInizioDefCol = castToDateCol(
                 fposiBase.col("datainiziodef"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziodef");
 
-        // convertStringColToDateCol(fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef"),
-        Column dataFineDefCol = convertStringColToDateCol(
+        // castToDateCol(fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef"),
+        Column dataFineDefCol = castToDateCol(
                 fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef");
 
-        // convertStringColToDateCol(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef"),
-        Column dataInizioPdCol = convertStringColToDateCol(
+        // castToDateCol(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef"),
+        Column dataInizioPdCol = castToDateCol(
                 fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
 
-        // convertStringColToDateCol(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc"),
-        Column dataInizioIncCol = convertStringColToDateCol(
+        // castToDateCol(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc"),
+        Column dataInizioIncCol = castToDateCol(
                 fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
 
-        // convertStringColToDateCol(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt"),
-        Column dataInizioRistruttCol = convertStringColToDateCol(
+        // castToDateCol(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt"),
+        Column dataInizioRistruttCol = castToDateCol(
                 fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
 
-        // convertStringColToDateCol(fposiBase.col("datasofferenza"), "yyyyMMdd", "yyyy-MM-dd").as("datasofferenza"),
-        Column dataSofferenzaCol = convertStringColToDateCol(
+        // castToDateCol(fposiBase.col("datasofferenza"), "yyyyMMdd", "yyyy-MM-dd").as("datasofferenza"),
+        Column dataSofferenzaCol = castToDateCol(
                 fposiBase.col("datasofferenza"), "yyyyMMdd", "yyyy-MM-dd").as("datasofferenza");
 
         // define WindowSpec in order to compute aggregates on fposiBase without grouping

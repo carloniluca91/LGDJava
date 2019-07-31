@@ -1,19 +1,24 @@
-package steps;
+package steps.lgdstep;
 
 import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
+import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.Logger;
 
-public class FrappPuma extends AbstractStep{
+public class FrappPuma extends AbstractStep {
 
+    private Logger logger = Logger.getLogger(this.getClass().getName());
+
+    // required parameters
     private String dataA;
 
-    FrappPuma(String[] args){
+    public FrappPuma(String[] args){
 
         // define option for $data_a
         Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
@@ -28,6 +33,7 @@ public class FrappPuma extends AbstractStep{
 
             CommandLine commandLine = commandLineParser.parse(options, args);
             dataA = commandLine.getOptionValue("dataA");
+            logger.info("Arguments parsed correctly");
         }
         catch (ParseException e) {
 
@@ -90,7 +96,7 @@ public class FrappPuma extends AbstractStep{
                         0,6 );
         */
         Column leastDateCol = functions.least(getUnixTimeStampCol(
-                functions.add_months(convertStringColToDateCol(tlbcidef.col("datafinedef"),
+                functions.add_months(castToDateCol(tlbcidef.col("datafinedef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -1), "yyyy-MM-dd"),
                 getUnixTimeStampCol(functions.lit(dataA), "yyyy-MM-dd"));
 

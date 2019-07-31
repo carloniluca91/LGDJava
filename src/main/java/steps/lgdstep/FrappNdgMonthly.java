@@ -1,4 +1,4 @@
-package steps;
+package steps.lgdstep;
 
 import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
@@ -6,24 +6,28 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
+import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Logger;
 
-public class FrappNdgMonthly extends AbstractStep{
+public class FrappNdgMonthly extends AbstractStep {
+
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     // required parameters
     private String dataA;
     private int numeroMesi1;
     private int numeroMesi2;
 
-    FrappNdgMonthly(String[] args){
+    public FrappNdgMonthly(String[] args){
 
         // define option dataA, periodo, numeroMesi1, numeroMesi2
-        Option dataAOption = new Option("da", "dataA", true, "parametro dataA");
-        Option numeroMesi1Option = new Option("nm_uno", "numero_mesi_1", true, "parametro numero_mesi_1");
-        Option numeroMesi2Option = new Option("nm_due", "numero_mesi_2", true, "parametro numero_mesi_2");
+        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
+        Option numeroMesi1Option = new Option("nm_uno", "numero_mesi_1", true, "parametro $numero_mesi_1");
+        Option numeroMesi2Option = new Option("nm_due", "numero_mesi_2", true, "parametro $numero_mesi_2");
 
         // set them as required
         dataAOption.setRequired(true);
@@ -46,10 +50,7 @@ public class FrappNdgMonthly extends AbstractStep{
             dataA = cmd.getOptionValue("dataA");
             numeroMesi1 = Integer.parseInt(cmd.getOptionValue("numero_mesi_1"));
             numeroMesi2 = Integer.parseInt(cmd.getOptionValue("numero_mesi_2"));
-
-            logger.info("dataA: " + dataA);
-            logger.info("numeroMesi1: " + numeroMesi1);
-            logger.info("numeroMesi2: " + numeroMesi2);
+            logger.info("Arguments parsed correctly");
 
         }
         catch (ParseException e) {
@@ -114,7 +115,7 @@ public class FrappNdgMonthly extends AbstractStep{
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         Column dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(convertStringColToDateCol(cicliNdgPrinc.col("datainiziodef"),
+                getUnixTimeStampCol(functions.add_months(castToDateCol(cicliNdgPrinc.col("datainiziodef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
 
         /*
@@ -135,7 +136,7 @@ public class FrappNdgMonthly extends AbstractStep{
         // dataFineDefCol in format "yyyy-MM-dd" due to add_months
         Column dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
                 // datafinedef -1 month in format "yyyy-MM-dd"
-                functions.add_months(convertStringColToDateCol(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
+                functions.add_months(castToDateCol(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
                         "yyyy-MM-dd"), -1),
                 // dataA, already in format "yyyy-MM-dd"
                 functions.lit(dataA), "yyyy-MM-dd"),
@@ -173,13 +174,13 @@ public class FrappNdgMonthly extends AbstractStep{
 
         // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(convertStringColToDateCol(cicliNdgColl.col("datainiziodef"),
+                getUnixTimeStampCol(functions.add_months(castToDateCol(cicliNdgColl.col("datainiziodef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
 
         // dataFineDefCol in format "yyyy-MM-dd" due to add_months
         dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
                 // datafinedef -1 in format "yyyy-MM-dd"
-                functions.add_months(convertStringColToDateCol(cicliNdgColl.col("datafinedef"), "yyyyMMdd",
+                functions.add_months(castToDateCol(cicliNdgColl.col("datafinedef"), "yyyyMMdd",
                         "yyyy-MM-dd"), -1),
                 // dataA, already in format "yyyy-MM-dd"
                 functions.lit(dataA), "yyyy-MM-dd"),

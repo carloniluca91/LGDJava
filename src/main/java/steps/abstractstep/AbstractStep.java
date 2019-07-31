@@ -1,4 +1,4 @@
-package steps;
+package steps.abstractstep;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -8,18 +8,19 @@ import java.util.logging.Logger;
 
 import org.apache.spark.sql.SparkSession;
 
-abstract class AbstractStep extends StepUtils implements StepInterface{
+
+public abstract class AbstractStep extends StepUtils implements StepInterface {
 
     // initialize logger and sparSession
     final Logger logger = Logger.getLogger(AbstractStep.class.getName());
-    final static SparkSession sparkSession = new SparkSession.Builder()
+    protected final static SparkSession sparkSession = new SparkSession.Builder()
             .appName("LGDApp").master("local").getOrCreate();
 
 
     private static Properties configProperties = new Properties();
     private static final String CONFIG_FILE_PATH = "src/main/resources/config.properties";
 
-    AbstractStep(){
+    protected AbstractStep(){
 
         try{
             configProperties = new Properties();
@@ -32,7 +33,7 @@ abstract class AbstractStep extends StepUtils implements StepInterface{
 
     }
 
-    String getProperty(String key) {
+    public String getProperty(String key) {
         return configProperties.getProperty(key);
     }
 

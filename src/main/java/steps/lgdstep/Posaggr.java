@@ -1,17 +1,20 @@
-package steps;
+package steps.lgdstep;
 
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
-import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
 import scala.collection.Seq;
+import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class Posaggr extends AbstractStep {
+
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     @Override
     public void run() {
@@ -172,22 +175,5 @@ public class Posaggr extends AbstractStep {
 
         posaggr.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(posaggrOutputDir, posaggrCsvPath).toString());
-    }
-
-    private Column replaceAndConvertToDouble(Dataset<Row> df, String columnName, String oldString, String newString){
-
-        return functions.regexp_replace(df.col(columnName), oldString, newString)
-                .cast(DataTypes.DoubleType).as(columnName);
-    }
-
-    private List<Column> windowSum(Dataset<Row> df, Map <String,String> columnMap, WindowSpec w){
-
-        List<Column> columnList = new ArrayList<>();
-        Set<Map.Entry<String, String>> entryList = columnMap.entrySet();
-        for (Map.Entry<String, String> entry: entryList){
-
-            columnList.add(functions.sum(df.col(entry.getKey())).over(w).alias(entry.getValue()));
-        }
-        return columnList;
     }
 }
