@@ -5,7 +5,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.types.StructType;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
@@ -47,7 +46,7 @@ public class RaccSoff extends AbstractStep {
         columnMap.put("data_primo_fine_me", "DATA_FINE_PRIMO_MESE_RIC");
 
         List<Column> dllabSelectList = selectDfColumns(dllab, columnMap);
-        Seq<Column> dllabSelectSeq = JavaConverters.asScalaIteratorConverter(dllabSelectList.iterator()).asScala().toSeq();
+        Seq<Column> dllabSelectSeq = toScalaSeq(dllabSelectList);
 
         String raccSoffOutputDirPath = getProperty("RACC_SOFF_OUTPUT_DIR");
         logger.info("raccSoffOutputDirPath: " + raccSoffOutputDirPath);

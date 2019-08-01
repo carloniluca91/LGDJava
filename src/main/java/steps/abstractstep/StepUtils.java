@@ -40,7 +40,6 @@ abstract class StepUtils {
         for (String columnName: columnNames){
 
             schema = schema.add(new StructField(columnName, DataTypes.StringType, true, Metadata.empty()));
-
         }
 
         return schema;

@@ -74,38 +74,27 @@ public class SofferenzePreview extends AbstractStep {
 
         // 37
 
-        List<Column> soffLoadSelectList = new ArrayList<>();
-        soffLoadSelectList.add(functions.lit(ufficio).as("ufficio"));
+        // '$ufficio'             as ufficio
+        Column ufficioCol = functions.lit(ufficio).as("ufficio");
 
         // ToString(ToDate('$data_a','yyyyMMdd'),'yyyy-MM-dd') as datarif
         Column dataRifCol = castToDateCol(functions.lit(dataA), "yyyyMMdd", "yyyy-MM-dd").as("datarif");
-        soffLoadSelectList.add(dataRifCol);
-
-        soffLoadSelectList.add(soffLoad.col("istituto"));
-        soffLoadSelectList.add(soffLoad.col("ndg"));
-        soffLoadSelectList.add(soffLoad.col("numerosofferenza"));
-        soffLoadSelectList.add(soffLoad.col("datainizio"));
-        soffLoadSelectList.add(soffLoad.col("datafine"));
-        soffLoadSelectList.add(soffLoad.col("statopratica"));
 
         /*
         (double)REPLACE(saldoposizione,',','.')         as saldoposizione,
         (double)REPLACE(saldoposizionecontab,',','.')   as saldoposizionecontab
          */
+
         Column saldoPosizioneCol = replaceAndConvertToDouble(soffLoad, "saldoposizione", ",", ".").as("saldoposizione");
         Column saldoPosizioneContabCol = replaceAndConvertToDouble(soffLoad, "saldoposizionecontab", ",", ".").as("saldoposizionecontab");
-        soffLoadSelectList.add(saldoPosizioneCol);
-        soffLoadSelectList.add(saldoPosizioneContabCol);
 
-        Seq<Column> soffLoadSelectSeq = toScalaSeq(soffLoadSelectList);
-        Dataset<Row> soffBase = soffLoad.select(soffLoadSelectSeq);
+        Dataset<Row> soffBase = soffLoad.select(ufficioCol, dataRifCol, soffLoad.col("istituto"), soffLoad.col("ndg"),
+                soffLoad.col("numerosofferenza"), soffLoad.col("datainizio"), soffLoad.col("datafine"),
+                soffLoad.col("statopratica"), saldoPosizioneCol, saldoPosizioneContabCol);
 
         // 49
 
         // 51
-
-        List<Column> soffBaseSelectList = new ArrayList<>(
-                selectDfColumns(soffBase, Arrays.asList("ufficio", "datarif", "istituto", "ndg", "numerosofferenza")));
 
         /*
         ToString(ToDate(datainizio,'yyyyMMdd'),'yyyy-MM-dd') as datainizio,
@@ -113,11 +102,6 @@ public class SofferenzePreview extends AbstractStep {
          */
         Column dataInizioCol = castToDateCol(soffBase.col("datainizio"), "yyyyMMdd", "yyyy-MM-dd").alias("datainizio");
         Column dataFineCol = castToDateCol(soffBase.col("datafine"), "yyyyMMdd", "yyyy-MM-dd").alias("datafine");
-
-        soffBaseSelectList.add(dataInizioCol);
-        soffBaseSelectList.add(dataFineCol);
-
-        soffBaseSelectList.add(soffBase.col("statopratica"));
 
         // GROUP soff_base BY ( istituto, ndg, numerosofferenza );
         WindowSpec soffGen2Window = Window.partitionBy(
@@ -127,13 +111,14 @@ public class SofferenzePreview extends AbstractStep {
         SUM(soff_base.saldoposizione)        as saldoposizione,
         SUM(soff_base.saldoposizionecontab)  as saldoposizionecontab
          */
-        Map<String, String> windowSumMap = new HashMap<>();
-        windowSumMap.put("saldoposizione", "saldoposizione");
-        windowSumMap.put("saldoposizionecontab", "saldoposizionecontab");
-        soffBaseSelectList.addAll(windowSum(soffBase, windowSumMap, soffGen2Window));
 
-        Seq<Column> soffBaseSelectSeq = toScalaSeq(soffBaseSelectList);
-        Dataset<Row> soffGen2 = soffBase.select(soffBaseSelectSeq);
+        Column saldoPosizioneSumCol = functions.sum(soffBase.col("saldoposizione")).over(soffGen2Window).as("saldoposizione");
+        Column saldoPosizioneContabSumCol = functions.sum(soffBase.col("saldoposizionecontab")).over(soffGen2Window).as("saldoposizionecontab");
+
+        Dataset<Row> soffGen2 = soffBase.select(soffBase.col("ufficio"), soffBase.col("datarif"),
+                soffBase.col("istituto"), soffBase.col("ndg"), soffBase.col("numerosofferenza"),
+                dataInizioCol, dataFineCol, soffBase.col("statopratica"),
+                saldoPosizioneSumCol, saldoPosizioneContabSumCol);
 
         String sofferenzePreviewOutputDir = getProperty("SOFFERENZE_PREVIEW_OUTPUT_DIR");
         String soffGen2Path = getProperty("SOFF_GEN_2");
@@ -149,25 +134,14 @@ public class SofferenzePreview extends AbstractStep {
         // 89
 
         // GROUP soff_base BY ( ufficio, datarif, istituto, SUBSTRING(datainizio,0,6), SUBSTRING(datafine,0,6), statopratica );
-        List<Column> groupByList = new ArrayList<>(selectDfColumns(soffBase, Arrays.asList("ufficio", "datarif", "istituto")));
+        Column meseInizioCol = functions.substring(soffBase.col("datainizio"), 0, 6).as("mese_inizio");
+        Column meseFineCol = functions.substring(soffBase.col("datafine"), 0, 6).as("mese_fine");
 
-        /*
-       SUBSTRING(group.$3,0,6) as mese_inizio,
-       SUBSTRING(group.$4,0,6)   as mese_fine
-         */
-
-        Column meseInizioCol = functions.substring(soffBase.col("datainizio"), 0, 7).as("mese_inizio");
-        Column meseFineCol = functions.substring(soffBase.col("datafine"), 0, 7).as("mese_fine");
-        groupByList.add(meseInizioCol);
-        groupByList.add(meseFineCol);
-
-        groupByList.add(soffBase.col("statopratica"));
-
-        Seq<Column> groubBySeq = toScalaSeq(groupByList);
-        Dataset<Row> soffSintGen2 = soffBase.groupBy(groubBySeq).agg(
-                functions.count("saldoposizione").as("row_count"),
-                functions.sum("saldoposizione").as("saldoposizione"),
-                functions.sum("saldoposizionecontab").as("saldoposizionecontab"));
+        Dataset<Row> soffSintGen2 = soffBase.groupBy(soffBase.col("ufficio"), soffBase.col("datarif"),
+                soffBase.col("istituto"), meseInizioCol, meseFineCol, soffBase.col("statopratica"))
+                .agg(functions.count(soffBase.col("saldoposizione")).as("row_count"),
+                        functions.sum(soffBase.col("saldoposizione")).as("saldoposizione"),
+                        functions.sum(soffBase.col("saldoposizionecontab")).as("saldoposizionecontab"));
 
         String soffSintGen2Path = getProperty("SOFF_GEN_SINT_2");
         logger.info("soffSintGen2Path: " + soffSintGen2Path);
