@@ -5,7 +5,6 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.StructType;
-import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
@@ -46,7 +45,6 @@ public class SofferenzePreview extends AbstractStep {
         catch (ParseException e) {
 
             logger.info("ParseException: " + e.getMessage());
-
             ufficio = "ufficio_bpm";
             dataA = "20190101";
 
