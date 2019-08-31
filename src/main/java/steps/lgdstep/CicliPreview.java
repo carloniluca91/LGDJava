@@ -14,13 +14,13 @@ import java.util.logging.Logger;
 
 public class CicliPreview extends AbstractStep {
 
-    private Logger logger = Logger.getLogger(this.getClass().getName());
-
     // required parameters
     private String dataA;
     private String ufficio;
 
     public CicliPreview(String[] args){
+
+        logger = Logger.getLogger(this.getClass().getName());
 
         // define options dataA, ufficio and set them as required
         Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
@@ -49,18 +49,22 @@ public class CicliPreview extends AbstractStep {
             logger.info("ParseException: " + e.getMessage());
             dataA = "2019-01-01";
             ufficio = "ufficio_bpm";
-            logger.info("setting dataA to " + dataA);
-            logger.info("setting ufficio to " + ufficio);
-
         }
+
+        stepInputDir = getProperty("CICLI_PREVIEW_INPUT_DIR");
+        stepOutputDir = getProperty("CICLI_PREVIEW_OUTPUT_DIR");
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.info("setting dataA to " + dataA);
+        logger.info("setting ufficio to " + ufficio);
     }
 
     public void run(){
 
-        // input path and file name
-        String cicliPreviewInputDir = getProperty("CICLI_PREVIEW_INPUT_DIR");
+        String csvFormat = getProperty("csv_format");
         String fposiOutdirCsv = getProperty("FPOSI_OUTDIR_CSV");
-        logger.info("cicliPreviewInputDir: " + cicliPreviewInputDir);
+
+        logger.info("csvFormat: " + csvFormat);
         logger.info("fposiOutdirCsv: " + fposiOutdirCsv);
 
         // define dataset schema
@@ -68,11 +72,8 @@ public class CicliPreview extends AbstractStep {
                 "datainizioristrutt", "datasofferenza", "totaccordatodatdef", "totutilizzdatdef", "segmento", "naturagiuridica_segm");
         StructType fposiLoadSchema = getDfSchema(fposiColumns);
 
-        String csvFormat = getProperty("csv_format");
-        logger.info("csvFormat: " + csvFormat);
-
         // 21
-        String fposiOutdirCsvPath = Paths.get(cicliPreviewInputDir, fposiOutdirCsv).toString();
+        String fposiOutdirCsvPath = Paths.get(stepInputDir, fposiOutdirCsv).toString();
         logger.info("fposiOutdirCsvPath: " + fposiOutdirCsvPath);
         Dataset<Row> fposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").
                 schema(fposiLoadSchema).csv(fposiOutdirCsvPath);
@@ -238,14 +239,12 @@ public class CicliPreview extends AbstractStep {
                 functions.col("segmento_calc"), functions.col("ciclo_soff"), functions.col("stato_anagrafico"));
 
         // 127
-
-        String cicliPreviewOutputDir = getProperty("CICLI_PREVIEW_OUTPUT_DIR");
         String fposiGen2OutCsv = getProperty("FPOSI_GEN2_CSV");
-        logger.info("cicliPreviewOutputDir: " + cicliPreviewOutputDir);
         logger.info("fposiGen2OutCsv: " + fposiGen2OutCsv);
 
         // 129
-        fposiGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(cicliPreviewOutputDir, fposiGen2OutCsv).toString());
+        fposiGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
+                Paths.get(stepOutputDir, fposiGen2OutCsv).toString());
 
         // 136
 
@@ -270,7 +269,7 @@ public class CicliPreview extends AbstractStep {
         logger.info("fposiSintGen2Csv: " + fposiSintGen2Csv);
 
         fposiSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(
-                cicliPreviewOutputDir, fposiSintGen2Csv).toString());
+                stepOutputDir, fposiSintGen2Csv).toString());
     }
 
     // column is null?'99999999':column

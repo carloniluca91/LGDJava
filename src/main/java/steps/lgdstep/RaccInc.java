@@ -14,22 +14,24 @@ import java.util.logging.Logger;
 
 public class RaccInc extends AbstractStep {
 
-    private Logger logger;
-
     public RaccInc(){
 
         logger = Logger.getLogger(this.getClass().getName());
+
+        stepInputDir = getProperty("RACC_INC_INPUT_DIR");
+        stepOutputDir = getProperty("RACC_INC_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
     }
 
     @Override
     public void run() {
 
         String csvFormat = getProperty("csv_format");
-        String raccIncInputDir = getProperty("RACC_INC_INPUT_DIR");
         String tlbmignPathCsv = getProperty("TLBMIGN_PATH_CSV");
 
         logger.info("csvFormat: " + csvFormat);
-        logger.info("raccIncInputDir: " + raccIncInputDir);
         logger.info("tlbmignPathCsv: " + tlbmignPathCsv);
 
         List<String> tlbmignColumnNames = Arrays.asList("cd_isti_ced", "ndg_ced", "cd_abi_ced", "cd_isti_ric", "ndg_ric",
@@ -39,7 +41,7 @@ public class RaccInc extends AbstractStep {
 
         StructType tlbmignSchema = getDfSchema(tlbmignColumnNames);
         Dataset<Row> tlbmign = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbmignSchema).csv(
-                Paths.get(raccIncInputDir, tlbmignPathCsv).toString());
+                Paths.get(stepInputDir, tlbmignPathCsv).toString());
 
         // AddDuration(ToDate(data_migraz,'yyyyMMdd'),'P1M') AS month_up
         Column dataMigrazDateCol = castToDateCol(tlbmign.col("data_migraz"), "yyyyMMdd", "yyyy-MM-dd");
@@ -55,11 +57,8 @@ public class RaccInc extends AbstractStep {
         tlbmignSelectList.add(tlbmign.col("data_migraz"));
 
         Seq<Column> tlbmignSelectSeq = toScalaSeq(tlbmignSelectList);
-        String raccIncOutputDir = getProperty("RACC_INC_OUTPUT_DIR");
-        logger.info("raccIncOutputDir: " + raccIncOutputDir);
-
         Dataset<Row> raccIncOut = tlbmign.select(tlbmignSelectSeq).withColumn("month_up", monthUpCol).drop("data_migraz");
         raccIncOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                raccIncOutputDir);
+                stepOutputDir);
     }
 }

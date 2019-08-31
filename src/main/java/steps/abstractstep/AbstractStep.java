@@ -11,14 +11,20 @@ import org.apache.spark.sql.SparkSession;
 
 public abstract class AbstractStep extends StepUtils implements StepInterface {
 
-    // initialize logger and sparSession
-    final Logger logger = Logger.getLogger(AbstractStep.class.getName());
+    // logger
+    protected Logger logger;
+
+    // sparSession
     protected final static SparkSession sparkSession = new SparkSession.Builder()
             .appName("LGDApp").master("local").getOrCreate();
 
-
+    // properties
     private static Properties configProperties = new Properties();
     private static final String CONFIG_FILE_PATH = "src/main/resources/config.properties";
+
+    // input and output dirs
+    protected static String stepInputDir;
+    protected static String stepOutputDir;
 
     protected AbstractStep(){
 

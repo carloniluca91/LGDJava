@@ -109,7 +109,6 @@ abstract class StepUtils {
         }
 
         return dfCols;
-
     }
 
     // create a list of columns to be selected from the given dataset, giving an alias to each column

@@ -17,24 +17,31 @@ import java.util.logging.Logger;
 
 public class RaccSoff extends AbstractStep {
 
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    public RaccSoff(){
+
+        logger = Logger.getLogger(this.getClass().getName());
+
+        stepInputDir = getProperty("RACC_SOFF_INPUT_DIR");
+        stepOutputDir = getProperty("RACC_SOFF_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
+    }
 
     @Override
     public void run() {
 
         String csvFormat = getProperty("csv-format");
-        String raccSoffInputDirPath = getProperty("RACC_SOFF_INPUT_DIR");
         String dblabCsvPath = getProperty("DBLABTLBXD9_PATH_CSV");
 
         logger.info("csvFormat: " + csvFormat);
-        logger.info("raccSoffInputPath: " + raccSoffInputDirPath);
         logger.info("dblabCsvPath: " + dblabCsvPath);
 
         List<String> dllabColumnNames = Arrays.asList(
                 "istricsof", "ndgricsof", "numricsof", "istcedsof", "ndgcedsof", "numcedsof", "data_primo_fine_me");
         StructType dllabSchema = getDfSchema(dllabColumnNames);
         Dataset<Row> dllab = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(dllabSchema).csv(
-                Paths.get(raccSoffInputDirPath, dblabCsvPath).toString());
+                Paths.get(stepInputDir, dblabCsvPath).toString());
 
         Map<String, String> columnMap = new HashMap<>();
         columnMap.put("istricsof", "IST_RIC_SOF");
@@ -47,10 +54,8 @@ public class RaccSoff extends AbstractStep {
 
         List<Column> dllabSelectList = selectDfColumns(dllab, columnMap);
         Seq<Column> dllabSelectSeq = toScalaSeq(dllabSelectList);
-
-        String raccSoffOutputDirPath = getProperty("RACC_SOFF_OUTPUT_DIR");
-        logger.info("raccSoffOutputDirPath: " + raccSoffOutputDirPath);
-        dllab.select(dllabSelectSeq).write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(raccSoffOutputDirPath);
+        dllab.select(dllabSelectSeq).write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite)
+                .csv(stepOutputDir);
 
     }
 }

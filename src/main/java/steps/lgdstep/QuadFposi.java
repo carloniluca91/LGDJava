@@ -14,8 +14,6 @@ import java.util.logging.Logger;
 
 public class QuadFposi extends AbstractStep {
 
-    private Logger logger;
-
     // required parameters
     private String ufficio;
 
@@ -41,19 +39,23 @@ public class QuadFposi extends AbstractStep {
 
             logger.info("ParseException: " + e.getMessage());
             ufficio = "defaultUfficio";
-            logger.info("$ufficio = " + ufficio);
         }
+
+        stepInputDir = getProperty("QUAD_FPOSI_INPUT_DIR");
+        stepOutputDir = getProperty("QUAD_FPOSI_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.info("$ufficio = " + ufficio);
     }
 
     @Override
     public void run() {
 
         String csvFormat = getProperty("csv_format");
-        String quadFposiInputDir = getProperty("QUAD_FPOSI_INPUT_DIR");
         String hadoopFposiCsv = getProperty("HADOOP_FPOSI_CSV");
 
         logger.info("csvFormat: " + csvFormat);
-        logger.info("quadFposiInputDir: " + quadFposiInputDir);
         logger.info("hadoopFposiCsv: " + hadoopFposiCsv);
 
         // 17
@@ -65,7 +67,7 @@ public class QuadFposi extends AbstractStep {
 
         StructType hadoopFposiSchema = getDfSchema(hadoopFposiColNames);
         Dataset<Row> hadoopFposi = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(hadoopFposiSchema)
-                .csv(Paths.get(quadFposiInputDir, hadoopFposiCsv).toString());
+                .csv(Paths.get(stepInputDir, hadoopFposiCsv).toString());
 
         // 45
 
@@ -78,7 +80,7 @@ public class QuadFposi extends AbstractStep {
 
         StructType oldfposiLoadSchema = getDfSchema(oldfposiLoadColNames);
         Dataset<Row> oldfposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(oldfposiLoadSchema)
-                .csv(Paths.get(quadFposiInputDir, oldfposiLoadCsv).toString());
+                .csv(Paths.get(stepInputDir, oldfposiLoadCsv).toString());
 
         // 63
 
@@ -156,24 +158,22 @@ public class QuadFposi extends AbstractStep {
 
         Dataset<Row> abbinatiOut = hadoopFposiOldFposiJoin.filter(abbinatiOutFilterCol).select(toScalaSeq(selectColList));
 
-        String quadFposiOutputDir = getProperty("QUAD_FPOSI_OUTPUT_DIR");
         String hadoopFposiOutDir = getProperty("HADOOP_FPOSI_OUT");
         String oldFposiOutDir = getProperty("OLD_FPOSI_OUT");
         String abbinatiOutDir = getProperty("ABBINATI_OUT");
 
-        logger.info("quadFposiOutputDir: " + quadFposiOutputDir);
         logger.info("hadoopFposiOutDir: " + hadoopFposiOutDir);
         logger.info("oldFposiOutDir: " + oldFposiOutDir);
         logger.info("abbinatiOutDir: " + abbinatiOutDir);
 
         hadoopFposiOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(quadFposiOutputDir, hadoopFposiOutDir).toString());
+                Paths.get(stepOutputDir, hadoopFposiOutDir).toString());
 
         oldFposiOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(quadFposiOutputDir, oldFposiOutDir).toString());
+                Paths.get(stepOutputDir, oldFposiOutDir).toString());
 
         abbinatiOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(quadFposiOutputDir, abbinatiOutDir).toString());
+                Paths.get(stepOutputDir, abbinatiOutDir).toString());
 
     }
 }

@@ -15,7 +15,16 @@ import java.util.logging.Logger;
 
 public class Fpasperd extends AbstractStep {
 
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    Fpasperd(){
+
+        logger = Logger.getLogger(this.getClass().getName());
+
+        stepInputDir = getProperty("FPASPERD_INPUT_DIR");
+        stepOutputDir = getProperty("FPASPERD_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
+    }
 
     @Override
     public void run() {
@@ -28,12 +37,10 @@ public class Fpasperd extends AbstractStep {
 
         StructType tlbcidefLoadSchema = getDfSchema(tlbcidefLoadColumns);
 
-        String fpasPerdInputDir = getProperty("FPASPERD_INPUT_DIR");
         String cicliNdgPathCsv = getProperty("CICLI_NDG_PATH_CSV");
-        logger.info("fpasPerdInputDir: " + fpasPerdInputDir);
         logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);
 
-        String tlbcidefLoadPath = Paths.get(fpasPerdInputDir, cicliNdgPathCsv).toString();
+        String tlbcidefLoadPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
         String csvFormat = getProperty("csv_format");
         logger.info("tlbcidefLoadPath: " + tlbcidefLoadPath);
         logger.info("csvFormat: " + csvFormat);
@@ -57,7 +64,7 @@ public class Fpasperd extends AbstractStep {
         StructType tlbpaspeSchema = getDfSchema(tlbpaspeColumns);
 
         String tlbpaspeCsv = getProperty("TLBPASPE_FILTER_CSV");
-        String tlbpaspeCsvPath = Paths.get(fpasPerdInputDir, tlbpaspeCsv).toString();
+        String tlbpaspeCsvPath = Paths.get(stepInputDir, tlbpaspeCsv).toString();
         logger.info("tlbpaspeCsv:" + tlbpaspeCsv);
         logger.info("tlbpaspeCsvPath: " + tlbpaspeCsvPath);
 
@@ -260,7 +267,7 @@ public class Fpasperd extends AbstractStep {
         // 336
 
         String tlbpaspeossCsv = getProperty("TLBPASPEOSS_CSV");
-        String tlbpaspeossCsvPath = Paths.get(fpasPerdInputDir, tlbpaspeossCsv).toString();
+        String tlbpaspeossCsvPath = Paths.get(stepInputDir, tlbpaspeossCsv).toString();
         logger.info("tlbpaspeossCsv: " + tlbpaspeossCsv);
         logger.info("tlbpaspeossCsvPath: " + tlbpaspeossCsvPath);
 
@@ -327,12 +334,10 @@ public class Fpasperd extends AbstractStep {
         Dataset<Row> paspePaspeossGenDist = fpasperdOutDistinct.join(tlbpaspeoss, joinCondition, "full_outer")
                 .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol, ndgPrincipaleCol, dataInizioDefCol);
 
-        String fpasperdOutDir = getProperty("FPASPERD_OUTPUT_DIR");
         String paspePaspeossGenDistCsv = getProperty("PASPE_PASPEOSS_GEN_DIST_CSV");
-        logger.info("fpasperdOutDir:" + fpasperdOutDir);
         logger.info("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);
 
-        String paspePaspeossGenDistCsvPath = Paths.get(fpasperdOutDir, paspePaspeossGenDistCsv).toString();
+        String paspePaspeossGenDistCsvPath = Paths.get(stepOutputDir, paspePaspeossGenDistCsv).toString();
         logger.info("paspePaspeossGenDistCsvPath: " + paspePaspeossGenDistCsvPath);
 
         paspePaspeossGenDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(paspePaspeossGenDistCsvPath);

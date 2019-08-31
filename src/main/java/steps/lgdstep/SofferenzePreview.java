@@ -13,13 +13,13 @@ import java.util.logging.Logger;
 
 public class SofferenzePreview extends AbstractStep {
 
-    private Logger logger = Logger.getLogger(this.getClass().getName());
-
     // required parameters
     private String ufficio;
     private String dataA;
 
     public SofferenzePreview(String[] args){
+
+        logger = Logger.getLogger(this.getClass().getName());
 
         // define options for $ufficio and  $data_a, then set them as required
         Option ufficioOption = new Option("u", "ufficio", true, "parametro $ufficio");
@@ -47,28 +47,31 @@ public class SofferenzePreview extends AbstractStep {
             logger.info("ParseException: " + e.getMessage());
             ufficio = "ufficio_bpm";
             dataA = "20190101";
-
-            logger.info("$ufficio: " + ufficio);
-            logger.info("$data_a: " + dataA);
         }
+
+        stepInputDir = getProperty("SOFFERENZE_PREVIEW_INPUT_DIR");
+        stepOutputDir = getProperty("SOFFERENZE_PREVIEW_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.info("ufficio: " + ufficio);
+        logger.info("dataA: " + dataA);
     }
 
     @Override
     public void run() {
 
         String csvFormat = getProperty("csv_format");
-        String sofferenzePreviewInputDir = getProperty("SOFFERENZE_PREVIEW_INPUT_DIR");
         String soffOutDirCsv = getProperty("SOFF_OUTDIR_CSV");
 
         logger.info("csvFormat: " + csvFormat);
-        logger.info("sofferenzePreviewInputDir: " + sofferenzePreviewInputDir);
         logger.info("soffOutDirCsv: " + soffOutDirCsv);
 
         List<String> soffLoadColumnNames = Arrays.asList("istituto", "ndg", "numerosofferenza", "datainizio", "datafine",
                 "statopratica", "saldoposizione", "saldoposizionecontab");
         StructType soffLoadSchema = getDfSchema(soffLoadColumnNames);
         Dataset<Row> soffLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(soffLoadSchema).csv(
-                Paths.get(sofferenzePreviewInputDir, soffOutDirCsv).toString());
+                Paths.get(stepInputDir, soffOutDirCsv).toString());
 
         // 37
 
@@ -118,14 +121,11 @@ public class SofferenzePreview extends AbstractStep {
                 dataInizioCol, dataFineCol, soffBase.col("statopratica"),
                 saldoPosizioneSumCol, saldoPosizioneContabSumCol);
 
-        String sofferenzePreviewOutputDir = getProperty("SOFFERENZE_PREVIEW_OUTPUT_DIR");
         String soffGen2Path = getProperty("SOFF_GEN_2");
-
-        logger.info("sofferenzePreviewOutputDir: " + sofferenzePreviewOutputDir);
         logger.info("soffGen2Path: " + soffGen2Path);
 
         soffGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(sofferenzePreviewOutputDir, soffGen2Path).toString());
+                Paths.get(stepOutputDir, soffGen2Path).toString());
 
         // 87
 
@@ -144,7 +144,7 @@ public class SofferenzePreview extends AbstractStep {
         String soffSintGen2Path = getProperty("SOFF_GEN_SINT_2");
         logger.info("soffSintGen2Path: " + soffSintGen2Path);
         soffSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(sofferenzePreviewOutputDir, soffSintGen2Path).toString());
+                Paths.get(stepOutputDir, soffSintGen2Path).toString());
 
         // 123
     }

@@ -13,12 +13,12 @@ import java.util.logging.Logger;
 
 public class FrappPuma extends AbstractStep {
 
-    private Logger logger = Logger.getLogger(this.getClass().getName());
-
     // required parameters
     private String dataA;
 
     public FrappPuma(String[] args){
+
+        logger = Logger.getLogger(this.getClass().getName());
 
         // define option for $data_a
         Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
@@ -41,6 +41,12 @@ public class FrappPuma extends AbstractStep {
             logger.info("ParseException: " + e.getMessage());
             dataA = "20190101";
         }
+
+        stepInputDir = getProperty("FRAPP_PUMA_INPUT_DIR");
+        stepOutputDir = getProperty("FRAPP_PUMA_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
     }
 
 
@@ -48,12 +54,10 @@ public class FrappPuma extends AbstractStep {
     public void run() {
 
         String csvFormat = getProperty("csv_format");
-        String frappPumaInputDir = getProperty("FRAPP_PUMA_INPUT_DIR");
         String cicliNdgPath = getProperty("CICLI_NDG_PATH_CSV");
         String tlbgaranPath = getProperty("TLBGARAN_PATH");
 
         logger.info("csvFormat: " + csvFormat);
-        logger.info("frappPumaInputDir: " + frappPumaInputDir);
         logger.info("cicliNdgPath: " + cicliNdgPath);
         logger.info("tlbgaranPath:" + tlbgaranPath);
 
@@ -64,7 +68,7 @@ public class FrappPuma extends AbstractStep {
                 "ndg_collegato", "codicebanca_collegato", "cd_collegamento", "cd_fiscale", "dt_rif_udct");
         StructType tlbcidefSchema = getDfSchema(tlbcidefColumns);
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbcidefSchema).csv(
-                Paths.get(frappPumaInputDir, cicliNdgPath).toString());
+                Paths.get(stepInputDir, cicliNdgPath).toString());
         // 49
 
         // cicli_ndg_princ = FILTER tlbcidef BY cd_collegamento IS NULL;
@@ -77,7 +81,7 @@ public class FrappPuma extends AbstractStep {
                 "cd_puma2", "ide_garanzia", "importo", "fair_value");
         StructType tlbgaranSchema = getDfSchema(tlbgaranColumns);
         Dataset<Row> tlbgaran = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbgaranSchema).csv(
-                Paths.get(frappPumaInputDir, tlbgaranPath).toString());
+                Paths.get(stepInputDir, tlbgaranPath).toString());
 
         // 71
 
@@ -147,13 +151,10 @@ public class FrappPuma extends AbstractStep {
 
         Dataset<Row> frappPumaOut = tlbcidefTlbgaranPrinc.union(tlbcidefTlbgaranColl).distinct();
 
-        String frappPumaOutputDir = getProperty("FRAPP_PUMA_OUTPUT_DIR");
         String frappPumaOutPath = getProperty("FRAPP_PUMA_OUT");
-
-        logger.info("frappPumaOutputDir:" + frappPumaOutputDir);
         logger.info("frappPumaOutPath: " + frappPumaOutPath);
 
         frappPumaOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(frappPumaOutputDir, frappPumaOutPath).toString());
+                Paths.get(stepOutputDir, frappPumaOutPath).toString());
     }
 }

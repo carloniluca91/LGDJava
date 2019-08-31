@@ -12,16 +12,15 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
-
 public class CicliLavStep1 extends AbstractStep {
-
-    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     // required parameters
     private String dataDa;
     private String dataA;
 
     public CicliLavStep1(String[] args) {
+
+        logger = Logger.getLogger(this.getClass().getName());
 
         // define options dataDa and dataA and set them as required
         Option dataDaOption = new Option("dd", "dataDa", true, "parametro $data_da");
@@ -50,23 +49,27 @@ public class CicliLavStep1 extends AbstractStep {
             logger.info("ParseException: " + e.getMessage());
             dataDa = "2015-01-01";
             dataA = "2019-01-01";
-            logger.info("Setting dataA to :" + dataDa);
-            logger.info("Setting dataA to :" + dataA);
         }
+
+        stepInputDir = getProperty("CICLILAV_STEP1_INPUT_DIR");
+        stepOutputDir = getProperty("CICLILAV_STEP1_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.info("dataDa: " + dataDa);
+        logger.info("dataA: " + dataA);
     }
 
     public void run(){
 
         // retrieve csv_format, input data directory and file name from configuration.properties file
         String csvFormat = getProperty("csv_format");
-        String ciclilavStep1InputDir = getProperty("CICLILAV_STEP1_INPUT_DIR");
         String tlbcidef_name = getProperty("TLBCIDEF_CSV");
 
         logger.info("csv format: " + csvFormat);
-        logger.info("tlbcdefPath: " + ciclilavStep1InputDir);
         logger.info("tlbcidef_name: " +  tlbcidef_name);
 
-        String tlbcdefPath = Paths.get(ciclilavStep1InputDir, tlbcidef_name).toString();
+        String tlbcdefPath = Paths.get(stepInputDir, tlbcidef_name).toString();
         logger.info("tlbcdefPath: " + tlbcdefPath);
 
         // 22
@@ -118,7 +121,7 @@ public class CicliLavStep1 extends AbstractStep {
         // 71
 
         // 78
-        String tlbcraccPath = Paths.get(ciclilavStep1InputDir, getProperty("TLBCRACC_CSV")).toString();
+        String tlbcraccPath = Paths.get(stepInputDir, getProperty("TLBCRACC_CSV")).toString();
         logger.info("tlbcraccPath: " + tlbcdefPath);
         List<String> tlbcraccColumns = Arrays.asList("data_rif", "cd_isti", "ndg", "cod_raccordo", "data_val");
         StructType tlbcraccSchema = getDfSchema(tlbcraccColumns);
@@ -177,18 +180,16 @@ public class CicliLavStep1 extends AbstractStep {
                 cicliRacc1.col("dt_fine_ciclo"), cdIstiCedCol, ndgCedCol, dtRifCraccCol);
         // 176
 
-        String ciclilavStep1OutputDir = getProperty("CICLILAV_STEP1_OUTPUT_DIR");
         String ciclilavStep1OutCsv = getProperty("CICLILAV_STEP1_OUT_CSV");
-        logger.info("ciclilavStep1OutputDir: " + ciclilavStep1OutputDir);
         logger.info("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
 
         String ciclilavStep1FilecraccCsv = getProperty("CICLILAV_STEP1_FILECRACC_CSV");
         logger.info("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
         ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(ciclilavStep1OutputDir, ciclilavStep1OutCsv).toString());
+                Paths.get(stepOutputDir, ciclilavStep1OutCsv).toString());
 
         ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(ciclilavStep1OutputDir, ciclilavStep1FilecraccCsv).toString());
+                Paths.get(stepOutputDir, ciclilavStep1FilecraccCsv).toString());
     }
 }

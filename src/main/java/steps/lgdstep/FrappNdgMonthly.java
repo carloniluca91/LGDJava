@@ -15,14 +15,14 @@ import java.util.logging.Logger;
 
 public class FrappNdgMonthly extends AbstractStep {
 
-    private Logger logger = Logger.getLogger(this.getClass().getName());
-
     // required parameters
     private String dataA;
     private int numeroMesi1;
     private int numeroMesi2;
 
     public FrappNdgMonthly(String[] args){
+
+        logger = Logger.getLogger(this.getClass().getName());
 
         // define option dataA, periodo, numeroMesi1, numeroMesi2
         Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
@@ -59,20 +59,23 @@ public class FrappNdgMonthly extends AbstractStep {
             dataA = "2018-12-01";
             numeroMesi1 = 1;
             numeroMesi2 = 2;
-
-            logger.info("Setting dataA to: " + dataA);
-            logger.info("Setting numeroMesi1 to:" + numeroMesi1);
-            logger.info("Setting numeroMesi2 to: " + numeroMesi2);
         }
+
+        stepInputDir = getProperty("FRAPP_NDG_MONTHLY_INPUT_DIR");
+        stepOutputDir = getProperty("FRAPP_NDG_MONTHLY_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.info("dataA: " + dataA);
+        logger.info("numeroMesi1:" + numeroMesi1);
+        logger.info("numeroMesi2: " + numeroMesi2);
     }
 
     public void run() {
 
         String csvFormat = getProperty("csv_format");
-        String frappNdgMonthlyInputDir = getProperty("FRAPP_NDG_MONTHLY_INPUT_DIR");
         String cicliNdgPathCsv = getProperty("CICLI_NDG_PATH_CSV");
         logger.info("csvFormat: " + csvFormat);
-        logger.info("frappNdgMonthlyInputDir: " + frappNdgMonthlyInputDir);
         logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);
 
         // 26
@@ -82,7 +85,7 @@ public class FrappNdgMonthly extends AbstractStep {
                 "cd_collegamento", "cd_fiscale", "dt_rif_udct");
 
         StructType tlbcidefSchema = getDfSchema(tlbcidefColumns);
-        String cicliNdgPathCsvPath = Paths.get(frappNdgMonthlyInputDir, cicliNdgPathCsv).toString();
+        String cicliNdgPathCsvPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
         logger.info("cicliNdgPathCsvPath: " + cicliNdgPathCsvPath);
 
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbcidefSchema).csv(cicliNdgPathCsvPath);
@@ -102,7 +105,7 @@ public class FrappNdgMonthly extends AbstractStep {
 
         StructType tlburttSchema = getDfSchema(tlburttColumns);
         String tlburttCsv = getProperty("TLBURTT_CSV");
-        String tlburttCsvPath = Paths.get(frappNdgMonthlyInputDir, tlburttCsv).toString();
+        String tlburttCsvPath = Paths.get(stepInputDir, tlburttCsv).toString();
         logger.info("tlburttCsv: " + tlburttCsv);
         logger.info("tlburttCsvPath: " + tlburttCsvPath);
 
@@ -202,14 +205,12 @@ public class FrappNdgMonthly extends AbstractStep {
 
         Dataset<Row> tlbcidefTlburtt = tlbcidefUrttPrinc.union(tlbcidefUrttColl).distinct();
 
-        String frappNdgMonthlyOutputDir = getProperty("FRAPP_NDG_MONTHLY_OUTPUT_DIR");
         String tlbcidefTlburttCsv = getProperty("TLBCIDEF_TLBURTT");
-        logger.info("frappNdgMonthlyOutputDir: " + frappNdgMonthlyOutputDir);
         logger.info("tlbcidefTlburttCsv: " + tlbcidefTlburttCsv);
 
         logger.info("tlbcidefTlburtt count: " + tlbcidefTlburtt.count());
-        tlbcidefTlburtt.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(
-                frappNdgMonthlyOutputDir, tlbcidefTlburttCsv).toString());
+        tlbcidefTlburtt.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
+                Paths.get(stepOutputDir, tlbcidefTlburttCsv).toString());
 
     }
 }

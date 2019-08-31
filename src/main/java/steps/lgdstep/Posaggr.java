@@ -14,25 +14,31 @@ import java.util.logging.Logger;
 
 public class Posaggr extends AbstractStep {
 
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    public Posaggr(){
+
+        logger = Logger.getLogger(this.getClass().getName());
+
+        stepInputDir = getProperty("POSAGGR_INPUT_DIR");
+        stepOutputDir =  getProperty("POSAGGR_OUTPUT_DIR");
+
+        logger.info("stepInputDir: " + stepInputDir);
+        logger.info("stepOutputDir: " + stepOutputDir);
+    }
 
     @Override
     public void run() {
 
-        // retrieve csv_format, input data directory and file name from configuration.properties file
         String csvFormat = getProperty("csv_format");
-        String posaggrInputDir = getProperty("POSAGGR_INPUT_DIR");
         String tblcompCsvPath = getProperty("TBLCOMP_PATH_CSV");
 
         logger.info("csvFormat: " + csvFormat);
-        logger.info("poaggrInputDir: " + posaggrInputDir);
         logger.info("tlbcompCsvPath: " + tblcompCsvPath);
 
         // 19
         List<String> tblcompColNames = Arrays.asList("dt_riferimento", "c_key", "tipo_segmne", "cd_istituto", "ndg");
         StructType tblcompSchema = getDfSchema(tblcompColNames);
         Dataset<Row> tblcomp = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tblcompSchema).csv(
-                Paths.get(posaggrInputDir, tblcompCsvPath).toString());
+                Paths.get(stepInputDir, tblcompCsvPath).toString());
 
         // 27
 
@@ -46,7 +52,7 @@ public class Posaggr extends AbstractStep {
                 "codimp_cebi", "tot_acco_agr", "tot_util_agr", "n058_int_vig");
         StructType tlbaggrSchema = getDfSchema(tlbaggrColNames);
         Dataset<Row> tlbaggr = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbaggrSchema).csv(
-                Paths.get(posaggrInputDir, tlbaggrCsvPath).toString());
+                Paths.get(stepInputDir, tlbaggrCsvPath).toString());
 
         // 59
 
@@ -74,7 +80,7 @@ public class Posaggr extends AbstractStep {
                 "esposizione_titoli");
         StructType tlbposiLoadSchema = getDfSchema(tlbposiLoadColNames);
         Dataset<Row> tlbposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbposiLoadSchema).csv(
-                Paths.get(posaggrInputDir, tlbposiLoadCsvPath).toString());
+                Paths.get(stepInputDir, tlbposiLoadCsvPath).toString());
 
         // 114
 
@@ -168,12 +174,10 @@ public class Posaggr extends AbstractStep {
                 JavaConverters.asScalaIteratorConverter(selectColumnList.iterator()).asScala().toSeq();
         Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(tblcompTlbaggrTlbposiSelectListselectColumnSeq);
 
-        String posaggrOutputDir = getProperty("POSAGGR_OUTPUT_DIR");
         String posaggrCsvPath = getProperty("POSAGGR_CSV");
-        logger.info("posaggrOutputDir: " + posaggrOutputDir);
         logger.info("posaggrOutputPath: " + posaggrCsvPath);
 
         posaggr.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(posaggrOutputDir, posaggrCsvPath).toString());
+                Paths.get(stepOutputDir, posaggrCsvPath).toString());
     }
 }
