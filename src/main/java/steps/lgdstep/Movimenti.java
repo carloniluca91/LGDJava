@@ -1,6 +1,5 @@
 package steps.lgdstep;
 
-import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.Seq;
@@ -18,41 +17,24 @@ public class Movimenti extends AbstractStep {
     // required parameter
     private String dataOsservazione;
 
-    public Movimenti(String[] args){
+    public Movimenti(String dataOsservazione){
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        Option dataOsservazioneOption = new Option("dO", "dataOsservazione", true, "parametro $data_osservazione");
-        dataOsservazioneOption.setRequired(true);
-
-        Options movimentiOptions = new Options();
-        movimentiOptions.addOption(dataOsservazioneOption);
-
-        CommandLineParser commandLineParser = new BasicParser();
-
-        try {
-
-            CommandLine commandLine = commandLineParser.parse(movimentiOptions, args);
-            dataOsservazione = commandLine.getOptionValue("dataOsservazione");
-
-        } catch (ParseException e) {
-
-            logger.info("ParseException: " + e.getMessage());
-            dataOsservazione = "2018-01-01";
-        }
+        this.dataOsservazione = dataOsservazione;
 
         stepInputDir = getProperty("MOVIMENTI_INPUT_DIR");
         stepOutputDir = getProperty("MOVIMENTI_OUTPUT_DIR");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("dataOsservazione: " + dataOsservazione);
+        logger.info("dataOsservazione: " + this.dataOsservazione);
     }
 
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String tlbmovcontaCsv = getProperty("TLBMOVCONTA_CSV");
 
         logger.info("csvFormat: " + csvFormat);

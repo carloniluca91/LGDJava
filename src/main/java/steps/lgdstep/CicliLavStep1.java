@@ -1,6 +1,5 @@
 package steps.lgdstep;
 
-import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
 import scala.collection.JavaConverters;
@@ -18,52 +17,26 @@ public class CicliLavStep1 extends AbstractStep {
     private String dataDa;
     private String dataA;
 
-    public CicliLavStep1(String[] args) {
+    public CicliLavStep1(String dataDa, String dataA) {
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        // define options dataDa and dataA and set them as required
-        Option dataDaOption = new Option("dd", "dataDa", true, "parametro $data_da");
-        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
-        dataDaOption.setRequired(true);
-        dataAOption.setRequired(true);
-
-        // add the two previously defined options
-        Options options = new Options();
-        options.addOption(dataDaOption);
-        options.addOption(dataAOption);
-
-        CommandLineParser parser = new BasicParser();
-
-        // try to parse and retrieve command line arguments
-        try {
-
-            CommandLine cmd = parser.parse(options, args);
-            dataDa = cmd.getOptionValue("dataDa");
-            dataA = cmd.getOptionValue("dataA");
-            logger.info("Arguments parsed correctly");
-
-        } catch (ParseException e) {
-
-            // assign some default values
-            logger.info("ParseException: " + e.getMessage());
-            dataDa = "2015-01-01";
-            dataA = "2019-01-01";
-        }
+        this.dataDa = dataDa;
+        this.dataA = dataA;
 
         stepInputDir = getProperty("CICLILAV_STEP1_INPUT_DIR");
         stepOutputDir = getProperty("CICLILAV_STEP1_OUTPUT_DIR");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("dataDa: " + dataDa);
-        logger.info("dataA: " + dataA);
+        logger.info("dataDa: " + this.dataDa);
+        logger.info("dataA: " + this.dataA);
     }
 
     public void run(){
 
         // retrieve csv_format, input data directory and file name from configuration.properties file
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String tlbcidef_name = getProperty("TLBCIDEF_CSV");
 
         logger.info("csv format: " + csvFormat);

@@ -28,7 +28,7 @@ public class RaccInc extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String tlbmignPathCsv = getProperty("TLBMIGN_PATH_CSV");
 
         logger.info("csvFormat: " + csvFormat);

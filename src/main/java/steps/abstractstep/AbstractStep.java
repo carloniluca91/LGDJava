@@ -19,7 +19,7 @@ public abstract class AbstractStep extends StepUtils implements StepInterface {
 
     // properties
     private static Properties configProperties = new Properties();
-    private static final String CONFIG_FILE_PATH = "src/main/resources/config.properties";
+    private static final String configFilePath = "src/main/resources/config.properties";
 
     // input and output dirs
     protected static String stepInputDir;
@@ -29,7 +29,7 @@ public abstract class AbstractStep extends StepUtils implements StepInterface {
 
         try{
             configProperties = new Properties();
-            InputStream inputConfigFile = new FileInputStream(CONFIG_FILE_PATH);
+            InputStream inputConfigFile = new FileInputStream(configFilePath);
             configProperties.load(inputConfigFile);
         }
         catch (IOException ex){

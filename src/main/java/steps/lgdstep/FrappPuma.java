@@ -1,6 +1,5 @@
 package steps.lgdstep;
 
-import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
@@ -16,44 +15,24 @@ public class FrappPuma extends AbstractStep {
     // required parameters
     private String dataA;
 
-    public FrappPuma(String[] args){
+    public FrappPuma(String dataA){
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        // define option for $data_a
-        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
-
-        Options options = new Options();
-        options.addOption(dataAOption);
-
-        CommandLineParser commandLineParser = new BasicParser();
-
-        // try to parse and retrieve command line arguments
-        try {
-
-            CommandLine commandLine = commandLineParser.parse(options, args);
-            dataA = commandLine.getOptionValue("dataA");
-            logger.info("Arguments parsed correctly");
-        }
-        catch (ParseException e) {
-
-            // assign some default values
-            logger.info("ParseException: " + e.getMessage());
-            dataA = "20190101";
-        }
+        this.dataA = dataA;
 
         stepInputDir = getProperty("FRAPP_PUMA_INPUT_DIR");
         stepOutputDir = getProperty("FRAPP_PUMA_OUTPUT_DIR");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
+        logger.info("dataA: " + this.dataA);
     }
-
 
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String cicliNdgPath = getProperty("CICLI_NDG_PATH_CSV");
         String tlbgaranPath = getProperty("TLBGARAN_PATH");
 

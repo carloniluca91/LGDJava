@@ -1,6 +1,5 @@
 package steps.lgdstep;
 
-import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
@@ -17,51 +16,26 @@ public class SofferenzePreview extends AbstractStep {
     private String ufficio;
     private String dataA;
 
-    public SofferenzePreview(String[] args){
+    public SofferenzePreview(String ufficio, String dataA){
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        // define options for $ufficio and  $data_a, then set them as required
-        Option ufficioOption = new Option("u", "ufficio", true, "parametro $ufficio");
-        Option dataAOption = new Option("dA", "dataA", true, "parametro $data_a");
-        ufficioOption.setRequired(true);
-        dataAOption.setRequired(true);
-
-        // add the two options
-        Options sofferenzePreviewOptions = new Options();
-        sofferenzePreviewOptions.addOption(ufficioOption);
-        sofferenzePreviewOptions.addOption(dataAOption);
-
-        CommandLineParser parser = new BasicParser();
-
-        // try to parse and retrieve command line arguments
-        try{
-
-            CommandLine cmdl = parser.parse(sofferenzePreviewOptions, args);
-            ufficio = cmdl.getOptionValue("ufficio");
-            dataA = cmdl.getOptionValue("dataA");
-            logger.info("Arguments parsed correctly");
-        }
-        catch (ParseException e) {
-
-            logger.info("ParseException: " + e.getMessage());
-            ufficio = "ufficio_bpm";
-            dataA = "20190101";
-        }
+        this.ufficio = ufficio;
+        this.dataA = dataA;
 
         stepInputDir = getProperty("SOFFERENZE_PREVIEW_INPUT_DIR");
         stepOutputDir = getProperty("SOFFERENZE_PREVIEW_OUTPUT_DIR");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("ufficio: " + ufficio);
-        logger.info("dataA: " + dataA);
+        logger.info("ufficio: " + this.ufficio);
+        logger.info("dataA: " + this.dataA);
     }
 
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String soffOutDirCsv = getProperty("SOFF_OUTDIR_CSV");
 
         logger.info("csvFormat: " + csvFormat);

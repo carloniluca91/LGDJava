@@ -1,6 +1,5 @@
 package steps.lgdstep;
 
-import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
@@ -20,60 +19,27 @@ public class FrappNdgMonthly extends AbstractStep {
     private int numeroMesi1;
     private int numeroMesi2;
 
-    public FrappNdgMonthly(String[] args){
+    public FrappNdgMonthly(String dataA, int numeroMesi1, int numeroMesi2){
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        // define option dataA, periodo, numeroMesi1, numeroMesi2
-        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
-        Option numeroMesi1Option = new Option("nm_uno", "numero_mesi_1", true, "parametro $numero_mesi_1");
-        Option numeroMesi2Option = new Option("nm_due", "numero_mesi_2", true, "parametro $numero_mesi_2");
-
-        // set them as required
-        dataAOption.setRequired(true);
-        numeroMesi1Option.setRequired(true);
-        numeroMesi2Option.setRequired(true);
-
-        // add them to Options
-        Options options = new Options();
-        options.addOption(dataAOption);
-        options.addOption(numeroMesi1Option);
-        options.addOption(numeroMesi2Option);
-
-
-        CommandLineParser commandLineParser = new BasicParser();
-
-        // try to parse and retrieve command line arguments
-        try{
-
-            CommandLine cmd = commandLineParser.parse(options, args);
-            dataA = cmd.getOptionValue("dataA");
-            numeroMesi1 = Integer.parseInt(cmd.getOptionValue("numero_mesi_1"));
-            numeroMesi2 = Integer.parseInt(cmd.getOptionValue("numero_mesi_2"));
-            logger.info("Arguments parsed correctly");
-
-        }
-        catch (ParseException e) {
-
-            logger.info("ParseException: " + e.getMessage());
-            dataA = "2018-12-01";
-            numeroMesi1 = 1;
-            numeroMesi2 = 2;
-        }
+        this.dataA = dataA;
+        this.numeroMesi1 = numeroMesi1;
+        this.numeroMesi2 = numeroMesi2;
 
         stepInputDir = getProperty("FRAPP_NDG_MONTHLY_INPUT_DIR");
         stepOutputDir = getProperty("FRAPP_NDG_MONTHLY_OUTPUT_DIR");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("dataA: " + dataA);
-        logger.info("numeroMesi1:" + numeroMesi1);
-        logger.info("numeroMesi2: " + numeroMesi2);
+        logger.info("dataA: " + this.dataA);
+        logger.info("numeroMesi1:" + this.numeroMesi1);
+        logger.info("numeroMesi2: " + this.numeroMesi2);
     }
 
     public void run() {
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String cicliNdgPathCsv = getProperty("CICLI_NDG_PATH_CSV");
         logger.info("csvFormat: " + csvFormat);
         logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);

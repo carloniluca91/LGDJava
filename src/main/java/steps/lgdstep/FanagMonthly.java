@@ -1,6 +1,5 @@
 package steps.lgdstep;
 
-import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import steps.abstractstep.AbstractStep;
 
@@ -14,43 +13,13 @@ public class FanagMonthly extends AbstractStep{
     private int numeroMesi2;
     private String dataA;
 
-    public FanagMonthly(String[] args){
+    public FanagMonthly(int numeroMesi1, int numeroMesi2, String dataA){
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        Options options = new Options();
-
-        Option numeroMesi1Option = new Option("nm1", "numero-mesi-1", true, "parametro $numero_mesi_1");
-        Option numeroMesi2Option = new Option("nm2", "numero-mesi-2", true, "parametro $numero_mesi_2");
-        Option dataAOption = new Option("dA", "dataA", true, "parametro $data_a");
-
-        numeroMesi1Option.setRequired(true);
-        numeroMesi2Option.setRequired(true);
-        dataAOption.setRequired(true);
-
-        options.addOption(numeroMesi1Option);
-        options.addOption(numeroMesi2Option);
-        options.addOption(dataAOption);
-
-        try {
-
-            CommandLineParser commandLineParser = new BasicParser();
-            CommandLine commandLine = commandLineParser.parse(options, args);
-            numeroMesi1 = Integer.parseInt(commandLine.getOptionValue("numero-mesi-1"));
-            numeroMesi2 = Integer.parseInt(commandLine.getOptionValue("numero-mesi-2"));
-            dataA = commandLine.getOptionValue("dataA");
-
-        } catch (ParseException e) {
-
-            logger.info(e.getMessage());
-            numeroMesi1 = 1;
-            numeroMesi2 = 1;
-            dataA = "2018-01-01";
-        }
-
-        logger.info("numeroMesi1: " + numeroMesi1);
-        logger.info("numeroMesi2: " + numeroMesi2);
-        logger.info("dataA: " + dataA);
+        this.numeroMesi1 = numeroMesi1;
+        this.numeroMesi2 = numeroMesi2;
+        this.dataA = dataA;
 
         stepInputDir = getProperty("FANAG_MONTHLY_INPUT_DIR");
         stepOutputDir = getProperty("FANAG_MONTHLY_OUTPUR_DIR");
@@ -63,7 +32,7 @@ public class FanagMonthly extends AbstractStep{
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String cicliNdgPath = getProperty("CICLI_NDG_PATH_CSV");
         String tlbuActPath = getProperty("TLBUACT_CSV");
         String tlbudtcPath = getProperty("TLBDUCT_PATH_CSV");

@@ -1,6 +1,5 @@
 package steps.lgdstep;
 
-import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import steps.abstractstep.AbstractStep;
@@ -17,42 +16,24 @@ public class QuadFposi extends AbstractStep {
     // required parameters
     private String ufficio;
 
-    public QuadFposi(String[] args){
+    public QuadFposi(String ufficio){
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        // define options for $ufficio, then set it as required
-        Option ufficioOption = new Option("u", "ufficio", true, "parametro $ufficio");
-        ufficioOption.setRequired(true);
-
-        Options quadFposiOptions = new Options();
-        quadFposiOptions.addOption(ufficioOption);
-
-        CommandLineParser commandLineParser = new BasicParser();
-
-        try {
-
-            CommandLine commandLine = commandLineParser.parse(quadFposiOptions, args);
-            ufficio = commandLine.getOptionValue("ufficio");
-        }
-        catch (ParseException e) {
-
-            logger.info("ParseException: " + e.getMessage());
-            ufficio = "defaultUfficio";
-        }
+        this.ufficio = ufficio;
 
         stepInputDir = getProperty("QUAD_FPOSI_INPUT_DIR");
         stepOutputDir = getProperty("QUAD_FPOSI_OUTPUT_DIR");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("$ufficio = " + ufficio);
+        logger.info("$ufficio = " + this.ufficio);
     }
 
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String hadoopFposiCsv = getProperty("HADOOP_FPOSI_CSV");
 
         logger.info("csvFormat: " + csvFormat);

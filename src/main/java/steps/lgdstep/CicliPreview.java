@@ -1,6 +1,5 @@
 package steps.lgdstep;
 
-import org.apache.commons.cli.*;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
@@ -18,50 +17,25 @@ public class CicliPreview extends AbstractStep {
     private String dataA;
     private String ufficio;
 
-    public CicliPreview(String[] args){
+    public CicliPreview(String dataA, String ufficio){
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        // define options dataA, ufficio and set them as required
-        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
-        Option ufficioOption = new Option("u", "ufficio", true, "parametro $ufficio");
-        dataAOption.setRequired(true);
-        ufficioOption.setRequired(true);
-
-        // add the two previously defined options
-        Options options = new Options();
-        options.addOption(dataAOption);
-        options.addOption(ufficioOption);
-
-        CommandLineParser commandLineParser = new BasicParser();
-
-        // try to parse and retrieve command line arguments
-        try{
-
-            CommandLine cmd = commandLineParser.parse(options, args);
-            dataA = cmd.getOptionValue("dataA");
-            ufficio = cmd.getOptionValue("ufficio");
-            logger.info("Arguments parsed correctly");
-
-        } catch (ParseException e) {
-
-            // asign some dafault values
-            logger.info("ParseException: " + e.getMessage());
-            dataA = "2019-01-01";
-            ufficio = "ufficio_bpm";
-        }
+        this.dataA = dataA;
+        this.ufficio = ufficio;
 
         stepInputDir = getProperty("CICLI_PREVIEW_INPUT_DIR");
         stepOutputDir = getProperty("CICLI_PREVIEW_OUTPUT_DIR");
+
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("setting dataA to " + dataA);
-        logger.info("setting ufficio to " + ufficio);
+        logger.info("setting dataA to " + this.dataA);
+        logger.info("setting ufficio to " + this.ufficio);
     }
 
     public void run(){
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String fposiOutdirCsv = getProperty("FPOSI_OUTDIR_CSV");
 
         logger.info("csvFormat: " + csvFormat);

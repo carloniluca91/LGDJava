@@ -28,7 +28,7 @@ public class Posaggr extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         String tblcompCsvPath = getProperty("TBLCOMP_PATH_CSV");
 
         logger.info("csvFormat: " + csvFormat);

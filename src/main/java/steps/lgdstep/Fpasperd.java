@@ -41,7 +41,7 @@ public class Fpasperd extends AbstractStep {
         logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);
 
         String tlbcidefLoadPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
-        String csvFormat = getProperty("csv_format");
+        String csvFormat = getProperty("csv.format");
         logger.info("tlbcidefLoadPath: " + tlbcidefLoadPath);
         logger.info("csvFormat: " + csvFormat);
 
