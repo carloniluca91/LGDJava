@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 
 import org.apache.spark.sql.SparkSession;
 
-
 public abstract class AbstractStep extends StepUtils implements StepInterface {
 
     // logger

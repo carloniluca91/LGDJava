@@ -6,7 +6,7 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.*;
-import scala.collection.JavaConverters;
+import scala.collection.JavaConversions;
 import scala.collection.Seq;
 
 import java.util.ArrayList;
@@ -28,9 +28,9 @@ abstract class StepUtils {
     }
 
     // convert a string column representing a date from the given input format to the given output date format
-    protected Column castStringColToDateCol(Column col, String inputF, String outputF){
+    protected Column castStringColToDateCol(Column col, String inputF){
 
-        return castCol(functions.from_unixtime(functions.unix_timestamp(col, inputF), outputF), DataTypes.DateType);
+        return castCol(functions.from_unixtime(functions.unix_timestamp(col, inputF), "yyyy-MM-dd"), DataTypes.DateType);
     }
 
     // convert a string column representing a date from the given input format to the given output date format
@@ -86,7 +86,7 @@ abstract class StepUtils {
     }
 
     // compute the least date between two date columns that have different format
-    Column leastDate(Column dateColumn1, Column dateColumn2, String date1Format, String date2Format){
+    protected Column leastDate(Column dateColumn1, Column dateColumn2, String date1Format, String date2Format){
 
         Column column1Ts = getUnixTimeStampCol(dateColumn1, date1Format);
         Column column2Ts = getUnixTimeStampCol(dateColumn2, date2Format);
@@ -125,9 +125,11 @@ abstract class StepUtils {
     }
 
     // convert a list of column expression into scala.collection.Seq of column expressions
-    protected Seq<Column> toScalaSeq(List<Column> columnList){
-        return JavaConverters.asScalaIteratorConverter(columnList.iterator()).asScala().toSeq();
+    protected Seq<Column> toScalaColSeq(List<Column> columnList){
+        return JavaConversions.asScalaBuffer(columnList).toSeq();
     }
+
+    protected Seq<String> toScalaStringSeq(List<String> stringList){ return JavaConversions.asScalaBuffer(stringList).toSeq();}
 
     // creates a list of aggregate column expressions to be used over windowspec w on dataframe df
     protected List<Column> windowSum(Dataset<Row> df, Map<String, String> columnMap, WindowSpec w){

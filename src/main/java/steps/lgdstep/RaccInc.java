@@ -56,7 +56,7 @@ public class RaccInc extends AbstractStep {
         tlbmignSelectList.add(functions.lit(null).cast(DataTypes.StringType).as("num_ced_inc"));
         tlbmignSelectList.add(tlbmign.col("data_migraz"));
 
-        Seq<Column> tlbmignSelectSeq = toScalaSeq(tlbmignSelectList);
+        Seq<Column> tlbmignSelectSeq = toScalaColSeq(tlbmignSelectList);
         Dataset<Row> raccIncOut = tlbmign.select(tlbmignSelectSeq).withColumn("month_up", monthUpCol).drop("data_migraz");
         raccIncOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 stepOutputDir);

@@ -95,11 +95,11 @@ public class QuadFposi extends AbstractStep {
         ToString(ToDate( dataSOFFERENZA,'yy-MM-dd'),'yyyyMMdd')  as DATASOFFERENZA
          */
 
-        Column DATAINIZIODEFCol = castStringColToDateCol(oldfposiLoad.col("datainizioDEF"), "yy-MM-dd", "yyyy-MM-dd").alias("DATAINIZIODEF");
-        Column DATAFINEDEFCol = castStringColToDateCol(oldfposiLoad.col("dataFINEDEF"), "yy-MM-dd", "yyyy-MM-dd").alias("DATAFINEDEF");
-        Column DATAINIZIOPDCol = castStringColToDateCol(oldfposiLoad.col("dataINIZIOPD"), "yy-MM-dd", "yyyy-MM-dd").alias("DATAINIZIOPD");
-        Column DATAINIZIOINCCol = castStringColToDateCol(oldfposiLoad.col("datainizioinc"), "yy-MM-dd", "yyyy-MM-dd").alias("DATAINIZIOINC");
-        Column DATASOFFERENZACol = castStringColToDateCol(oldfposiLoad.col("dataSOFFERENZA"), "yy-MM-dd", "yyyy-MM-dd").alias("DATASOFFERENZA");
+        Column DATAINIZIODEFCol = castStringColToDateCol(oldfposiLoad.col("datainizioDEF"), "yy-MM-dd").alias("DATAINIZIODEF");
+        Column DATAFINEDEFCol = castStringColToDateCol(oldfposiLoad.col("dataFINEDEF"), "yy-MM-dd").alias("DATAFINEDEF");
+        Column DATAINIZIOPDCol = castStringColToDateCol(oldfposiLoad.col("dataINIZIOPD"), "yy-MM-dd").alias("DATAINIZIOPD");
+        Column DATAINIZIOINCCol = castStringColToDateCol(oldfposiLoad.col("datainizioinc"), "yy-MM-dd").alias("DATAINIZIOINC");
+        Column DATASOFFERENZACol = castStringColToDateCol(oldfposiLoad.col("dataSOFFERENZA"), "yy-MM-dd").alias("DATASOFFERENZA");
 
         Dataset<Row> oldFposiGen = oldfposiLoad.select(DATAINIZIODEFCol, DATAFINEDEFCol, DATAINIZIOPDCol, DATAINIZIOINCCol, DATASOFFERENZACol,
                 oldfposiLoad.col("codicebanca").alias("CODICE_BANCA"), oldfposiLoad.col("ndgprincipale").alias("NDGPRINCIPALE"),
@@ -136,8 +136,8 @@ public class QuadFposi extends AbstractStep {
         selectColList.addAll(hadoopFposiSelectList);
         selectColList.addAll(oldFposiSelectList);
 
-        Dataset<Row> hadoopFposiOut = hadoopFposiOldFposiJoin.filter(oldFposi.col("CODICEBANCA").isNull()).select(toScalaSeq(selectColList));
-        Dataset<Row> oldFposiOut = hadoopFposiOldFposiJoin.filter(hadoopFposi.col("codicebanca").isNull()).select(toScalaSeq(selectColList));
+        Dataset<Row> hadoopFposiOut = hadoopFposiOldFposiJoin.filter(oldFposi.col("CODICEBANCA").isNull()).select(toScalaColSeq(selectColList));
+        Dataset<Row> oldFposiOut = hadoopFposiOldFposiJoin.filter(hadoopFposi.col("codicebanca").isNull()).select(toScalaColSeq(selectColList));
 
         /*
         FILTER hadoop_fposi_oldfposi_join
@@ -156,7 +156,7 @@ public class QuadFposi extends AbstractStep {
                 .and(hadoopFposi.col("datainizioinc").notEqual(oldFposi.col("DATAINIZIOINC")))
                 .and(hadoopFposi.col("datainiziosoff").notEqual(oldFposi.col("DATASOFFERENZA")));
 
-        Dataset<Row> abbinatiOut = hadoopFposiOldFposiJoin.filter(abbinatiOutFilterCol).select(toScalaSeq(selectColList));
+        Dataset<Row> abbinatiOut = hadoopFposiOldFposiJoin.filter(abbinatiOutFilterCol).select(toScalaColSeq(selectColList));
 
         String hadoopFposiOutDir = getProperty("HADOOP_FPOSI_OUT");
         String oldFposiOutDir = getProperty("OLD_FPOSI_OUT");

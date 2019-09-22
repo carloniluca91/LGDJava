@@ -53,7 +53,7 @@ public class RaccSoff extends AbstractStep {
         columnMap.put("data_primo_fine_me", "DATA_FINE_PRIMO_MESE_RIC");
 
         List<Column> dllabSelectList = selectDfColumns(dllab, columnMap);
-        Seq<Column> dllabSelectSeq = toScalaSeq(dllabSelectList);
+        Seq<Column> dllabSelectSeq = toScalaColSeq(dllabSelectList);
         dllab.select(dllabSelectSeq).write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite)
                 .csv(stepOutputDir);
 

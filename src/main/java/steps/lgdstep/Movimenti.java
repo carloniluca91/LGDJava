@@ -90,7 +90,7 @@ public class Movimenti extends AbstractStep {
         selectColMap.put("mo_flag_extracont", "flagextracontab");
         selectColMap.put("mo_flag_storno", "flagstorno");
 
-        Seq<Column> selectColSeq = toScalaSeq(selectDfColumns(tlbmovconta, selectColMap));
+        Seq<Column> selectColSeq = toScalaColSeq(selectDfColumns(tlbmovconta, selectColMap));
         Dataset<Row> movOutDist = tlbmovconta.filter(filterCondition).select(selectColSeq).distinct();
 
         String movOutDistPath = getProperty("MOV_OUT_DIST");
