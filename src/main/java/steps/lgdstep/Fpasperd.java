@@ -15,7 +15,7 @@ import java.util.logging.Logger;
 
 public class Fpasperd extends AbstractStep {
 
-    Fpasperd(){
+    public Fpasperd(){
 
         logger = Logger.getLogger(this.getClass().getName());
 

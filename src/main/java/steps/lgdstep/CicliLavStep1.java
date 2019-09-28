@@ -24,8 +24,8 @@ public class CicliLavStep1 extends AbstractStep {
         this.dataDa = dataDa;
         this.dataA = dataA;
 
-        stepInputDir = getProperty("CICLILAV_STEP1_INPUT_DIR");
-        stepOutputDir = getProperty("CICLILAV_STEP1_OUTPUT_DIR");
+        stepInputDir = getProperty("ciclilav.step1.input.dir");
+        stepOutputDir = getProperty("ciclilav.step1.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -37,7 +37,7 @@ public class CicliLavStep1 extends AbstractStep {
 
         // retrieve csv_format, input data directory and file name from configuration.properties file
         String csvFormat = getProperty("csv.format");
-        String tlbcidef_name = getProperty("TLBCIDEF_CSV");
+        String tlbcidef_name = getProperty("tlbcidef.csv");
 
         logger.info("csv format: " + csvFormat);
         logger.info("tlbcidef_name: " +  tlbcidef_name);
@@ -94,7 +94,7 @@ public class CicliLavStep1 extends AbstractStep {
         // 71
 
         // 78
-        String tlbcraccPath = Paths.get(stepInputDir, getProperty("TLBCRACC_CSV")).toString();
+        String tlbcraccPath = Paths.get(stepInputDir, getProperty("tlbcracc.csv")).toString();
         logger.info("tlbcraccPath: " + tlbcdefPath);
         List<String> tlbcraccColumns = Arrays.asList("data_rif", "cd_isti", "ndg", "cod_raccordo", "data_val");
         StructType tlbcraccSchema = getDfSchema(tlbcraccColumns);
@@ -153,10 +153,10 @@ public class CicliLavStep1 extends AbstractStep {
                 cicliRacc1.col("dt_fine_ciclo"), cdIstiCedCol, ndgCedCol, dtRifCraccCol);
         // 176
 
-        String ciclilavStep1OutCsv = getProperty("CICLILAV_STEP1_OUT_CSV");
+        String ciclilavStep1OutCsv = getProperty("ciclilav.step1.out.csv");
         logger.info("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
 
-        String ciclilavStep1FilecraccCsv = getProperty("CICLILAV_STEP1_FILECRACC_CSV");
+        String ciclilavStep1FilecraccCsv = getProperty("ciclilav.step1.filecracc.csv");
         logger.info("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
         ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(

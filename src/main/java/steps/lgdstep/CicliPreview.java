@@ -24,8 +24,8 @@ public class CicliPreview extends AbstractStep {
         this.dataA = dataA;
         this.ufficio = ufficio;
 
-        stepInputDir = getProperty("CICLI_PREVIEW_INPUT_DIR");
-        stepOutputDir = getProperty("CICLI_PREVIEW_OUTPUT_DIR");
+        stepInputDir = getProperty("cicli.preview.input.dir");
+        stepOutputDir = getProperty("cicli.preview.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -36,7 +36,7 @@ public class CicliPreview extends AbstractStep {
     public void run(){
 
         String csvFormat = getProperty("csv.format");
-        String fposiOutdirCsv = getProperty("FPOSI_OUTDIR_CSV");
+        String fposiOutdirCsv = getProperty("fposi.outdir.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("fposiOutdirCsv: " + fposiOutdirCsv);
@@ -213,7 +213,7 @@ public class CicliPreview extends AbstractStep {
                 functions.col("segmento_calc"), functions.col("ciclo_soff"), functions.col("stato_anagrafico"));
 
         // 127
-        String fposiGen2OutCsv = getProperty("FPOSI_GEN2_CSV");
+        String fposiGen2OutCsv = getProperty("fposi.gen2.csv");
         logger.info("fposiGen2OutCsv: " + fposiGen2OutCsv);
 
         // 129
@@ -239,7 +239,7 @@ public class CicliPreview extends AbstractStep {
                 totAccordatoDatDefCol, totUtilizzDatDefCol);
         // 169
 
-        String fposiSintGen2Csv = getProperty("FPOSI_SINT_GEN2");
+        String fposiSintGen2Csv = getProperty("fposi.sint.gen2");
         logger.info("fposiSintGen2Csv: " + fposiSintGen2Csv);
 
         fposiSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(

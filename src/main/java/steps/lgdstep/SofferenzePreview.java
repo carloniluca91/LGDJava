@@ -23,8 +23,8 @@ public class SofferenzePreview extends AbstractStep {
         this.ufficio = ufficio;
         this.dataA = dataA;
 
-        stepInputDir = getProperty("SOFFERENZE_PREVIEW_INPUT_DIR");
-        stepOutputDir = getProperty("SOFFERENZE_PREVIEW_OUTPUT_DIR");
+        stepInputDir = getProperty("sofferenze.preview.input.dir");
+        stepOutputDir = getProperty("sofferenze.preview.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -36,7 +36,7 @@ public class SofferenzePreview extends AbstractStep {
     public void run() {
 
         String csvFormat = getProperty("csv.format");
-        String soffOutDirCsv = getProperty("SOFF_OUTDIR_CSV");
+        String soffOutDirCsv = getProperty("soff.outdir.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("soffOutDirCsv: " + soffOutDirCsv);
@@ -95,7 +95,7 @@ public class SofferenzePreview extends AbstractStep {
                 dataInizioCol, dataFineCol, soffBase.col("statopratica"),
                 saldoPosizioneSumCol, saldoPosizioneContabSumCol);
 
-        String soffGen2Path = getProperty("SOFF_GEN_2");
+        String soffGen2Path = getProperty("soff.gen2");
         logger.info("soffGen2Path: " + soffGen2Path);
 
         soffGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
@@ -115,7 +115,7 @@ public class SofferenzePreview extends AbstractStep {
                         functions.sum(soffBase.col("saldoposizione")).as("saldoposizione"),
                         functions.sum(soffBase.col("saldoposizionecontab")).as("saldoposizionecontab"));
 
-        String soffSintGen2Path = getProperty("SOFF_GEN_SINT_2");
+        String soffSintGen2Path = getProperty("soff.gen.sint2");
         logger.info("soffSintGen2Path: " + soffSintGen2Path);
         soffSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(stepOutputDir, soffSintGen2Path).toString());

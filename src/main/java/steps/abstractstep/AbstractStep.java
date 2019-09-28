@@ -19,7 +19,7 @@ public abstract class AbstractStep extends StepUtils implements StepInterface {
 
     // properties
     private static Properties configProperties = new Properties();
-    private static final String configFilePath = "src/main/resources/config.properties";
+    private static final String configFilePath = "src/main/resources/lgd.properties";
 
     // input and output dirs
     protected static String stepInputDir;

@@ -18,8 +18,8 @@ public class RaccInc extends AbstractStep {
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        stepInputDir = getProperty("RACC_INC_INPUT_DIR");
-        stepOutputDir = getProperty("RACC_INC_OUTPUT_DIR");
+        stepInputDir = getProperty("racc.inc.input.dir");
+        stepOutputDir = getProperty("racc.inc.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -29,7 +29,7 @@ public class RaccInc extends AbstractStep {
     public void run() {
 
         String csvFormat = getProperty("csv.format");
-        String tlbmignPathCsv = getProperty("TLBMIGN_PATH_CSV");
+        String tlbmignPathCsv = getProperty("tlbmign.path.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("tlbmignPathCsv: " + tlbmignPathCsv);
