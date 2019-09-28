@@ -51,7 +51,7 @@ public class QuadFcoll extends AbstractStep {
 
         // 44
         List<String> oldFposiLoafColumnNames = Arrays.asList(
-                "datainizioDE", "dataFINEDEF", "dataINIZIOPD", "datainizioinc",
+                "datainizioDEF", "dataFINEDEF", "dataINIZIOPD", "datainizioinc",
                 "dataSOFFERENZA", "codicebanca", "ndgprincipale", "flagincristrut", "cumulo");
         Dataset<Row> oldFposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getDfSchema(oldFposiLoafColumnNames))
                 .csv(Paths.get(stepInputDir, oldFposiLoadCsv).toString());
