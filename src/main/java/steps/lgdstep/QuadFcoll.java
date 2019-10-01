@@ -16,7 +16,7 @@ public class QuadFcoll extends AbstractStep {
         logger = Logger.getLogger(this.getClass().getName());
 
         stepInputDir = getProperty("quad.fcoll.input.dir");
-        stepOutputDir = getProperty("quad.fposi.output.dir");
+        stepOutputDir = getProperty("quad.fcoll.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
