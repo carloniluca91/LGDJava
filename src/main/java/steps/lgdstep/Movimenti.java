@@ -23,8 +23,8 @@ public class Movimenti extends AbstractStep {
 
         this.dataOsservazione = dataOsservazione;
 
-        stepInputDir = getProperty("MOVIMENTI_INPUT_DIR");
-        stepOutputDir = getProperty("MOVIMENTI_OUTPUT_DIR");
+        stepInputDir = getProperty("movimenti.input.dir");
+        stepOutputDir = getProperty("movimenti.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -35,7 +35,7 @@ public class Movimenti extends AbstractStep {
     public void run() {
 
         String csvFormat = getProperty("csv.format");
-        String tlbmovcontaCsv = getProperty("TLBMOVCONTA_CSV");
+        String tlbmovcontaCsv = getProperty("tlbmovconta.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("tlbmovcontaCsv: " + tlbmovcontaCsv);
@@ -75,7 +75,7 @@ public class Movimenti extends AbstractStep {
         Seq<Column> selectColSeq = toScalaColSeq(selectDfColumns(tlbmovconta, selectColMap));
         Dataset<Row> movOutDist = tlbmovconta.filter(filterCondition).select(selectColSeq).distinct();
 
-        String movOutDistPath = getProperty("MOV_OUT_DIST");
+        String movOutDistPath = getProperty("mov.out.dist");
         logger.info("movOutDistPath: " + movOutDistPath);
 
         movOutDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(

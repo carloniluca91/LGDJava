@@ -67,15 +67,6 @@ public class QuadFposi extends AbstractStep {
 
         // 70
 
-        /*
-        TODO: verifica date con solo due cifre per l'anno
-        ToString(ToDate( datainizioDEF,'yy-MM-dd'),'yyyyMMdd')   as DATAINIZIODEF,
-        ToString(ToDate( dataFINEDEF,'yy-MM-dd'),'yyyyMMdd')     as DATAFINEDEF,
-        ToString(ToDate( dataINIZIOPD,'yy-MM-dd'),'yyyyMMdd')    as DATAINIZIOPD,
-        ToString(ToDate( datainizioinc,'yy-MM-dd'),'yyyyMMdd')   as DATAINIZIOINC,
-        ToString(ToDate( dataSOFFERENZA,'yy-MM-dd'),'yyyyMMdd')  as DATASOFFERENZA
-         */
-
         Column DATAINIZIODEFCol = castStringColToDateCol(oldfposiLoad.col("datainizioDEF"), "yy-MM-dd").alias("DATAINIZIODEF");
         Column DATAFINEDEFCol = castStringColToDateCol(oldfposiLoad.col("dataFINEDEF"), "yy-MM-dd").alias("DATAFINEDEF");
         Column DATAINIZIOPDCol = castStringColToDateCol(oldfposiLoad.col("dataINIZIOPD"), "yy-MM-dd").alias("DATAINIZIOPD");

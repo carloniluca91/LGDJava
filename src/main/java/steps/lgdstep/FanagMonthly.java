@@ -21,8 +21,8 @@ public class FanagMonthly extends AbstractStep{
         this.numeroMesi2 = numeroMesi2;
         this.dataA = dataA;
 
-        stepInputDir = getProperty("FANAG_MONTHLY_INPUT_DIR");
-        stepOutputDir = getProperty("FANAG_MONTHLY_OUTPUR_DIR");
+        stepInputDir = getProperty("fanag.monthly.input.dir");
+        stepOutputDir = getProperty("fanag.monthly.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -33,10 +33,10 @@ public class FanagMonthly extends AbstractStep{
     public void run() {
 
         String csvFormat = getProperty("csv.format");
-        String cicliNdgPath = getProperty("CICLI_NDG_PATH_CSV");
-        String tlbuActPath = getProperty("TLBUACT_CSV");
-        String tlbudtcPath = getProperty("TLBDUCT_PATH_CSV");
-        String fanagOutPath = getProperty("FANAG_OUT");
+        String cicliNdgPath = getProperty("cicli.ndg.path.csv");
+        String tlbuActPath = getProperty("tlbuact.csv");
+        String tlbudtcPath = getProperty("tlbduct.path.csv");
+        String fanagOutPath = getProperty("fanag.out");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("cicliNdgPath: " + cicliNdgPath);

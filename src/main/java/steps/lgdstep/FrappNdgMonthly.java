@@ -27,8 +27,8 @@ public class FrappNdgMonthly extends AbstractStep {
         this.numeroMesi1 = numeroMesi1;
         this.numeroMesi2 = numeroMesi2;
 
-        stepInputDir = getProperty("FRAPP_NDG_MONTHLY_INPUT_DIR");
-        stepOutputDir = getProperty("FRAPP_NDG_MONTHLY_OUTPUT_DIR");
+        stepInputDir = getProperty("frapp.ndg.monthly.input.dir");
+        stepOutputDir = getProperty("frapp.ndg.monthly.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -40,7 +40,7 @@ public class FrappNdgMonthly extends AbstractStep {
     public void run() {
 
         String csvFormat = getProperty("csv.format");
-        String cicliNdgPathCsv = getProperty("CICLI_NDG_PATH_CSV");
+        String cicliNdgPathCsv = getProperty("cicli.ndg.path.csv");
         logger.info("csvFormat: " + csvFormat);
         logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);
 
@@ -70,7 +70,7 @@ public class FrappNdgMonthly extends AbstractStep {
                 "categoria_inc", "dur_res_default", "flag_margine", "dt_entrata_def", "tp_contr_rapp", "cd_eplus", "r792_tipocartol");
 
         StructType tlburttSchema = getDfSchema(tlburttColumns);
-        String tlburttCsv = getProperty("TLBURTT_CSV");
+        String tlburttCsv = getProperty("tlburtt.csv");
         String tlburttCsvPath = Paths.get(stepInputDir, tlburttCsv).toString();
         logger.info("tlburttCsv: " + tlburttCsv);
         logger.info("tlburttCsvPath: " + tlburttCsvPath);
@@ -171,7 +171,7 @@ public class FrappNdgMonthly extends AbstractStep {
 
         Dataset<Row> tlbcidefTlburtt = tlbcidefUrttPrinc.union(tlbcidefUrttColl).distinct();
 
-        String tlbcidefTlburttCsv = getProperty("TLBCIDEF_TLBURTT");
+        String tlbcidefTlburttCsv = getProperty("tlbcidef.tlburtt");
         logger.info("tlbcidefTlburttCsv: " + tlbcidefTlburttCsv);
 
         logger.info("tlbcidefTlburtt count: " + tlbcidefTlburtt.count());

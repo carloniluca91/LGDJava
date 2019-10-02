@@ -1,19 +1,23 @@
 package steps.lgdstep;
 
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
+import org.apache.spark.sql.*;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
 
 public class QuadFrapp extends AbstractStep {
 
-    public QuadFrapp(){
+    private String ufficio;
+
+    public QuadFrapp(String ufficio){
 
         logger = Logger.getLogger(this.getClass().getName());
+
+        this.ufficio = ufficio;
 
         stepInputDir = getProperty("quad.frapp.input.dir");
         stepOutputDir = getProperty("quad.frapp.output.dir");
@@ -28,10 +32,12 @@ public class QuadFrapp extends AbstractStep {
         String csvFormat = getProperty("csv.format");
         String hadoopFrappCsv = getProperty("hadoop.frapp.csv");
         String oldFrappLoadCsv = getProperty("old.frapp.load.csv");
+        String fcollCsv = getProperty("fcoll.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("hadoopFrappCsv: " + hadoopFrappCsv);
         logger.info("oldFrappLoadCsv: " + oldFrappLoadCsv);
+        logger.info("fcollCsv: " + fcollCsv);
 
         List<String> hadoopFrappColumnNames = Arrays.asList("codicebanca", "ndg", "sportello", "conto", "datariferimento", "contoesteso",
                 "formatecnica", "dataaccensione", "dataestinzione", "datascadenza", "r046tpammortam", "r071tprapporto", "r209periodliquid",
@@ -68,7 +74,74 @@ public class QuadFrapp extends AbstractStep {
         Dataset<Row> oldFrappLoad = sparkSession.read().format(csvFormat).option("sep", ",").schema(getDfSchema(oldFrappLoadColumnNames))
                 .csv(Paths.get(stepInputDir, oldFrappLoadCsv).toString());
 
-        List<String> fcollColumnNames = Arrays.asList();
+        List<String> fcollColumnNames = Arrays.asList("CODICEBANCA", "NDGPRINCIPALE", "DATAINIZIODEF", "DATAFINEDEF",
+                "DATA_DEFAULT", "ISTITUTO_COLLEGATO", "NDG_COLLEGATO", "DATA_COLLEGAMENTO", "CUMULO");
 
+        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",").schema(getDfSchema(fcollColumnNames))
+                .csv(Paths.get(stepInputDir, fcollCsv).toString());
+
+        // JOIN oldfrapp_load BY (CODICEBANCA, NDG), fcoll BY (ISTITUTO_COLLEGATO, NDG_COLLEGATO);
+
+        Column joinCondition = oldFrappLoad.col("CODICEBANCA").equalTo(fcoll.col("ISTITUTO_COLLEGATO"))
+                .and(oldFrappLoad.col("NDG").equalTo(fcoll.col("NDG_COLLEGATO")));
+
+        // FILTER
+        // BY ToDate(oldfrapp_load::DT_RIFERIMENTO,'yyyyMMdd') >= ToDate( fcoll::DATAINIZIODEF,'yyyyMMdd')
+        // AND ToDate(oldfrapp_load::DT_RIFERIMENTO,'yyyyMMdd') <= ToDate( fcoll::DATAFINEDEF,'yyyyMMdd'  )
+
+        Column dtRiferimentoDataInizioDef = getUnixTimeStampCol(oldFrappLoad.col("DT_RIFERIMENTO"), "yyyyMMdd")
+                .geq(getUnixTimeStampCol(fcoll.col("DATAINIZIODEF"), "yyyyMMdd"));
+        Column dtRiferimentoDataFineDef = getUnixTimeStampCol(oldFrappLoad.col("DT_RIFERIMENTO"), "yyyyMMdd")
+                .leq(getUnixTimeStampCol(fcoll.col("DATAFINEDEF"), "yyyyMMdd"));
+
+        Column filterCondition = dtRiferimentoDataInizioDef.and(dtRiferimentoDataFineDef);
+
+        Dataset<Row> oldFrapp = oldFrappLoad.join(fcoll, joinCondition).filter(filterCondition).select(oldFrappLoad.col("*"),
+                fcoll.col("CODICEBANCA").alias("CODICEBANCA_PRINC"), fcoll.col("NDGPRINCIPALE"), fcoll.col("DATAINIZIODEF"));
+
+        // JOIN hadoop_frapp BY (codicebanca_princ, ndgprincipale, datainiziodef, codicebanca, ndg, sportello, conto, datariferimento) FULL OUTER,
+        // oldfrapp BY (CODICEBANCA_PRINC, NDGPRINCIPALE, DATAINIZIODEF, CODICEBANCA, NDG, SPORTELLO, CONTO, DT_RIFERIMENTO);
+
+        List<String> joinColumnNames = Arrays.asList("codicebanca_princ",
+                "ndgprincipale", "datainiziodef", "codicebanca", "ndg", "sportello", "conto");
+        joinCondition = getJoinCondition(hadoopFrapp, oldFrapp, joinColumnNames)
+                .and(hadoopFrapp.col("datariferimento").equalTo(oldFrapp.col("DT_RIFERIMENTO")));
+
+        // FILTER hadoop_frapp_oldfrapp_join BY oldfrapp::CODICEBANCA IS NULL;
+
+        Dataset<Row> hadoopFrappOut = hadoopFrapp.join(oldFrapp, joinCondition, "full_outer")
+                .filter(oldFrapp.col("CODICEBANCA").isNull())
+                .select(functions.lit(ufficio).alias("ufficio"), hadoopFrapp.col("*"), oldFrapp.col("*"));
+
+        Dataset<Row> oldFrappOut = hadoopFrapp.join(oldFrapp, joinCondition, "full_outer")
+                .filter(hadoopFrapp.col("codicebanca").isNull())
+                .select(functions.lit(ufficio).alias("ufficio"), hadoopFrapp.col("*"), oldFrapp.col("*"));
+
+        String hadoopFrappOutPath = getProperty("hadoop.frapp.out");
+        String oldFrappOutPath = getProperty("old.frapp.out");
+
+        logger.info("hadoopFrappOutPath: " + hadoopFrappOutPath);
+        logger.info("oldFrappOutPath: " + oldFrappOutPath);
+
+        hadoopFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(
+                Paths.get(stepOutputDir, hadoopFrappOutPath).toString());
+
+        oldFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(
+                Paths.get(stepOutputDir, oldFrappOutPath).toString());
+
+    }
+
+    private Column getJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
+
+        Column joinCondition = datasetLeft.col(joinColumnNames.get(0))
+                .equalTo(datasetRight.col(joinColumnNames.get(0).toUpperCase()));
+
+        for (String joinColumnName: joinColumnNames.subList(1, joinColumnNames.toArray().length - 1)){
+
+            joinCondition = joinCondition.and(datasetLeft.col(joinColumnName)
+                    .equalTo(datasetRight.col(joinColumnName.toUpperCase())));
+        }
+
+        return joinCondition;
     }
 }

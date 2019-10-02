@@ -18,8 +18,8 @@ public class Posaggr extends AbstractStep {
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        stepInputDir = getProperty("POSAGGR_INPUT_DIR");
-        stepOutputDir =  getProperty("POSAGGR_OUTPUT_DIR");
+        stepInputDir = getProperty("posaggr.input.dir");
+        stepOutputDir =  getProperty("posaggr.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -29,7 +29,7 @@ public class Posaggr extends AbstractStep {
     public void run() {
 
         String csvFormat = getProperty("csv.format");
-        String tblcompCsvPath = getProperty("TBLCOMP_PATH_CSV");
+        String tblcompCsvPath = getProperty("tblcomp.path.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("tlbcompCsvPath: " + tblcompCsvPath);
@@ -43,7 +43,7 @@ public class Posaggr extends AbstractStep {
         // 27
 
         // 32
-        String tlbaggrCsvPath = getProperty("TLBAGGR_PATH_CSV");
+        String tlbaggrCsvPath = getProperty("tlbaggr.path.csv");
         logger.info("tlbaggrCsvPath: " + tlbaggrCsvPath);
 
         List<String> tlbaggrColNames = Arrays.asList("dt_riferimento", "c_key_aggr", "ndg_gruppo", "cod_fiscale",
@@ -71,7 +71,7 @@ public class Posaggr extends AbstractStep {
 
         // 89
 
-        String tlbposiLoadCsvPath = getProperty("TLBPOSI_LOAD_CSV");
+        String tlbposiLoadCsvPath = getProperty("tlbposi.load.csv");
         logger.info("tlbposiLoadCsvPath: " + tlbposiLoadCsvPath);
 
         List<String> tlbposiLoadColNames = Arrays.asList("dt_riferimento", "cd_istituto", "ndg", "c_key", "cod_fiscale",
@@ -174,7 +174,7 @@ public class Posaggr extends AbstractStep {
                 JavaConverters.asScalaIteratorConverter(selectColumnList.iterator()).asScala().toSeq();
         Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(tblcompTlbaggrTlbposiSelectListselectColumnSeq);
 
-        String posaggrCsvPath = getProperty("POSAGGR_CSV");
+        String posaggrCsvPath = getProperty("posaggr.csv");
         logger.info("posaggrOutputPath: " + posaggrCsvPath);
 
         posaggr.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(

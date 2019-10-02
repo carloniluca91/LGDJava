@@ -19,8 +19,8 @@ public class Fpasperd extends AbstractStep {
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        stepInputDir = getProperty("FPASPERD_INPUT_DIR");
-        stepOutputDir = getProperty("FPASPERD_OUTPUT_DIR");
+        stepInputDir = getProperty("fpasperd.input.dir");
+        stepOutputDir = getProperty("fpasperd.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -37,7 +37,7 @@ public class Fpasperd extends AbstractStep {
 
         StructType tlbcidefLoadSchema = getDfSchema(tlbcidefLoadColumns);
 
-        String cicliNdgPathCsv = getProperty("CICLI_NDG_PATH_CSV");
+        String cicliNdgPathCsv = getProperty("cicli.ndg.path.csv");
         logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);
 
         String tlbcidefLoadPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
@@ -63,7 +63,7 @@ public class Fpasperd extends AbstractStep {
         List<String> tlbpaspeColumns = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
         StructType tlbpaspeSchema = getDfSchema(tlbpaspeColumns);
 
-        String tlbpaspeCsv = getProperty("TLBPASPE_FILTER_CSV");
+        String tlbpaspeCsv = getProperty("tlbpaspe.filter.csv");
         String tlbpaspeCsvPath = Paths.get(stepInputDir, tlbpaspeCsv).toString();
         logger.info("tlbpaspeCsv:" + tlbpaspeCsv);
         logger.info("tlbpaspeCsvPath: " + tlbpaspeCsvPath);
@@ -266,7 +266,7 @@ public class Fpasperd extends AbstractStep {
 
         // 336
 
-        String tlbpaspeossCsv = getProperty("TLBPASPEOSS_CSV");
+        String tlbpaspeossCsv = getProperty("tlbpaspeoss.csv");
         String tlbpaspeossCsvPath = Paths.get(stepInputDir, tlbpaspeossCsv).toString();
         logger.info("tlbpaspeossCsv: " + tlbpaspeossCsv);
         logger.info("tlbpaspeossCsvPath: " + tlbpaspeossCsvPath);
@@ -334,7 +334,7 @@ public class Fpasperd extends AbstractStep {
         Dataset<Row> paspePaspeossGenDist = fpasperdOutDistinct.join(tlbpaspeoss, joinCondition, "full_outer")
                 .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol, ndgPrincipaleCol, dataInizioDefCol);
 
-        String paspePaspeossGenDistCsv = getProperty("PASPE_PASPEOSS_GEN_DIST_CSV");
+        String paspePaspeossGenDistCsv = getProperty("paspe.paspeoss.gen.dist.csv");
         logger.info("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);
 
         String paspePaspeossGenDistCsvPath = Paths.get(stepOutputDir, paspePaspeossGenDistCsv).toString();

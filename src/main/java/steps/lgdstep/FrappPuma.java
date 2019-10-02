@@ -21,8 +21,8 @@ public class FrappPuma extends AbstractStep {
 
         this.dataA = dataA;
 
-        stepInputDir = getProperty("FRAPP_PUMA_INPUT_DIR");
-        stepOutputDir = getProperty("FRAPP_PUMA_OUTPUT_DIR");
+        stepInputDir = getProperty("frapp.puma.input.dir");
+        stepOutputDir = getProperty("frapp.puma.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -33,8 +33,8 @@ public class FrappPuma extends AbstractStep {
     public void run() {
 
         String csvFormat = getProperty("csv.format");
-        String cicliNdgPath = getProperty("CICLI_NDG_PATH_CSV");
-        String tlbgaranPath = getProperty("TLBGARAN_PATH");
+        String cicliNdgPath = getProperty("cicli.ndg.path.csv");
+        String tlbgaranPath = getProperty("tlbgaran.path");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("cicliNdgPath: " + cicliNdgPath);
@@ -130,7 +130,7 @@ public class FrappPuma extends AbstractStep {
 
         Dataset<Row> frappPumaOut = tlbcidefTlbgaranPrinc.union(tlbcidefTlbgaranColl).distinct();
 
-        String frappPumaOutPath = getProperty("FRAPP_PUMA_OUT");
+        String frappPumaOutPath = getProperty("frapp.puma.out");
         logger.info("frappPumaOutPath: " + frappPumaOutPath);
 
         frappPumaOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
