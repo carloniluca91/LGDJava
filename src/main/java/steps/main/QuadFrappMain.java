@@ -8,7 +8,11 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import steps.lgdstep.QuadFrapp;
 
+import java.util.logging.Logger;
+
 public class QuadFrappMain {
+
+    private static Logger logger = Logger.getLogger(QuadFrappMain.class.getName());
 
     public static void main(String[] args){
 
@@ -26,6 +30,7 @@ public class QuadFrappMain {
 
             CommandLine commandLine = commandLineParser.parse(quadFrappOtions, args);
             ufficio = commandLine.getOptionValue("ufficio");
+            logger.info("$ufficio: " + ufficio);
             QuadFrapp quadFrapp = new QuadFrapp(ufficio);
             quadFrapp.run();
 
