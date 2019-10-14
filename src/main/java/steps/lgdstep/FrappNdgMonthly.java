@@ -50,7 +50,7 @@ public class FrappNdgMonthly extends AbstractStep {
                 "tp_ndg", "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg", "ndg_collegato", "codicebanca_collegato",
                 "cd_collegamento", "cd_fiscale", "dt_rif_udct");
 
-        StructType tlbcidefSchema = getDfSchema(tlbcidefColumns);
+        StructType tlbcidefSchema = getStringTypeSchema(tlbcidefColumns);
         String cicliNdgPathCsvPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
         logger.info("cicliNdgPathCsvPath: " + cicliNdgPathCsvPath);
 
@@ -69,7 +69,7 @@ public class FrappNdgMonthly extends AbstractStep {
                 "freq_remargining", "cd_prodotto_ris", "durata_originaria", "divisa", "score_erogaz", "durata_residua", "categoria_sof",
                 "categoria_inc", "dur_res_default", "flag_margine", "dt_entrata_def", "tp_contr_rapp", "cd_eplus", "r792_tipocartol");
 
-        StructType tlburttSchema = getDfSchema(tlburttColumns);
+        StructType tlburttSchema = getStringTypeSchema(tlburttColumns);
         String tlburttCsv = getProperty("tlburtt.csv");
         String tlburttCsvPath = Paths.get(stepInputDir, tlburttCsv).toString();
         logger.info("tlburttCsv: " + tlburttCsv);
@@ -79,12 +79,12 @@ public class FrappNdgMonthly extends AbstractStep {
         // 107
 
         // 111
-        Dataset<Row> tlburttFilter = tlburtt.filter(castCol(tlburtt, "progr_segmento", DataTypes.IntegerType).equalTo(0));
+        Dataset<Row> tlburttFilter = tlburtt.filter(castCol(tlburtt.col("progr_segmento"), DataTypes.IntegerType).equalTo(0));
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         Column dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(castToDateCol(cicliNdgPrinc.col("datainiziodef"),
+                getUnixTimeStampCol(functions.add_months(stringDateFormat(cicliNdgPrinc.col("datainiziodef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
 
         /*
@@ -105,7 +105,7 @@ public class FrappNdgMonthly extends AbstractStep {
         // dataFineDefCol in format "yyyy-MM-dd" due to add_months
         Column dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
                 // datafinedef -1 month in format "yyyy-MM-dd"
-                functions.add_months(castToDateCol(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
+                functions.add_months(stringDateFormat(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
                         "yyyy-MM-dd"), -1),
                 // dataA, already in format "yyyy-MM-dd"
                 functions.lit(dataA), "yyyy-MM-dd"),
@@ -143,13 +143,13 @@ public class FrappNdgMonthly extends AbstractStep {
 
         // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(castToDateCol(cicliNdgColl.col("datainiziodef"),
+                getUnixTimeStampCol(functions.add_months(stringDateFormat(cicliNdgColl.col("datainiziodef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
 
         // dataFineDefCol in format "yyyy-MM-dd" due to add_months
         dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
                 // datafinedef -1 in format "yyyy-MM-dd"
-                functions.add_months(castToDateCol(cicliNdgColl.col("datafinedef"), "yyyyMMdd",
+                functions.add_months(stringDateFormat(cicliNdgColl.col("datafinedef"), "yyyyMMdd",
                         "yyyy-MM-dd"), -1),
                 // dataA, already in format "yyyy-MM-dd"
                 functions.lit(dataA), "yyyy-MM-dd"),

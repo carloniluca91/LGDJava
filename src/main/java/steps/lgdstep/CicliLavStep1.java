@@ -48,7 +48,7 @@ public class CicliLavStep1 extends AbstractStep {
         // 22
         List<String> tlbcidefColumns = Arrays.asList("cd_isti", "ndg_principale", "cod_cr", "dt_inizio_ciclo", "dt_ingresso_status",
                 "status_ingresso", "dt_uscita_status", "status_uscita", "dt_fine_ciclo", "indi_pastdue", "indi_impr_priv");
-        StructType tlbcidefSchema = getDfSchema(tlbcidefColumns);
+        StructType tlbcidefSchema = getStringTypeSchema(tlbcidefColumns);
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcidefSchema).csv(tlbcdefPath);
 
@@ -97,7 +97,7 @@ public class CicliLavStep1 extends AbstractStep {
         String tlbcraccPath = Paths.get(stepInputDir, getProperty("tlbcracc.csv")).toString();
         logger.info("tlbcraccPath: " + tlbcdefPath);
         List<String> tlbcraccColumns = Arrays.asList("data_rif", "cd_isti", "ndg", "cod_raccordo", "data_val");
-        StructType tlbcraccSchema = getDfSchema(tlbcraccColumns);
+        StructType tlbcraccSchema = getStringTypeSchema(tlbcraccColumns);
 
         Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcraccSchema).csv(tlbcraccPath);

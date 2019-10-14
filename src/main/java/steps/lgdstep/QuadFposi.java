@@ -46,7 +46,7 @@ public class QuadFposi extends AbstractStep {
                 "rae_segm", "ciae_ndg", "provincia_segm", "ateco", "segmento", "databilseg", "strbilseg", "attivobilseg",
                 "fatturbilseg");
 
-        StructType hadoopFposiSchema = getDfSchema(hadoopFposiColNames);
+        StructType hadoopFposiSchema = getStringTypeSchema(hadoopFposiColNames);
         Dataset<Row> hadoopFposi = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(hadoopFposiSchema)
                 .csv(Paths.get(stepInputDir, hadoopFposiCsv).toString());
 
@@ -59,7 +59,7 @@ public class QuadFposi extends AbstractStep {
         List<String> oldfposiLoadColNames = Arrays.asList("datainizioDEF", "dataFINEDEF", "dataINIZIOPD", "datainizioinc",
                 "dataSOFFERENZA", "codicebanca", "ndgprincipale", "flagincristrut", "cumulo");
 
-        StructType oldfposiLoadSchema = getDfSchema(oldfposiLoadColNames);
+        StructType oldfposiLoadSchema = getStringTypeSchema(oldfposiLoadColNames);
         Dataset<Row> oldfposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(oldfposiLoadSchema)
                 .csv(Paths.get(stepInputDir, oldfposiLoadCsv).toString());
 

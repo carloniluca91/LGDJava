@@ -4,7 +4,6 @@ import org.apache.spark.sql.*;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Logger;
@@ -53,7 +52,7 @@ public class QuadFrapp extends AbstractStep {
                 "d0475impdervalintng", "qcaprateascad", "qcaprateimpag", "qintrateimpag", "qcapratemora", "qintratemora", "accontiratescad",
                 "imporigprestito", "d6998", "d6970", "d0075addebitiinsosp", "codicebanca_princ", "ndgprincipale", "datainiziodef");
 
-        Dataset<Row> hadoopFrapp = sparkSession.read().format(csvFormat).option("sep", ",").schema(getDfSchema(hadoopFrappColumnNames))
+        Dataset<Row> hadoopFrapp = sparkSession.read().format(csvFormat).option("sep", ",").schema(getStringTypeSchema(hadoopFrappColumnNames))
                 .csv(Paths.get(stepInputDir, hadoopFrappCsv).toString());
 
         List<String> oldFrappLoadColumnNames = Arrays.asList("CODICEBANCA", "NDG", "SPORTELLO", "CONTO", "PROGR_SEGMENTO", "DT_RIFERIMENTO",
@@ -71,13 +70,13 @@ public class QuadFrapp extends AbstractStep {
                 "QCAPRATEASCAD", "QCAPRATEIMPAG", "QINTERRATEIMPAG", "QCAPRATEMORA", "QINTERRATEMORA", "ACCONTIRATESCAD", "IMPORIGPRESTITO",
                 "CDFISC", "D6998_GAR_TITOLI", "D6970_GAR_PERS", "ADDEBITI_IN_SOSP");
 
-        Dataset<Row> oldFrappLoad = sparkSession.read().format(csvFormat).option("sep", ",").schema(getDfSchema(oldFrappLoadColumnNames))
+        Dataset<Row> oldFrappLoad = sparkSession.read().format(csvFormat).option("sep", ",").schema(getStringTypeSchema(oldFrappLoadColumnNames))
                 .csv(Paths.get(stepInputDir, oldFrappLoadCsv).toString());
 
         List<String> fcollColumnNames = Arrays.asList("CODICEBANCA", "NDGPRINCIPALE", "DATAINIZIODEF", "DATAFINEDEF",
                 "DATA_DEFAULT", "ISTITUTO_COLLEGATO", "NDG_COLLEGATO", "DATA_COLLEGAMENTO", "CUMULO");
 
-        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",").schema(getDfSchema(fcollColumnNames))
+        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",").schema(getStringTypeSchema(fcollColumnNames))
                 .csv(Paths.get(stepInputDir, fcollCsv).toString());
 
         // JOIN oldfrapp_load BY (CODICEBANCA, NDG), fcoll BY (ISTITUTO_COLLEGATO, NDG_COLLEGATO);
@@ -104,7 +103,7 @@ public class QuadFrapp extends AbstractStep {
 
         List<String> joinColumnNames = Arrays.asList("codicebanca_princ",
                 "ndgprincipale", "datainiziodef", "codicebanca", "ndg", "sportello", "conto");
-        joinCondition = getJoinCondition(hadoopFrapp, oldFrapp, joinColumnNames)
+        joinCondition = getQuadJoinCondition(hadoopFrapp, oldFrapp, joinColumnNames)
                 .and(hadoopFrapp.col("datariferimento").equalTo(oldFrapp.col("DT_RIFERIMENTO")));
 
         // FILTER hadoop_frapp_oldfrapp_join BY oldfrapp::CODICEBANCA IS NULL;
@@ -123,25 +122,10 @@ public class QuadFrapp extends AbstractStep {
         logger.info("hadoopFrappOutPath: " + hadoopFrappOutPath);
         logger.info("oldFrappOutPath: " + oldFrappOutPath);
 
-        hadoopFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(stepOutputDir, hadoopFrappOutPath).toString());
+        hadoopFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite)
+                .csv(Paths.get(stepOutputDir, hadoopFrappOutPath).toString());
 
-        oldFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(stepOutputDir, oldFrappOutPath).toString());
-
-    }
-
-    private Column getJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
-
-        Column joinCondition = datasetLeft.col(joinColumnNames.get(0))
-                .equalTo(datasetRight.col(joinColumnNames.get(0).toUpperCase()));
-
-        for (String joinColumnName: joinColumnNames.subList(1, joinColumnNames.toArray().length - 1)){
-
-            joinCondition = joinCondition.and(datasetLeft.col(joinColumnName)
-                    .equalTo(datasetRight.col(joinColumnName.toUpperCase())));
-        }
-
-        return joinCondition;
+        oldFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite)
+                .csv(Paths.get(stepOutputDir, oldFrappOutPath).toString());
     }
 }

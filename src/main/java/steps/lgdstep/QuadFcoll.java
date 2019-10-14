@@ -37,15 +37,15 @@ public class QuadFcoll extends AbstractStep {
 
         // 17
         List<String> fcollLoadColumnNames = Arrays.asList("cumulo", "cd_istituto_COLL", "ndg_COLL", "data_inizio_DEF", "data_collegamento", "pri");
-        Dataset<Row> fcollLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getDfSchema(fcollLoadColumnNames))
+        Dataset<Row> fcollLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(fcollLoadColumnNames))
                 .csv(Paths.get(stepInputDir, fcollCsv).toString());
 
         // ToString(ToDate( data_inizio_DEF,'ddMMMyyyy'),'yyyyMMdd')    as data_inizio_DEF
         // ToString(ToDate( data_collegamento,'ddMMMyyyy'),'yyyyMMdd')  as data_collegamento
 
         Dataset<Row> fcoll = fcollLoad
-                .withColumn("data_inizio_DEF", castToDateCol(fcollLoad.col("data_inizio_DEF"), "ddMMyyyy", "yyyyMMdd"))
-                .withColumn("data_collegamento", castToDateCol(fcollLoad.col("data_collegamento"), "ddMMyyyy", "yyyyMMdd"));
+                .withColumn("data_inizio_DEF", stringDateFormat(fcollLoad.col("data_inizio_DEF"), "ddMMyyyy", "yyyyMMdd"))
+                .withColumn("data_collegamento", stringDateFormat(fcollLoad.col("data_collegamento"), "ddMMyyyy", "yyyyMMdd"));
 
         // 39
 
@@ -53,7 +53,7 @@ public class QuadFcoll extends AbstractStep {
         List<String> oldFposiLoafColumnNames = Arrays.asList(
                 "datainizioDEF", "dataFINEDEF", "dataINIZIOPD", "datainizioinc",
                 "dataSOFFERENZA", "codicebanca", "ndgprincipale", "flagincristrut", "cumulo");
-        Dataset<Row> oldFposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getDfSchema(oldFposiLoafColumnNames))
+        Dataset<Row> oldFposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(oldFposiLoafColumnNames))
                 .csv(Paths.get(stepInputDir, oldFposiLoadCsv).toString());
 
         // FILTER oldfposi_load BY dataINIZIOPD is not null OR datainizioinc is not null OR dataSOFFERENZA is not null
@@ -64,8 +64,8 @@ public class QuadFcoll extends AbstractStep {
         // ToString(ToDate( datainizioDEF,'yy-MM-dd'),'yyyyMMdd')   as datainizioDEF
         // ToString(ToDate( dataFINEDEF,'yy-MM-dd'),'yyyyMMdd')   as dataFINEDEF
         Dataset<Row> oldFposi = oldFposiLoad.filter(filterConditionCol)
-                .withColumn("datainizioDEF", castToDateCol(oldFposiLoad.col("datainizioDEF"), "yy-MM-dd", "yyyyMMdd"))
-                .withColumn("dataFINEDEF", castToDateCol(oldFposiLoad.col("dataFINEDEF"), "yy-MM-dd", "yyyyMMdd"));
+                .withColumn("datainizioDEF", stringDateFormat(oldFposiLoad.col("datainizioDEF"), "yy-MM-dd", "yyyyMMdd"))
+                .withColumn("dataFINEDEF", stringDateFormat(oldFposiLoad.col("dataFINEDEF"), "yy-MM-dd", "yyyyMMdd"));
 
         // 76
 

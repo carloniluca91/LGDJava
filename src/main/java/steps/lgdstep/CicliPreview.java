@@ -44,7 +44,7 @@ public class CicliPreview extends AbstractStep {
         // define dataset schema
         List<String> fposiColumns = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef", "datafinedef", "datainiziopd", "datainizioinc",
                 "datainizioristrutt", "datasofferenza", "totaccordatodatdef", "totutilizzdatdef", "segmento", "naturagiuridica_segm");
-        StructType fposiLoadSchema = getDfSchema(fposiColumns);
+        StructType fposiLoadSchema = getStringTypeSchema(fposiColumns);
 
         // 21
         String fposiOutdirCsvPath = Paths.get(stepInputDir, fposiOutdirCsv).toString();
@@ -176,27 +176,27 @@ public class CicliPreview extends AbstractStep {
          */
 
         // ToString(ToDate(datainiziodef,'yyyyMMdd'),'yyyy-MM-dd') as datainiziodef
-        Column dataInizioDefCol = castToDateCol(
+        Column dataInizioDefCol = stringDateFormat(
                 fposiBase.col("datainiziodef"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziodef");
 
-        // castToDateCol(fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef"),
-        Column dataFineDefCol = castToDateCol(
+        // stringDateFormat(fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef"),
+        Column dataFineDefCol = stringDateFormat(
                 fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef");
 
-        // castToDateCol(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef"),
-        Column dataInizioPdCol = castToDateCol(
+        // stringDateFormat(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef"),
+        Column dataInizioPdCol = stringDateFormat(
                 fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
 
-        // castToDateCol(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc"),
-        Column dataInizioIncCol = castToDateCol(
+        // stringDateFormat(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc"),
+        Column dataInizioIncCol = stringDateFormat(
                 fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
 
-        // castToDateCol(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt"),
-        Column dataInizioRistruttCol = castToDateCol(
+        // stringDateFormat(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt"),
+        Column dataInizioRistruttCol = stringDateFormat(
                 fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
 
-        // castToDateCol(fposiBase.col("datasofferenza"), "yyyyMMdd", "yyyy-MM-dd").as("datasofferenza"),
-        Column dataSofferenzaCol = castToDateCol(
+        // stringDateFormat(fposiBase.col("datasofferenza"), "yyyyMMdd", "yyyy-MM-dd").as("datasofferenza"),
+        Column dataSofferenzaCol = stringDateFormat(
                 fposiBase.col("datasofferenza"), "yyyyMMdd", "yyyy-MM-dd").as("datasofferenza");
 
         // define WindowSpec in order to compute aggregates on fposiBase without grouping

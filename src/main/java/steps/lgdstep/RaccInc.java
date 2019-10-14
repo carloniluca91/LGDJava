@@ -39,12 +39,12 @@ public class RaccInc extends AbstractStep {
                 "fl08_anag", "fl09_anag", "fl10_anag", "cod_migraz", "data_migraz", "data_ini_appl", "data_fin_appl",
                 "data_ini_appl2");
 
-        StructType tlbmignSchema = getDfSchema(tlbmignColumnNames);
+        StructType tlbmignSchema = getStringTypeSchema(tlbmignColumnNames);
         Dataset<Row> tlbmign = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbmignSchema).csv(
                 Paths.get(stepInputDir, tlbmignPathCsv).toString());
 
         // AddDuration(ToDate(data_migraz,'yyyyMMdd'),'P1M') AS month_up
-        Column dataMigrazDateCol = castToDateCol(tlbmign.col("data_migraz"), "yyyyMMdd", "yyyy-MM-dd");
+        Column dataMigrazDateCol = stringDateFormat(tlbmign.col("data_migraz"), "yyyyMMdd", "yyyy-MM-dd");
         Column monthUpCol = functions.date_format(functions.add_months(dataMigrazDateCol, 1), "yyyyMMdd");
 
         List<Column> tlbmignSelectList = new ArrayList<>();

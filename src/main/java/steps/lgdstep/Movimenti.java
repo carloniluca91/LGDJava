@@ -45,7 +45,7 @@ public class Movimenti extends AbstractStep {
                 "mo_id_movimento", "mo_categoria", "mo_causale", "mo_dt_contabile", "mo_dt_valuta", "mo_imp_movimento",
                 "mo_flag_extracont", "mo_flag_storno", "mo_ndg_principale", "mo_dt_inizio_ciclo");
 
-        StructType tlbmovContaSchema = getDfSchema(tlbmovcontaColumnNames);
+        StructType tlbmovContaSchema = getStringTypeSchema(tlbmovcontaColumnNames);
         Dataset<Row> tlbmovconta = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbmovContaSchema)
                 .csv(Paths.get(stepInputDir, tlbmovcontaCsv).toString());
 

@@ -39,7 +39,7 @@ public class RaccSoff extends AbstractStep {
 
         List<String> dllabColumnNames = Arrays.asList(
                 "istricsof", "ndgricsof", "numricsof", "istcedsof", "ndgcedsof", "numcedsof", "data_primo_fine_me");
-        StructType dllabSchema = getDfSchema(dllabColumnNames);
+        StructType dllabSchema = getStringTypeSchema(dllabColumnNames);
         Dataset<Row> dllab = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(dllabSchema).csv(
                 Paths.get(stepInputDir, dblabCsvPath).toString());
 

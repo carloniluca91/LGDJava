@@ -45,7 +45,7 @@ public class FrappPuma extends AbstractStep {
                 "datainiziopd", "datainizioristrutt", "datainizioinc", "datainiziosoff", "c_key", "tipo_segmne", "sae_segm",
                 "rae_segm", "segmento", "tp_ndg", "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg",
                 "ndg_collegato", "codicebanca_collegato", "cd_collegamento", "cd_fiscale", "dt_rif_udct");
-        StructType tlbcidefSchema = getDfSchema(tlbcidefColumns);
+        StructType tlbcidefSchema = getStringTypeSchema(tlbcidefColumns);
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbcidefSchema).csv(
                 Paths.get(stepInputDir, cicliNdgPath).toString());
         // 49
@@ -58,7 +58,7 @@ public class FrappPuma extends AbstractStep {
         // 59
         List<String> tlbgaranColumns = Arrays.asList("cd_istituto", "ndg", "sportello", "dt_riferimento", "conto_esteso",
                 "cd_puma2", "ide_garanzia", "importo", "fair_value");
-        StructType tlbgaranSchema = getDfSchema(tlbgaranColumns);
+        StructType tlbgaranSchema = getStringTypeSchema(tlbgaranColumns);
         Dataset<Row> tlbgaran = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbgaranSchema).csv(
                 Paths.get(stepInputDir, tlbgaranPath).toString());
 
@@ -79,7 +79,7 @@ public class FrappPuma extends AbstractStep {
                         0,6 );
         */
         Column leastDateCol = functions.least(getUnixTimeStampCol(
-                functions.add_months(castToDateCol(tlbcidef.col("datafinedef"),
+                functions.add_months(stringDateFormat(tlbcidef.col("datafinedef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -1), "yyyy-MM-dd"),
                 getUnixTimeStampCol(functions.lit(dataA), "yyyy-MM-dd"));
 

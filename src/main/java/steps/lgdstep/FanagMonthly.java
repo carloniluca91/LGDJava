@@ -49,7 +49,7 @@ public class FanagMonthly extends AbstractStep{
                 "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg", "ndg_collegato", "codicebanca_collegato",
                 "cd_collegamento", "cd_fiscale", "dt_rif_udct");
 
-        Dataset<Row> cicliNdg = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getDfSchema(cicliNdgColumnNames)).csv(
+        Dataset<Row> cicliNdg = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(cicliNdgColumnNames)).csv(
                 Paths.get(stepInputDir, cicliNdgPath).toString());
 
         // cicli_ndg_princ = FILTER cicli_ndg BY cd_collegamento IS NULL;
@@ -68,7 +68,7 @@ public class FanagMonthly extends AbstractStep{
         List<String> tlbuactLoadSeletcColNames = Arrays.asList("dt_riferimento", "cd_istituto", "ndg", "tp_ndg", "intestazione",
                 "cd_fiscale", "partita_iva", "sae", "rae", "ciae", "provincia", "sportello", "ndg_caponucleo");
 
-        Dataset<Row> tlbuact = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getDfSchema(tlbuactColumnNames)).csv(
+        Dataset<Row> tlbuact = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(tlbuactColumnNames)).csv(
                 Paths.get(stepInputDir, tlbuActPath).toString()).selectExpr(toScalaStringSeq(tlbuactLoadSeletcColNames));
 
         // JOIN  tlbuact BY (cd_istituto, ndg), cicli_ndg_princ BY (codicebanca_collegato, ndg_collegato);
@@ -172,7 +172,7 @@ public class FanagMonthly extends AbstractStep{
                 "cd_tipo_def_t0", "cd_stato_def_a_t12", "cd_rap_ristr", "tp_ristrutt", "tp_cli_scad_scf", "tp_cli_scad_scf_b2", "totale_saldi_0063",
                 "totale_saldi_0260");
 
-        Dataset<Row> tlbudtc = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getDfSchema(tlbudtcColumnNames))
+        Dataset<Row> tlbudtc = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(tlbudtcColumnNames))
                 .csv(Paths.get(stepInputDir, tlbudtcPath).toString());
 
         // JOIN  tlbudtc BY (cd_istituto, ndg, dt_riferimento), tlbcidef_tlbuact BY (codicebanca_collegato,ndg_collegato, datariferimento) ;

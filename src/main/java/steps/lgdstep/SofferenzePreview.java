@@ -43,7 +43,7 @@ public class SofferenzePreview extends AbstractStep {
 
         List<String> soffLoadColumnNames = Arrays.asList("istituto", "ndg", "numerosofferenza", "datainizio", "datafine",
                 "statopratica", "saldoposizione", "saldoposizionecontab");
-        StructType soffLoadSchema = getDfSchema(soffLoadColumnNames);
+        StructType soffLoadSchema = getStringTypeSchema(soffLoadColumnNames);
         Dataset<Row> soffLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(soffLoadSchema).csv(
                 Paths.get(stepInputDir, soffOutDirCsv).toString());
 
@@ -53,7 +53,7 @@ public class SofferenzePreview extends AbstractStep {
         Column ufficioCol = functions.lit(ufficio).as("ufficio");
 
         // ToString(ToDate('$data_a','yyyyMMdd'),'yyyy-MM-dd') as datarif
-        Column dataRifCol = castToDateCol(functions.lit(dataA), "yyyyMMdd", "yyyy-MM-dd").as("datarif");
+        Column dataRifCol = stringDateFormat(functions.lit(dataA), "yyyyMMdd", "yyyy-MM-dd").as("datarif");
 
         /*
         (double)REPLACE(saldoposizione,',','.')         as saldoposizione,
@@ -75,8 +75,8 @@ public class SofferenzePreview extends AbstractStep {
         ToString(ToDate(datainizio,'yyyyMMdd'),'yyyy-MM-dd') as datainizio,
         ToString(ToDate(datafine,'yyyyMMdd'),'yyyy-MM-dd')   as datafine
          */
-        Column dataInizioCol = castToDateCol(soffBase.col("datainizio"), "yyyyMMdd", "yyyy-MM-dd").alias("datainizio");
-        Column dataFineCol = castToDateCol(soffBase.col("datafine"), "yyyyMMdd", "yyyy-MM-dd").alias("datafine");
+        Column dataInizioCol = stringDateFormat(soffBase.col("datainizio"), "yyyyMMdd", "yyyy-MM-dd").alias("datainizio");
+        Column dataFineCol = stringDateFormat(soffBase.col("datafine"), "yyyyMMdd", "yyyy-MM-dd").alias("datafine");
 
         // GROUP soff_base BY ( istituto, ndg, numerosofferenza );
         WindowSpec soffGen2Window = Window.partitionBy(

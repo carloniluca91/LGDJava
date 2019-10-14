@@ -18,12 +18,7 @@ abstract class StepUtils {
 
     StepUtils(){}
 
-    // convert column of dataset into given dataType
-    protected Column castCol(Dataset<Row> df, String columnName, DataType dataType){
-        return castCol(df.col(columnName), dataType);
-    }
-
-    private Column castCol(Column column, DataType dataType){
+    protected Column castCol(Column column, DataType dataType){
         return column.cast(dataType);
     }
 
@@ -33,14 +28,22 @@ abstract class StepUtils {
         return castCol(functions.from_unixtime(functions.unix_timestamp(col, inputF), "yyyy-MM-dd"), DataTypes.DateType);
     }
 
-    // convert a string column representing a date from the given input format to the given output date format
-    protected Column castToDateCol(Column col, String inputF, String outputF){
+    protected Column getQuadJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
 
-        return functions.from_unixtime(functions.unix_timestamp(col, inputF), outputF);
+        Column joinCondition = datasetLeft.col(joinColumnNames.get(0))
+                .equalTo(datasetRight.col(joinColumnNames.get(0).toUpperCase()));
+
+        for (String joinColumnName: joinColumnNames.subList(1, joinColumnNames.toArray().length - 1)){
+
+            joinCondition = joinCondition.and(datasetLeft.col(joinColumnName)
+                    .equalTo(datasetRight.col(joinColumnName.toUpperCase())));
+        }
+
+        return joinCondition;
     }
 
     // create a schema with one String column for each name provided
-    protected StructType getDfSchema(List<String> columnNames){
+    protected StructType getStringTypeSchema(List<String> columnNames){
 
         StructType schema = new StructType();
         for (String columnName: columnNames){
@@ -122,6 +125,12 @@ abstract class StepUtils {
         }
 
         return dfCols;
+    }
+
+    // convert a string column representing a date from the given input format to the given output date format
+    protected Column stringDateFormat(Column col, String inputF, String outputF){
+
+        return functions.from_unixtime(functions.unix_timestamp(col, inputF), outputF);
     }
 
     // convert a list of column expression into scala.collection.Seq of column expressions

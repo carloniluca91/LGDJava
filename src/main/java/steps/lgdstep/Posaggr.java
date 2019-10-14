@@ -36,7 +36,7 @@ public class Posaggr extends AbstractStep {
 
         // 19
         List<String> tblcompColNames = Arrays.asList("dt_riferimento", "c_key", "tipo_segmne", "cd_istituto", "ndg");
-        StructType tblcompSchema = getDfSchema(tblcompColNames);
+        StructType tblcompSchema = getStringTypeSchema(tblcompColNames);
         Dataset<Row> tblcomp = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tblcompSchema).csv(
                 Paths.get(stepInputDir, tblcompCsvPath).toString());
 
@@ -50,7 +50,7 @@ public class Posaggr extends AbstractStep {
                 "tipo_segmne_aggr", "segmento", "tipo_motore", "cd_istituto", "ndg", "rae", "sae", "tp_ndg", "prov_segm",
                 "fonte_segmento", "utilizzo_cr", "accordato_cr", "databil", "strutbil", "fatturbil", "attivobil",
                 "codimp_cebi", "tot_acco_agr", "tot_util_agr", "n058_int_vig");
-        StructType tlbaggrSchema = getDfSchema(tlbaggrColNames);
+        StructType tlbaggrSchema = getStringTypeSchema(tlbaggrColNames);
         Dataset<Row> tlbaggr = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbaggrSchema).csv(
                 Paths.get(stepInputDir, tlbaggrCsvPath).toString());
 
@@ -78,7 +78,7 @@ public class Posaggr extends AbstractStep {
                 "ndg_gruppo", "bo_acco", "bo_util", "tot_add_sosp", "tot_val_intr", "ca_acco", "ca_util", "fl_incaglio",
                 "fl_soff", "fl_inc_ogg", "fl_ristr", "fl_pd_90", "fl_pd_180", "util_cassa", "fido_op_cassa", "utilizzo_titoli",
                 "esposizione_titoli");
-        StructType tlbposiLoadSchema = getDfSchema(tlbposiLoadColNames);
+        StructType tlbposiLoadSchema = getStringTypeSchema(tlbposiLoadColNames);
         Dataset<Row> tlbposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbposiLoadSchema).csv(
                 Paths.get(stepInputDir, tlbposiLoadCsvPath).toString());
 

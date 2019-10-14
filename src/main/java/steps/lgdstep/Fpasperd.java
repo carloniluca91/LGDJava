@@ -35,7 +35,7 @@ public class Fpasperd extends AbstractStep {
                 "segmento", "tp_ndg", "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg",
                 "ndg_collegato", "codicebanca_collegato", "cd_collegamento", "cd_fiscale");
 
-        StructType tlbcidefLoadSchema = getDfSchema(tlbcidefLoadColumns);
+        StructType tlbcidefLoadSchema = getStringTypeSchema(tlbcidefLoadColumns);
 
         String cicliNdgPathCsv = getProperty("cicli.ndg.path.csv");
         logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);
@@ -50,7 +50,7 @@ public class Fpasperd extends AbstractStep {
 
         // // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
         // tlbcidef::datafinedef in format "yyyyMMdd"
-        Column dataFineDefCol = castToDateCol(tlbcidefLoad.col("datafinedef"),
+        Column dataFineDefCol = stringDateFormat(tlbcidefLoad.col("datafinedef"),
                 "yyyyMMdd", "yyyy-MM-dd");
         dataFineDefCol = functions.date_format(functions.add_months(dataFineDefCol, 2), "yyyyMMdd").as("datafinedef");
 
@@ -61,7 +61,7 @@ public class Fpasperd extends AbstractStep {
 
         // 63
         List<String> tlbpaspeColumns = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
-        StructType tlbpaspeSchema = getDfSchema(tlbpaspeColumns);
+        StructType tlbpaspeSchema = getStringTypeSchema(tlbpaspeColumns);
 
         String tlbpaspeCsv = getProperty("tlbpaspe.filter.csv");
         String tlbpaspeCsvPath = Paths.get(stepInputDir, tlbpaspeCsv).toString();
@@ -91,8 +91,8 @@ public class Fpasperd extends AbstractStep {
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
         Column daysDiffColl = functions.datediff(
-                castToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                castToDateCol(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
+                stringDateFormat(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
+                stringDateFormat(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
 
         // list of columns to be selected from dataframe tlbpaspeFilter
         List<String> tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -185,8 +185,8 @@ public class Fpasperd extends AbstractStep {
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
         daysDiffColl = functions.datediff(
-                castToDateCol(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                castToDateCol(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
+                stringDateFormat(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
+                stringDateFormat(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
 
         // columns to be selected from dataframe fpasperdNullOut
         List<String> fpasperdNullOutSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -274,7 +274,7 @@ public class Fpasperd extends AbstractStep {
         // slightly change the field names for tlbpaspeoss in order to avoid implicit coalesce operator
         // triggered by performing "full_outer" join on columns with same name
         List<String> tlbpaspeossCols = Arrays.asList("_cd_istituto", "_ndg", "_datacont", "_causale", "_importo");
-        StructType tlbpaspeossSchema = getDfSchema(tlbpaspeossCols);
+        StructType tlbpaspeossSchema = getStringTypeSchema(tlbpaspeossCols);
         Dataset<Row> tlbpaspeoss = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbpaspeossSchema).csv(tlbpaspeossCsvPath);
         // 344
