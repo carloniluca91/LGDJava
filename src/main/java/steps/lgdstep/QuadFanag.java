@@ -3,6 +3,7 @@ package steps.lgdstep;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.functions;
 import steps.abstractstep.AbstractStep;
 
@@ -121,10 +122,67 @@ public class QuadFanag extends AbstractStep {
         Dataset<Row> tlbucolFiltered = tlbucolLoad.filter(tlbucolLoad.col("cd_collegamento").isin("103", "105", "106", "107", "207"));
 
         Dataset<Row> hadoopFanagOut = soloHadoopFanagFilter.select(functions.lit(ufficio).alias("ufficio"), soloHadoopFanagFilter.col("*"));
-        Dataset<Row> hadoopFanagOutNdg = soloOldFanagFilterNdg.select(functions.lit(ufficio).alias("ufficio"), soloOldFanagFilterNdg.col("*"));
+        Dataset<Row> hadoopFanagOutNdg = soloHadoopFanagFilterNdg.select(functions.lit(ufficio).alias("ufficio"), soloOldFanagFilterNdg.col("*"));
 
-        // TODO: terminare
-        Dataset<Row> oldFanagOutColl;
+        // JOIN solo_oldfanag_filter BY (CODICEBANCA, NDG, DATARIFERIMENTO),
+        // tlbucol_filtered BY (cd_istituto, ndg_collegato, dt_riferimento);
+        Column oldFanagOutCollJoinCondition = soloOldFanagFilter.col("CODICEBANCA").equalTo(tlbucolFiltered.col("cd_istituto"))
+                .and(soloOldFanagFilter.col("NDG").equalTo(tlbucolFiltered.col("ndg_collegato")))
+                .and(soloOldFanagFilter.col("DATARIFERIMENTO").equalTo(tlbucolFiltered.col("dt_riferimento")));
+
+        Dataset<Row> oldFanagOutColl = soloOldFanagFilter.join(tlbucolFiltered, oldFanagOutCollJoinCondition).select(
+                functions.lit(ufficio).alias("ufficio"), soloHadoopFanagFilter.col("*"));
+
+        // JOIN solo_oldfanag_filter BY (CODICEBANCA, NDG, DATARIFERIMENTO)
+        // ,tlbucol_filtered BY (cd_istituto, ndg, dt_riferimento);
+        Column oldFanagPrincJoinCondition = soloOldFanagFilter.col("CODICEBANCA").equalTo(tlbucolFiltered.col("cd_istituto"))
+                .and(soloOldFanagFilter.col("NDG").equalTo(tlbucolFiltered.col("ndg")))
+                .and(soloOldFanagFilter.col("DATARIFERIMENTO").equalTo(tlbucolFiltered.col("dt_riferimento")));
+
+        Dataset<Row> oldFanagOutPrinc = soloOldFanagFilter.join(tlbucolFiltered, oldFanagPrincJoinCondition).select(
+                functions.lit(ufficio).alias("ufficio"), soloOldFanagFilter.col("*"));
+
+        // oldfanag_out = UNION oldfanag_out_coll ,oldfanag_out_princ
+        Dataset<Row> oldFanagOut = oldFanagOutColl.union(oldFanagOutPrinc);
+
+        // JOIN solo_oldfanag_filter_ndg BY (CODICEBANCA, NDG, DATARIFERIMENTO),
+        // tlbucol_filtered BY (cd_istituto, ndg_collegato, dt_riferimento);
+        Column oldFanagOutCollNdgJoinCondition = soloOldFanagFilterNdg.col("CODICEBANCA").equalTo(tlbucolFiltered.col("cd_istituto"))
+                .and(soloOldFanagFilterNdg.col("NDG").equalTo(tlbucolFiltered.col("ndg_collegato")))
+                .and(soloOldFanagFilterNdg.col("DATARIFERIMENTO").equalTo(tlbucolFiltered.col("dt_riferimento")));
+
+        Dataset<Row> oldFanagOutCollNdg = soloOldFanagFilterNdg.join(tlbucolFiltered, oldFanagOutCollNdgJoinCondition).select(
+                functions.lit(ufficio).alias("ufficio"), soloOldFanagFilterNdg.col("*"));
+
+        // JOIN solo_oldfanag_filter_ndg BY (CODICEBANCA, NDG, DATARIFERIMENTO),
+        // tlbucol_filtered BY (cd_istituto, ndg, dt_riferimento);
+        Column oldFanagOutPrincNdgJoinCondition = soloOldFanagFilterNdg.col("CODICEBANCA").equalTo(tlbucolFiltered.col("cd_istituto"))
+                .and(soloOldFanagFilterNdg.col("NDG").equalTo(tlbucolFiltered.col("ndg")))
+                .and(soloOldFanagFilterNdg.col("DATARIFERIMENTO").equalTo(tlbucolFiltered.col("dt_riferimento")));
+
+        Dataset<Row> oldFanagOutPrincNdg = soloOldFanagFilterNdg.join(tlbucolFiltered, oldFanagOutPrincNdgJoinCondition).select(
+                functions.lit(ufficio).alias("ufficio"), soloOldFanagFilterNdg.col("*"));
+
+        // oldfanag_out_ndg = UNION oldfanag_out_coll_ndg, oldfanag_out_princ_ndg
+        Dataset<Row> oldFanagOutNdg = oldFanagOutCollNdg.union(oldFanagOutPrincNdg);
+
+        String hadoopFanagOutPath = getProperty("hadoop.fanag.out");
+        String oldFanagOutPath = getProperty("old.fanag.out");
+        String hadoopFanagOutNdgPath = getProperty("hadoop.fanag.out.ndg");
+        String oldFanagOutNdgPath = getProperty("old.fanag.out.ndg");
+
+        logger.info("hadoopFanagOutPath: " + hadoopFanagOutPath);
+        logger.info("oldFanagOutPath: " + oldFanagOutPath);
+        logger.info("hadoopFanagOutNdgPath: " + hadoopFanagOutNdgPath);
+        logger.info("oldFanagOutNdgPath: " + oldFanagOutNdgPath);
+
+        hadoopFanagOut.write().format(csvFormat).mode(SaveMode.Overwrite).csv(Paths.get(stepOutputDir, hadoopFanagOutPath).toString());
+
+        oldFanagOut.write().format(csvFormat).mode(SaveMode.Overwrite).csv(Paths.get(stepOutputDir, oldFanagOutPath).toString());
+
+        hadoopFanagOutNdg.write().format(csvFormat).mode(SaveMode.Overwrite).csv(Paths.get(stepOutputDir, hadoopFanagOutNdgPath).toString());
+
+        oldFanagOutNdg.write().format(csvFormat).mode(SaveMode.Overwrite).csv(Paths.get(stepOutputDir, oldFanagOutNdgPath).toString());
 
     }
 }
