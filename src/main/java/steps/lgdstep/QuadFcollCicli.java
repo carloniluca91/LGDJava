@@ -29,7 +29,7 @@ public class QuadFcollCicli extends AbstractStep {
     public void run() {
 
         String csvFormat = getProperty("csv.format");
-        String fcollCsv = getProperty("hadoop.fposi.csv");
+        String fcollCsv = getProperty("fcoll.csv");
         String cicliNdgLoadCsv = getProperty("cicli.ndg.load.csv");
         String fileOutPath = getProperty("file.out");
 
