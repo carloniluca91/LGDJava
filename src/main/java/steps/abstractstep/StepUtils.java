@@ -133,14 +133,14 @@ abstract class StepUtils {
         return functions.from_unixtime(functions.unix_timestamp(col, inputF), outputF);
     }
 
-    // convert a list of column expression into scala.collection.Seq of column expressions
-    protected Seq<Column> toScalaColSeq(List<Column> columnList){
-        return JavaConversions.asScalaBuffer(columnList).toSeq();
+    // convert a Java list into a scala.collection.Seq
+    protected Seq<String> toScalaStringSeq(List<String> list){
+        return JavaConversions.asScalaBuffer(list).toSeq();
     }
 
-    protected Seq<String> toScalaStringSeq(List<String> stringList){ return JavaConversions.asScalaBuffer(stringList).toSeq();}
+    protected Seq<Column> toScalaColSeq(List<Column> list) { return JavaConversions.asScalaBuffer(list).toSeq();}
 
-    // creates a list of aggregate column expressions to be used over windowspec w on dataframe df
+        // creates a list of aggregate column expressions to be used over windowspec w on dataframe df
     protected List<Column> windowSum(Dataset<Row> df, Map<String, String> columnMap, WindowSpec w){
 
         List<Column> columnList = new ArrayList<>();

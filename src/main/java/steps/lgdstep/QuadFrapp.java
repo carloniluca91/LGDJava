@@ -1,25 +1,26 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class QuadFrapp extends AbstractStep {
 
     private String ufficio;
 
-    public QuadFrapp(String ufficio){
+    public QuadFrapp(String loggerName, String ufficio){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         this.ufficio = ufficio;
 
-        stepInputDir = getProperty("quad.frapp.input.dir");
-        stepOutputDir = getProperty("quad.frapp.output.dir");
+        stepInputDir = getPropertyValue("quad.frapp.input.dir");
+        stepOutputDir = getPropertyValue("quad.frapp.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -28,10 +29,10 @@ public class QuadFrapp extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String hadoopFrappCsv = getProperty("hadoop.frapp.csv");
-        String oldFrappLoadCsv = getProperty("old.frapp.load.csv");
-        String fcollCsv = getProperty("fcoll.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String hadoopFrappCsv = getPropertyValue("hadoop.frapp.csv");
+        String oldFrappLoadCsv = getPropertyValue("old.frapp.load.csv");
+        String fcollCsv = getPropertyValue("fcoll.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("hadoopFrappCsv: " + hadoopFrappCsv);
@@ -116,8 +117,8 @@ public class QuadFrapp extends AbstractStep {
                 .filter(hadoopFrapp.col("codicebanca").isNull())
                 .select(functions.lit(ufficio).alias("ufficio"), hadoopFrapp.col("*"), oldFrapp.col("*"));
 
-        String hadoopFrappOutPath = getProperty("hadoop.frapp.out");
-        String oldFrappOutPath = getProperty("old.frapp.out");
+        String hadoopFrappOutPath = getPropertyValue("hadoop.frapp.out");
+        String oldFrappOutPath = getPropertyValue("old.frapp.out");
 
         logger.info("hadoopFrappOutPath: " + hadoopFrappOutPath);
         logger.info("oldFrappOutPath: " + oldFrappOutPath);

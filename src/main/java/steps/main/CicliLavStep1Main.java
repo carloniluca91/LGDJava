@@ -1,45 +1,22 @@
 package steps.main;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.Option;
 import steps.lgdstep.CicliLavStep1;
-
-import java.util.logging.Logger;
+import steps.params.OptionFactory;
+import steps.params.StepParams;
 
 public class CicliLavStep1Main {
 
-    private static Logger logger = Logger.getLogger(CicliLavStep1Main.class.getName());
-
     public static void main(String[] args){
 
-        // define options dataDa and dataA and set them as required
-        Option dataDaOption = new Option("dd", "dataDa", true, "parametro $data_da");
-        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
-        dataDaOption.setRequired(true);
-        dataAOption.setRequired(true);
+        // define options
+        Option dataDaOption = OptionFactory.getDataDaOption();
+        Option dataAOption = OptionFactory.getDataAOpton();
 
-        // add the two previously defined options
-        Options options = new Options();
-        options.addOption(dataDaOption);
-        options.addOption(dataAOption);
+        String loggerName = CicliLavStep1Main.class.getSimpleName();
+        StepParams stepParams = new StepParams(loggerName, args, dataDaOption, dataAOption);
+        CicliLavStep1 cicliLavStep1 = new CicliLavStep1(loggerName, stepParams.getDataDa(), stepParams.getDataA());
+        cicliLavStep1.run();
 
-        // try to parse and retrieve command line arguments
-        CommandLineParser commandLineParser = new BasicParser();
-        String dataDa;
-        String dataA;
-
-        try {
-
-            CommandLine commandLine = commandLineParser.parse(options, args);
-            dataDa = commandLine.getOptionValue("dataDa");
-            dataA = commandLine.getOptionValue("dataA");
-            logger.info("Arguments parsed correctly");
-
-            CicliLavStep1 cicliLavStep1 = new CicliLavStep1(dataDa, dataA);
-            cicliLavStep1.run();
-
-        } catch (ParseException e) {
-
-            logger.info("ParseException: " + e.getMessage());
-        }
     }
 }

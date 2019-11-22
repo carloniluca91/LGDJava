@@ -6,7 +6,7 @@ public class FpasperdMain {
 
     public static void main(String[] args){
 
-        Fpasperd fpasperd = new Fpasperd();
+        Fpasperd fpasperd = new Fpasperd(FpasperdMain.class.getSimpleName());
         fpasperd.run();
     }
 }

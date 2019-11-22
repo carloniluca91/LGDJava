@@ -1,53 +1,24 @@
 package steps.main;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.Option;
 import steps.lgdstep.FrappNdgMonthly;
-
-import java.util.logging.Logger;
+import steps.params.OptionFactory;
+import steps.params.StepParams;
 
 public class FrappNdgMonthlyMain {
 
-    private static Logger logger = Logger.getLogger(FrappNdgMonthlyMain.class.getName());
-
     public static void main(String[] args) {
 
-        // define option dataA, periodo, numeroMesi1, numeroMesi2
-        Option dataAOption = new Option("da", "dataA", true, "parametro $data_a");
-        Option numeroMesi1Option = new Option("nm_uno", "numero_mesi_1", true, "parametro $numero_mesi_1");
-        Option numeroMesi2Option = new Option("nm_due", "numero_mesi_2", true, "parametro $numero_mesi_2");
+        // define options
+        Option dataAOption = OptionFactory.getDataAOpton();
+        Option numeroMesi1Option = OptionFactory.getNumeroMesi1Option();
+        Option numeroMesi2Option = OptionFactory.getNumeroMesi2Option();
 
-        // set them as required
-        dataAOption.setRequired(true);
-        numeroMesi1Option.setRequired(true);
-        numeroMesi2Option.setRequired(true);
+        String loggerName = FrappNdgMonthlyMain.class.getSimpleName();
+        StepParams stepParams = new StepParams(loggerName, args, dataAOption, numeroMesi1Option, numeroMesi2Option);
+        FrappNdgMonthly frappNdgMonthly = new FrappNdgMonthly(loggerName, stepParams.getDataA(), stepParams.getNumeroMesi1(),
+                stepParams.getNumeroMesi2());
 
-        // add them to Options
-        Options options = new Options();
-        options.addOption(dataAOption);
-        options.addOption(numeroMesi1Option);
-        options.addOption(numeroMesi2Option);
-
-        CommandLineParser commandLineParser = new BasicParser();
-
-        int numeroMesi1, numeroMesi2;
-        String dataA;
-
-        // try to parse and retrieve command line arguments
-        try{
-
-            CommandLine commandLine = commandLineParser.parse(options, args);
-            dataA = commandLine.getOptionValue("dataA");
-            numeroMesi1 = Integer.parseInt(commandLine.getOptionValue("numero_mesi_1"));
-            numeroMesi2 = Integer.parseInt(commandLine.getOptionValue("numero_mesi_2"));
-            logger.info("Arguments parsed correctly");
-
-            FrappNdgMonthly frapp = new FrappNdgMonthly(dataA, numeroMesi1, numeroMesi2);
-            frapp.run();
-
-        }
-        catch (ParseException e) {
-
-            logger.info("ParseException: " + e.getMessage());
-        }
+        frappNdgMonthly.run();
     }
 }

@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import steps.abstractstep.AbstractStep;
@@ -9,21 +10,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class QuadFposi extends AbstractStep {
 
     // required parameters
     private String ufficio;
 
-    public QuadFposi(String ufficio){
+    public QuadFposi(String loggerName, String ufficio){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         this.ufficio = ufficio;
 
-        stepInputDir = getProperty("quad.fposi.input.dir");
-        stepOutputDir = getProperty("quad.fposi.output.dir");
+        stepInputDir = getPropertyValue("quad.fposi.input.dir");
+        stepOutputDir = getPropertyValue("quad.fposi.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -33,8 +34,8 @@ public class QuadFposi extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String hadoopFposiCsv = getProperty("hadoop.fposi.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String hadoopFposiCsv = getPropertyValue("hadoop.fposi.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("hadoopFposiCsv: " + hadoopFposiCsv);
@@ -53,7 +54,7 @@ public class QuadFposi extends AbstractStep {
         // 45
 
         // 51
-        String oldfposiLoadCsv = getProperty("old.fposi.load.csv");
+        String oldfposiLoadCsv = getPropertyValue("old.fposi.load.csv");
         logger.info("oldfposiLoadCsv: " + oldfposiLoadCsv);
 
         List<String> oldfposiLoadColNames = Arrays.asList("datainizioDEF", "dataFINEDEF", "dataINIZIOPD", "datainizioinc",
@@ -130,9 +131,9 @@ public class QuadFposi extends AbstractStep {
 
         Dataset<Row> abbinatiOut = hadoopFposiOldFposiJoin.filter(abbinatiOutFilterCol).select(toScalaColSeq(selectColList));
 
-        String hadoopFposiOutDir = getProperty("hadoop.fposi.out");
-        String oldFposiOutDir = getProperty("old.fposi.out");
-        String abbinatiOutDir = getProperty("abbinati.out");
+        String hadoopFposiOutDir = getPropertyValue("hadoop.fposi.out");
+        String oldFposiOutDir = getPropertyValue("old.fposi.out");
+        String abbinatiOutDir = getPropertyValue("abbinati.out");
 
         logger.info("hadoopFposiOutDir: " + hadoopFposiOutDir);
         logger.info("oldFposiOutDir: " + oldFposiOutDir);

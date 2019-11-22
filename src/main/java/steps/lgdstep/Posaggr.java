@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
@@ -10,16 +11,16 @@ import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.logging.Logger;
 
 public class Posaggr extends AbstractStep {
 
-    public Posaggr(){
+    public Posaggr(String loggerName){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
-        stepInputDir = getProperty("posaggr.input.dir");
-        stepOutputDir =  getProperty("posaggr.output.dir");
+        stepInputDir = getPropertyValue("posaggr.input.dir");
+        stepOutputDir =  getPropertyValue("posaggr.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -28,8 +29,8 @@ public class Posaggr extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String tblcompCsvPath = getProperty("tblcomp.path.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String tblcompCsvPath = getPropertyValue("tblcomp.path.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("tlbcompCsvPath: " + tblcompCsvPath);
@@ -43,7 +44,7 @@ public class Posaggr extends AbstractStep {
         // 27
 
         // 32
-        String tlbaggrCsvPath = getProperty("tlbaggr.path.csv");
+        String tlbaggrCsvPath = getPropertyValue("tlbaggr.path.csv");
         logger.info("tlbaggrCsvPath: " + tlbaggrCsvPath);
 
         List<String> tlbaggrColNames = Arrays.asList("dt_riferimento", "c_key_aggr", "ndg_gruppo", "cod_fiscale",
@@ -71,7 +72,7 @@ public class Posaggr extends AbstractStep {
 
         // 89
 
-        String tlbposiLoadCsvPath = getProperty("tlbposi.load.csv");
+        String tlbposiLoadCsvPath = getPropertyValue("tlbposi.load.csv");
         logger.info("tlbposiLoadCsvPath: " + tlbposiLoadCsvPath);
 
         List<String> tlbposiLoadColNames = Arrays.asList("dt_riferimento", "cd_istituto", "ndg", "c_key", "cod_fiscale",
@@ -174,7 +175,7 @@ public class Posaggr extends AbstractStep {
                 JavaConverters.asScalaIteratorConverter(selectColumnList.iterator()).asScala().toSeq();
         Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(tblcompTlbaggrTlbposiSelectListselectColumnSeq);
 
-        String posaggrCsvPath = getProperty("posaggr.csv");
+        String posaggrCsvPath = getPropertyValue("posaggr.csv");
         logger.info("posaggrOutputPath: " + posaggrCsvPath);
 
         posaggr.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(

@@ -4,28 +4,38 @@ import org.apache.commons.cli.Option;
 
 public class OptionFactory {
 
-    public static Option getDataDaOption(){
+    private static Option createOption(String shortOpt, String longOpt, String description){
 
-        return new Option("dd", "data-da", true, "parametro $data_da");
+        return new Option(shortOpt, longOpt, true, description);
     }
 
     public static Option getDataAOpton(){
 
-        return new Option("dd", "data-a", true, "parametro $data_a");
+        return createOption("dd", "data-a", "parametro $data_a");
+    }
+
+    public static Option getDataDaOption(){
+
+        return createOption("dd", "data-da", "parametro $data_da");
+    }
+
+    public static Option getDataOsservazioneOption(){
+
+        return createOption("dao", "data-osservazione", "parametro $data_osservazione");
     }
 
     public static Option getUfficioOption(){
 
-        return new Option("uf", "ufficio", true, "parametro $ufficio");
+        return createOption("uf", "ufficio", "parametro $ufficio");
     }
 
     public static Option getNumeroMesi1Option(){
 
-        return new Option("nm1", "numero-mesi-1", true, "parametro $numero_mesi_1");
+        return createOption("nm1", "numero-mesi-1", "parametro $numero_mesi_1");
     }
 
     public static Option getNumeroMesi2Option(){
 
-        return new Option("nm2", "numero-mesi-2", true, "parametro $numero_mesi_2");
+        return createOption("nm2", "numero-mesi-2", "parametro $numero_mesi_2");
     }
 }

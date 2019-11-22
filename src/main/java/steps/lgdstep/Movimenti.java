@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.Seq;
@@ -10,21 +11,21 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 public class Movimenti extends AbstractStep {
 
     // required parameter
     private String dataOsservazione;
 
-    public Movimenti(String dataOsservazione){
+    public Movimenti(String loggerName, String dataOsservazione){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         this.dataOsservazione = dataOsservazione;
 
-        stepInputDir = getProperty("movimenti.input.dir");
-        stepOutputDir = getProperty("movimenti.output.dir");
+        stepInputDir = getPropertyValue("movimenti.input.dir");
+        stepOutputDir = getPropertyValue("movimenti.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -34,8 +35,8 @@ public class Movimenti extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String tlbmovcontaCsv = getProperty("tlbmovconta.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String tlbmovcontaCsv = getPropertyValue("tlbmovconta.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("tlbmovcontaCsv: " + tlbmovcontaCsv);
@@ -75,7 +76,7 @@ public class Movimenti extends AbstractStep {
         Seq<Column> selectColSeq = toScalaColSeq(selectDfColumns(tlbmovconta, selectColMap));
         Dataset<Row> movOutDist = tlbmovconta.filter(filterCondition).select(selectColSeq).distinct();
 
-        String movOutDistPath = getProperty("mov.out.dist");
+        String movOutDistPath = getPropertyValue("mov.out.dist");
         logger.info("movOutDistPath: " + movOutDistPath);
 
         movOutDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(

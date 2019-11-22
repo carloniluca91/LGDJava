@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.JavaConverters;
@@ -7,22 +8,26 @@ import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class FrappPuma extends AbstractStep {
 
     // required parameters
     private String dataA;
 
-    public FrappPuma(String dataA){
+    public FrappPuma(String loggerName, String dataA){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+
+        logger = Logger.getLogger(loggerName);
 
         this.dataA = dataA;
 
-        stepInputDir = getProperty("frapp.puma.input.dir");
-        stepOutputDir = getProperty("frapp.puma.output.dir");
+        stepInputDir = getPropertyValue("frapp.puma.input.dir");
+        stepOutputDir = getPropertyValue("frapp.puma.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -32,9 +37,9 @@ public class FrappPuma extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String cicliNdgPath = getProperty("cicli.ndg.path.csv");
-        String tlbgaranPath = getProperty("tlbgaran.path");
+        String csvFormat = getPropertyValue("csv.format");
+        String cicliNdgPath = getPropertyValue("cicli.ndg.path.csv");
+        String tlbgaranPath = getPropertyValue("tlbgaran.path");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("cicliNdgPath: " + cicliNdgPath);
@@ -130,7 +135,7 @@ public class FrappPuma extends AbstractStep {
 
         Dataset<Row> frappPumaOut = tlbcidefTlbgaranPrinc.union(tlbcidefTlbgaranColl).distinct();
 
-        String frappPumaOutPath = getProperty("frapp.puma.out");
+        String frappPumaOutPath = getPropertyValue("frapp.puma.out");
         logger.info("frappPumaOutPath: " + frappPumaOutPath);
 
         frappPumaOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(

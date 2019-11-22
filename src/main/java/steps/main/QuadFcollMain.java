@@ -6,7 +6,7 @@ public class QuadFcollMain {
 
     public static void main(String[] args){
 
-        QuadFcoll quadFcoll = new QuadFcoll();
+        QuadFcoll quadFcoll = new QuadFcoll(QuadFcollMain.class.getSimpleName());
         quadFcoll.run();
     }
 }

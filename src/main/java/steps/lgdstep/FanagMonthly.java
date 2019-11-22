@@ -1,11 +1,16 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
-import java.util.*;
-import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class FanagMonthly extends AbstractStep{
 
@@ -13,30 +18,31 @@ public class FanagMonthly extends AbstractStep{
     private int numeroMesi2;
     private String dataA;
 
-    public FanagMonthly(int numeroMesi1, int numeroMesi2, String dataA){
+    public FanagMonthly(String loggerName, int numeroMesi1, int numeroMesi2, String dataA){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         this.numeroMesi1 = numeroMesi1;
         this.numeroMesi2 = numeroMesi2;
         this.dataA = dataA;
 
-        stepInputDir = getProperty("fanag.monthly.input.dir");
-        stepOutputDir = getProperty("fanag.monthly.output.dir");
+        stepInputDir = getPropertyValue("fanag.monthly.input.dir");
+        stepOutputDir = getPropertyValue("fanag.monthly.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
 
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String cicliNdgPath = getProperty("cicli.ndg.path.csv");
-        String tlbuActPath = getProperty("tlbuact.csv");
-        String tlbudtcPath = getProperty("tlbduct.path.csv");
-        String fanagOutPath = getProperty("fanag.out");
+        String csvFormat = getPropertyValue("csv.format");
+        String cicliNdgPath = getPropertyValue("cicli.ndg.path.csv");
+        String tlbuActPath = getPropertyValue("tlbuact.csv");
+        String tlbudtcPath = getPropertyValue("tlbduct.path.csv");
+        String fanagOutPath = getPropertyValue("fanag.out");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("cicliNdgPath: " + cicliNdgPath);

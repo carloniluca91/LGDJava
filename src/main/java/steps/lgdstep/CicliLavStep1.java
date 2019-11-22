@@ -1,15 +1,14 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.*;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class CicliLavStep1 extends AbstractStep {
 
@@ -17,33 +16,36 @@ public class CicliLavStep1 extends AbstractStep {
     private String dataDa;
     private String dataA;
 
-    public CicliLavStep1(String dataDa, String dataA) {
+    public CicliLavStep1(String loggerName, String dataDa, String dataA) {
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+
+        logger = Logger.getLogger(loggerName);
 
         this.dataDa = dataDa;
         this.dataA = dataA;
 
-        stepInputDir = getProperty("ciclilav.step1.input.dir");
-        stepOutputDir = getProperty("ciclilav.step1.output.dir");
+        stepInputDir = getPropertyValue("ciclilav.step1.input.dir");
+        stepOutputDir = getPropertyValue("ciclilav.step1.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("dataDa: " + this.dataDa);
-        logger.info("dataA: " + this.dataA);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
+        logger.debug("dataDa: " + this.dataDa);
+        logger.debug("dataA: " + this.dataA);
     }
 
     public void run(){
 
         // retrieve csv_format, input data directory and file name from configuration.properties file
-        String csvFormat = getProperty("csv.format");
-        String tlbcidef_name = getProperty("tlbcidef.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String tlbcidefCsv = getPropertyValue("tlbcidef.csv");
+        String tlbcraccCsv = getPropertyValue("tlbcracc.csv");
+        String tlbcdefPath = Paths.get(dataInputDir, stepInputDir, tlbcidefCsv).toString();
 
-        logger.info("csv format: " + csvFormat);
-        logger.info("tlbcidef_name: " +  tlbcidef_name);
-
-        String tlbcdefPath = Paths.get(stepInputDir, tlbcidef_name).toString();
-        logger.info("tlbcdefPath: " + tlbcdefPath);
+        logger.debug("csv format: " + csvFormat);
+        logger.debug("tlbcidefCsv: " +  tlbcidefCsv);
+        logger.debug("tlbcraccCsv: " + tlbcraccCsv);
+        logger.debug("tlbcdefPath: " + tlbcdefPath);
 
         // 22
         List<String> tlbcidefColumns = Arrays.asList("cd_isti", "ndg_principale", "cod_cr", "dt_inizio_ciclo", "dt_ingresso_status",
@@ -94,11 +96,9 @@ public class CicliLavStep1 extends AbstractStep {
         // 71
 
         // 78
-        String tlbcraccPath = Paths.get(stepInputDir, getProperty("tlbcracc.csv")).toString();
-        logger.info("tlbcraccPath: " + tlbcdefPath);
+        String tlbcraccPath = Paths.get(dataInputDir, stepInputDir, tlbcraccCsv).toString();
         List<String> tlbcraccColumns = Arrays.asList("data_rif", "cd_isti", "ndg", "cod_raccordo", "data_val");
         StructType tlbcraccSchema = getStringTypeSchema(tlbcraccColumns);
-
         Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcraccSchema).csv(tlbcraccPath);
 
@@ -123,9 +123,7 @@ public class CicliLavStep1 extends AbstractStep {
         // 110
 
         // 119
-        List<String> joinCols = Arrays.asList("cod_raccordo", "data_rif");
-        logger.info("join columns: " + joinCols.toString());
-        Seq<String> joinColsSeq = JavaConverters.asScalaIteratorConverter(joinCols.iterator()).asScala().toSeq();  // conversion to scala Seq
+        Seq<String> joinColsSeq = toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));  // conversion to scala Seq
 
         // (tlbcracc::cd_isti is not null ? tlbcracc::cd_isti : cicli_racc_1::cd_isti) as cd_isti_ced
         Column cdIstiCedCol = functions.when(tlbcraccClone.col("cd_isti_clone").isNotNull(), tlbcraccClone.col("cd_isti_clone"))
@@ -153,16 +151,16 @@ public class CicliLavStep1 extends AbstractStep {
                 cicliRacc1.col("dt_fine_ciclo"), cdIstiCedCol, ndgCedCol, dtRifCraccCol);
         // 176
 
-        String ciclilavStep1OutCsv = getProperty("ciclilav.step1.out.csv");
-        logger.info("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
+        String ciclilavStep1OutCsv = getPropertyValue("ciclilav.step1.out.csv");
+        String ciclilavStep1FilecraccCsv = getPropertyValue("ciclilav.step1.filecracc.csv");
 
-        String ciclilavStep1FilecraccCsv = getProperty("ciclilav.step1.filecracc.csv");
-        logger.info("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
+        logger.debug("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
+        logger.debug("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
         ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(stepOutputDir, ciclilavStep1OutCsv).toString());
+                Paths.get(dataOutputDir, stepOutputDir, ciclilavStep1OutCsv).toString());
 
         ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(stepOutputDir, ciclilavStep1FilecraccCsv).toString());
+                Paths.get(dataOutputDir, stepOutputDir, ciclilavStep1FilecraccCsv).toString());
     }
 }

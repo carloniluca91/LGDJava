@@ -1,36 +1,20 @@
 package steps.main;
 
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.Option;
 import steps.lgdstep.QuadFposi;
-
-import java.util.logging.Logger;
+import steps.params.OptionFactory;
+import steps.params.StepParams;
 
 public class QuadFposiMain {
 
-    private static Logger logger = Logger.getLogger(QuadFposiMain.class.getName());
-
     public static void main(String[] args){
 
-        // define options for $ufficio, then set it as required
-        Option ufficioOption = new Option("u", "ufficio", true, "parametro $ufficio");
-        ufficioOption.setRequired(true);
+        // define options
+        Option ufficioOption = OptionFactory.getUfficioOption();
 
-        Options quadFposiOptions = new Options();
-        quadFposiOptions.addOption(ufficioOption);
-
-        CommandLineParser commandLineParser = new BasicParser();
-
-        String ufficio;
-        try {
-
-            CommandLine commandLine = commandLineParser.parse(quadFposiOptions, args);
-            ufficio = commandLine.getOptionValue("ufficio");
-            QuadFposi quadFposi = new QuadFposi(ufficio);
-            quadFposi.run();
-        }
-        catch (ParseException e) {
-
-            logger.info("ParseException: " + e.getMessage());
-        }
+        String loggerName = QuadFposiMain.class.getSimpleName();
+        StepParams stepParams = new StepParams(loggerName, args, ufficioOption);
+        QuadFposi quadFposi = new QuadFposi(loggerName, stepParams.getUfficio());
+        quadFposi.run();
     }
 }

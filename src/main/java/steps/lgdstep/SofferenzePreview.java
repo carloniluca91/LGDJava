@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
@@ -8,7 +9,6 @@ import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.logging.Logger;
 
 public class SofferenzePreview extends AbstractStep {
 
@@ -16,15 +16,16 @@ public class SofferenzePreview extends AbstractStep {
     private String ufficio;
     private String dataA;
 
-    public SofferenzePreview(String ufficio, String dataA){
+    public SofferenzePreview(String loggerName, String ufficio, String dataA){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         this.ufficio = ufficio;
         this.dataA = dataA;
 
-        stepInputDir = getProperty("sofferenze.preview.input.dir");
-        stepOutputDir = getProperty("sofferenze.preview.output.dir");
+        stepInputDir = getPropertyValue("sofferenze.preview.input.dir");
+        stepOutputDir = getPropertyValue("sofferenze.preview.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -35,8 +36,8 @@ public class SofferenzePreview extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String soffOutDirCsv = getProperty("soff.outdir.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String soffOutDirCsv = getPropertyValue("soff.outdir.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("soffOutDirCsv: " + soffOutDirCsv);
@@ -95,7 +96,7 @@ public class SofferenzePreview extends AbstractStep {
                 dataInizioCol, dataFineCol, soffBase.col("statopratica"),
                 saldoPosizioneSumCol, saldoPosizioneContabSumCol);
 
-        String soffGen2Path = getProperty("soff.gen2");
+        String soffGen2Path = getPropertyValue("soff.gen2");
         logger.info("soffGen2Path: " + soffGen2Path);
 
         soffGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
@@ -115,7 +116,7 @@ public class SofferenzePreview extends AbstractStep {
                         functions.sum(soffBase.col("saldoposizione")).as("saldoposizione"),
                         functions.sum(soffBase.col("saldoposizionecontab")).as("saldoposizionecontab"));
 
-        String soffSintGen2Path = getProperty("soff.gen.sint2");
+        String soffSintGen2Path = getPropertyValue("soff.gen.sint2");
         logger.info("soffSintGen2Path: " + soffSintGen2Path);
         soffSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(stepOutputDir, soffSintGen2Path).toString());

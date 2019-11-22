@@ -1,15 +1,19 @@
 package steps.lgdstep;
 
-import org.apache.spark.sql.*;
+import org.apache.log4j.Logger;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
+import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.StructType;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class CicliPreview extends AbstractStep {
 
@@ -17,15 +21,16 @@ public class CicliPreview extends AbstractStep {
     private String dataA;
     private String ufficio;
 
-    public CicliPreview(String dataA, String ufficio){
+    public CicliPreview(String loggerName, String dataA, String ufficio){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         this.dataA = dataA;
         this.ufficio = ufficio;
 
-        stepInputDir = getProperty("cicli.preview.input.dir");
-        stepOutputDir = getProperty("cicli.preview.output.dir");
+        stepInputDir = getPropertyValue("cicli.preview.input.dir");
+        stepOutputDir = getPropertyValue("cicli.preview.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -35,8 +40,8 @@ public class CicliPreview extends AbstractStep {
 
     public void run(){
 
-        String csvFormat = getProperty("csv.format");
-        String fposiOutdirCsv = getProperty("fposi.outdir.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String fposiOutdirCsv = getPropertyValue("fposi.outdir.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("fposiOutdirCsv: " + fposiOutdirCsv);
@@ -213,7 +218,7 @@ public class CicliPreview extends AbstractStep {
                 functions.col("segmento_calc"), functions.col("ciclo_soff"), functions.col("stato_anagrafico"));
 
         // 127
-        String fposiGen2OutCsv = getProperty("fposi.gen2.csv");
+        String fposiGen2OutCsv = getPropertyValue("fposi.gen2.csv");
         logger.info("fposiGen2OutCsv: " + fposiGen2OutCsv);
 
         // 129
@@ -239,7 +244,7 @@ public class CicliPreview extends AbstractStep {
                 totAccordatoDatDefCol, totUtilizzDatDefCol);
         // 169
 
-        String fposiSintGen2Csv = getProperty("fposi.sint.gen2");
+        String fposiSintGen2Csv = getPropertyValue("fposi.sint.gen2");
         logger.info("fposiSintGen2Csv: " + fposiSintGen2Csv);
 
         fposiSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(

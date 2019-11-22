@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -13,16 +14,18 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 public class RaccSoff extends AbstractStep {
 
-    public RaccSoff(){
+    public RaccSoff(String loggerName){
+
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         logger = Logger.getLogger(this.getClass().getName());
 
-        stepInputDir = getProperty("racc.soff.input.dir");
-        stepOutputDir = getProperty("racc.soff.output.dir");
+        stepInputDir = getPropertyValue("racc.soff.input.dir");
+        stepOutputDir = getPropertyValue("racc.soff.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -31,8 +34,8 @@ public class RaccSoff extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv-format");
-        String dblabCsvPath = getProperty("dblabtlbxd9.path.csv");
+        String csvFormat = getPropertyValue("csv-format");
+        String dblabCsvPath = getPropertyValue("dblabtlbxd9.path.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("dblabCsvPath: " + dblabCsvPath);

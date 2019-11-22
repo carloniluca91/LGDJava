@@ -1,25 +1,26 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.logging.Logger;
 
 public class QuadFcollCicli extends AbstractStep {
 
     // required parameters
     private String ufficio;
 
-    public QuadFcollCicli(String ufficio){
+    public QuadFcollCicli(String loggerName, String ufficio){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         this.ufficio = ufficio;
 
-        stepInputDir = getProperty("quad.fcoll.cicli.input.dir");
-        stepOutputDir = getProperty("quad.fcoll.cicli.output.dir");
+        stepInputDir = getPropertyValue("quad.fcoll.cicli.input.dir");
+        stepOutputDir = getPropertyValue("quad.fcoll.cicli.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -28,10 +29,10 @@ public class QuadFcollCicli extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String fcollCsv = getProperty("fcoll.csv");
-        String cicliNdgLoadCsv = getProperty("cicli.ndg.load.csv");
-        String fileOutPath = getProperty("file.out");
+        String csvFormat = getPropertyValue("csv.format");
+        String fcollCsv = getPropertyValue("fcoll.csv");
+        String cicliNdgLoadCsv = getPropertyValue("cicli.ndg.load.csv");
+        String fileOutPath = getPropertyValue("file.out");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("fcollCsv: " + fcollCsv);

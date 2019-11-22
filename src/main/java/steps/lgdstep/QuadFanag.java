@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -10,20 +11,20 @@ import steps.abstractstep.AbstractStep;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class QuadFanag extends AbstractStep {
 
     private String ufficio;
 
-    public QuadFanag(String ufficio){
+    public QuadFanag(String loggerName, String ufficio){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
         this.ufficio = ufficio;
 
-        stepInputDir = getProperty("quad.fanag.input.dir");
-        stepOutputDir = getProperty("quad.fanag.output.dir");
+        stepInputDir = getPropertyValue("quad.fanag.input.dir");
+        stepOutputDir = getPropertyValue("quad.fanag.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -32,11 +33,11 @@ public class QuadFanag extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String hadoopFanagCsv = getProperty("hadoop.fanag.csv");
-        String oldFanagLoadCsv = getProperty("old.fanag.load.csv");
-        String fcollCsv = getProperty("fcoll.csv");
-        String tlbucolLoadCsv = getProperty("tlbucol.load.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String hadoopFanagCsv = getPropertyValue("hadoop.fanag.csv");
+        String oldFanagLoadCsv = getPropertyValue("old.fanag.load.csv");
+        String fcollCsv = getPropertyValue("fcoll.csv");
+        String tlbucolLoadCsv = getPropertyValue("tlbucol.load.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("hadoopFanagCsv: " + hadoopFanagCsv);
@@ -166,10 +167,10 @@ public class QuadFanag extends AbstractStep {
         // oldfanag_out_ndg = UNION oldfanag_out_coll_ndg, oldfanag_out_princ_ndg
         Dataset<Row> oldFanagOutNdg = oldFanagOutCollNdg.union(oldFanagOutPrincNdg);
 
-        String hadoopFanagOutPath = getProperty("hadoop.fanag.out");
-        String oldFanagOutPath = getProperty("old.fanag.out");
-        String hadoopFanagOutNdgPath = getProperty("hadoop.fanag.out.ndg");
-        String oldFanagOutNdgPath = getProperty("old.fanag.out.ndg");
+        String hadoopFanagOutPath = getPropertyValue("hadoop.fanag.out");
+        String oldFanagOutPath = getPropertyValue("old.fanag.out");
+        String hadoopFanagOutNdgPath = getPropertyValue("hadoop.fanag.out.ndg");
+        String oldFanagOutNdgPath = getPropertyValue("old.fanag.out.ndg");
 
         logger.info("hadoopFanagOutPath: " + hadoopFanagOutPath);
         logger.info("oldFanagOutPath: " + oldFanagOutPath);

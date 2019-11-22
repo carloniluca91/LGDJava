@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
@@ -11,19 +12,19 @@ import steps.abstractstep.AbstractStep;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class Fpasperd extends AbstractStep {
 
-    public Fpasperd(){
+    public Fpasperd(String loggerName){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
-        stepInputDir = getProperty("fpasperd.input.dir");
-        stepOutputDir = getProperty("fpasperd.output.dir");
+        stepInputDir = getPropertyValue("fpasperd.input.dir");
+        stepOutputDir = getPropertyValue("fpasperd.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override
@@ -37,13 +38,13 @@ public class Fpasperd extends AbstractStep {
 
         StructType tlbcidefLoadSchema = getStringTypeSchema(tlbcidefLoadColumns);
 
-        String cicliNdgPathCsv = getProperty("cicli.ndg.path.csv");
-        logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);
-
+        String cicliNdgPathCsv = getPropertyValue("cicli.ndg.path.csv");
         String tlbcidefLoadPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
-        String csvFormat = getProperty("csv.format");
-        logger.info("tlbcidefLoadPath: " + tlbcidefLoadPath);
-        logger.info("csvFormat: " + csvFormat);
+        String csvFormat = getPropertyValue("csv.format");
+
+        logger.debug("cicliNdgPathCsv: " + cicliNdgPathCsv);
+        logger.debug("tlbcidefLoadPath: " + tlbcidefLoadPath);
+        logger.debug("csvFormat: " + csvFormat);
 
         Dataset<Row> tlbcidefLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(
                 tlbcidefLoadSchema).csv(tlbcidefLoadPath);
@@ -63,7 +64,7 @@ public class Fpasperd extends AbstractStep {
         List<String> tlbpaspeColumns = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
         StructType tlbpaspeSchema = getStringTypeSchema(tlbpaspeColumns);
 
-        String tlbpaspeCsv = getProperty("tlbpaspe.filter.csv");
+        String tlbpaspeCsv = getPropertyValue("tlbpaspe.filter.csv");
         String tlbpaspeCsvPath = Paths.get(stepInputDir, tlbpaspeCsv).toString();
         logger.info("tlbpaspeCsv:" + tlbpaspeCsv);
         logger.info("tlbpaspeCsvPath: " + tlbpaspeCsvPath);
@@ -266,7 +267,7 @@ public class Fpasperd extends AbstractStep {
 
         // 336
 
-        String tlbpaspeossCsv = getProperty("tlbpaspeoss.csv");
+        String tlbpaspeossCsv = getPropertyValue("tlbpaspeoss.csv");
         String tlbpaspeossCsvPath = Paths.get(stepInputDir, tlbpaspeossCsv).toString();
         logger.info("tlbpaspeossCsv: " + tlbpaspeossCsv);
         logger.info("tlbpaspeossCsvPath: " + tlbpaspeossCsvPath);
@@ -334,7 +335,7 @@ public class Fpasperd extends AbstractStep {
         Dataset<Row> paspePaspeossGenDist = fpasperdOutDistinct.join(tlbpaspeoss, joinCondition, "full_outer")
                 .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol, ndgPrincipaleCol, dataInizioDefCol);
 
-        String paspePaspeossGenDistCsv = getProperty("paspe.paspeoss.gen.dist.csv");
+        String paspePaspeossGenDistCsv = getPropertyValue("paspe.paspeoss.gen.dist.csv");
         logger.info("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);
 
         String paspePaspeossGenDistCsvPath = Paths.get(stepOutputDir, paspePaspeossGenDistCsv).toString();

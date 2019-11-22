@@ -1,5 +1,6 @@
 package steps.lgdstep;
 
+import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
@@ -10,16 +11,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class RaccInc extends AbstractStep {
 
-    public RaccInc(){
+    public RaccInc(String loggerName){
 
-        logger = Logger.getLogger(this.getClass().getName());
+        super(loggerName);
+        logger = Logger.getLogger(loggerName);
 
-        stepInputDir = getProperty("racc.inc.input.dir");
-        stepOutputDir = getProperty("racc.inc.output.dir");
+        stepInputDir = getPropertyValue("racc.inc.input.dir");
+        stepOutputDir = getPropertyValue("racc.inc.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -28,8 +29,8 @@ public class RaccInc extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getProperty("csv.format");
-        String tlbmignPathCsv = getProperty("tlbmign.path.csv");
+        String csvFormat = getPropertyValue("csv.format");
+        String tlbmignPathCsv = getPropertyValue("tlbmign.path.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("tlbmignPathCsv: " + tlbmignPathCsv);

@@ -13,20 +13,22 @@ import java.util.List;
 
 public class StepParams {
 
-    private Logger logger = Logger.getLogger(this.getClass().getName());
+    private Logger logger;
 
     private String dataDa;
     private String dataA;
     private String ufficio;
     private int numeroMesi1;
     private int numeroMesi2;
+    private String dataOsservazione;
 
     private List<Option> optionList;
     private Options stepParamsOptions;
     private CommandLine commandLine;
 
-    public StepParams(String[] args, Option ... options){
+    public StepParams(String loggerName, String[] args, Option ... options){
 
+        logger = Logger.getLogger(loggerName);
         optionList = Arrays.asList(options);
         stepParamsOptions = new Options();
 
@@ -51,6 +53,7 @@ public class StepParams {
             setUfficio();
             setNumeroMesi1();
             setNumeroMesi2();
+            setDataOsservazione();
 
             logger.info("Arguments parsed correctly");
 
@@ -60,13 +63,15 @@ public class StepParams {
         }
     }
 
+    public String getDataA() {
+        return dataA;
+    }
+
     public String getDataDa() {
         return dataDa;
     }
 
-    public String getDataA() {
-        return dataA;
-    }
+    public String getDataOsservazione() { return dataOsservazione; }
 
     public int getNumeroMesi1() {
         return numeroMesi1;
@@ -80,6 +85,16 @@ public class StepParams {
         return ufficio;
     }
 
+    private void setDataA(){
+
+        Option option = OptionFactory.getDataAOpton();
+        if (optionList.contains(option)){
+
+            dataA = commandLine.getOptionValue(option.getLongOpt());
+            logger.debug(String.format("%s: %s", option.getDescription(), dataA));
+        }
+    }
+
     private void setDataDa(){
 
         Option option = OptionFactory.getDataDaOption();
@@ -90,13 +105,13 @@ public class StepParams {
         }
     }
 
-    private void setDataA(){
+    private void setDataOsservazione(){
 
-        Option option = OptionFactory.getDataAOpton();
+        Option option = OptionFactory.getDataOsservazioneOption();
         if (optionList.contains(option)){
 
-            dataA = commandLine.getOptionValue(option.getLongOpt());
-            logger.debug(String.format("%s: %s", option.getDescription(), dataA));
+            dataOsservazione = commandLine.getOptionValue(option.getLongOpt());
+            logger.debug(String.format("%s: %s", option.getDescription(), dataOsservazione));
         }
     }
 
