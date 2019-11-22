@@ -102,7 +102,7 @@ public class StepParams {
 
     private void setNumeroMesi1(){
 
-        Option option = OptionFactory.getUfficioOption();
+        Option option = OptionFactory.getNumeroMesi1Option();
         if (optionList.contains(option)){
 
             numeroMesi1 = Integer.parseInt(commandLine.getOptionValue(option.getLongOpt()));
@@ -112,7 +112,7 @@ public class StepParams {
 
     private void setNumeroMesi2(){
 
-        Option option = OptionFactory.getUfficioOption();
+        Option option = OptionFactory.getNumeroMesi2Option();
         if (optionList.contains(option)){
 
             numeroMesi2 = Integer.parseInt(commandLine.getOptionValue(option.getLongOpt()));
