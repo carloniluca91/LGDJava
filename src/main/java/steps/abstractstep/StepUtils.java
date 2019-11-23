@@ -38,19 +38,41 @@ abstract class StepUtils {
                 functions.lit(upperDate), functions.lit(upperDatePattern));
     }
 
+    // change the format of string expressing a date
+    protected Column dateFormat(Column dateColumn, String oldPattern, String newPattern){
+
+        return functions.callUDF("changeDateFormat", dateColumn, functions.lit(oldPattern), functions.lit(newPattern));
+    }
+
+    // check if a date is >= other date
+    protected Column dateGtOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
+
+        return functions.callUDF("date1GtDate2",
+                dateColumn, functions.lit(dateColumnPattern),
+                functions.lit(otherDate), functions.lit(otherDatePattern));
+    }
+
     // check if a date is <= other date
     protected Column dateLeqOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
 
         return functions.callUDF("date1LeqDate2",
                 dateColumn, functions.lit(dateColumnPattern),
                 functions.lit(otherDate), functions.lit(otherDatePattern));
-
     }
 
-    // change the format of string expressing a date
-    protected Column dateFormat(Column dateColumn, String oldPattern, String newPattern){
+    // check if a date is < other date
+    protected Column dateLtOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
 
-        return functions.callUDF("changeDateFormat", dateColumn, functions.lit(oldPattern), functions.lit(newPattern));
+        return functions.callUDF("date1LtDate2",
+                dateColumn, functions.lit(dateColumnPattern),
+                functions.lit(otherDate), functions.lit(otherDatePattern));
+    }
+
+    protected Column dateLtOtherDate(Column dateColumn, String dateColumnPattern, Column otherDateColumn, String otherDatePattern){
+
+        return functions.callUDF("date1LtDate2",
+                dateColumn, functions.lit(dateColumnPattern),
+                otherDateColumn, functions.lit(otherDatePattern));
     }
 
     protected Column getQuadJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
@@ -92,14 +114,7 @@ abstract class StepUtils {
         return functions.least(column1Ts, column2Ts);
     }
 
-    // compute the least date between two date columns that have different format
-    protected Column leastDate(Column dateColumn1, Column dateColumn2, String date1Format, String date2Format){
-
-        Column column1Ts = getUnixTimeStampCol(dateColumn1, date1Format);
-        Column column2Ts = getUnixTimeStampCol(dateColumn2, date2Format);
-        return functions.least(column1Ts, column2Ts);
-    }
-
+    // convert a string into a LocalDate object
     protected LocalDate parseStringToLocalDate(String stringDate, String pattern){
 
         return LocalDate.parse(stringDate, DateTimeFormatter.ofPattern(pattern));
