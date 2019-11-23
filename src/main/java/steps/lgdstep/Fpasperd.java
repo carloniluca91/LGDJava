@@ -51,7 +51,7 @@ public class Fpasperd extends AbstractStep {
 
         // // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
         // tlbcidef::datafinedef in format "yyyyMMdd"
-        Column dataFineDefCol = stringDateFormat(tlbcidefLoad.col("datafinedef"),
+        Column dataFineDefCol = dateFormat(tlbcidefLoad.col("datafinedef"),
                 "yyyyMMdd", "yyyy-MM-dd");
         dataFineDefCol = functions.date_format(functions.add_months(dataFineDefCol, 2), "yyyyMMdd").as("datafinedef");
 
@@ -92,8 +92,8 @@ public class Fpasperd extends AbstractStep {
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
         Column daysDiffColl = functions.datediff(
-                stringDateFormat(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                stringDateFormat(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
+                dateFormat(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
+                dateFormat(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
 
         // list of columns to be selected from dataframe tlbpaspeFilter
         List<String> tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -186,8 +186,8 @@ public class Fpasperd extends AbstractStep {
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
         daysDiffColl = functions.datediff(
-                stringDateFormat(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                stringDateFormat(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
+                dateFormat(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
+                dateFormat(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
 
         // columns to be selected from dataframe fpasperdNullOut
         List<String> fpasperdNullOutSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");

@@ -9,14 +9,14 @@ import org.apache.spark.sql.types.*;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 abstract class StepUtils {
-
-    StepUtils(){}
 
     protected Column castCol(Column column, DataType dataType){
         return column.cast(dataType);
@@ -26,6 +26,31 @@ abstract class StepUtils {
     protected Column castStringColToDateCol(Column col, String inputF){
 
         return castCol(functions.from_unixtime(functions.unix_timestamp(col, inputF), "yyyy-MM-dd"), DataTypes.DateType);
+    }
+
+    // check if a date is within a given interval
+    protected Column dateBetween(Column dateColumn, String dateColumnPattern, String lowerDate, String lowerDatePattern,
+                                 String upperDate, String upperDatePattern){
+
+        return functions.callUDF("dateBetween",
+                dateColumn, functions.lit(dateColumnPattern),
+                functions.lit(lowerDate), functions.lit(lowerDatePattern),
+                functions.lit(upperDate), functions.lit(upperDatePattern));
+    }
+
+    // check if a date is <= other date
+    protected Column dateLeqOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
+
+        return functions.callUDF("date1LeqDate2",
+                dateColumn, functions.lit(dateColumnPattern),
+                functions.lit(otherDate), functions.lit(otherDatePattern));
+
+    }
+
+    // change the format of string expressing a date
+    protected Column dateFormat(Column dateColumn, String oldPattern, String newPattern){
+
+        return functions.callUDF("changeDateFormat", dateColumn, functions.lit(oldPattern), functions.lit(newPattern));
     }
 
     protected Column getQuadJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
@@ -54,30 +79,9 @@ abstract class StepUtils {
         return schema;
     }
 
-    // compute unixtimestamp for column of given dataset using the given format
-    protected Column getUnixTimeStampCol(Dataset<Row> df, String columnName, String dateFormat){
-        return functions.unix_timestamp(df.col(columnName), dateFormat);
-    }
-
     // compute unixtimestamp for a generic column  using the given format
     protected Column getUnixTimeStampCol(Column column, String dateFormat){
         return functions.unix_timestamp(column, dateFormat);
-    }
-
-    // compute the greatest date between two date columns that have the same provided format
-    Column greatestDate(Column dateColumn1, Column dateColumn2, String commonDateFormat){
-
-        Column column1Ts = getUnixTimeStampCol(dateColumn1, commonDateFormat);
-        Column column2Ts = getUnixTimeStampCol(dateColumn2, commonDateFormat);
-        return functions.greatest(column1Ts, column2Ts);
-    }
-
-    // compute the greatest date between two date columns that have different format
-    protected Column greatestDate(Column dateColumn1, Column dateColumn2, String date1Format, String date2Format){
-
-        Column column1Ts = getUnixTimeStampCol(dateColumn1, date1Format);
-        Column column2Ts = getUnixTimeStampCol(dateColumn2, date2Format);
-        return functions.greatest(column1Ts, column2Ts);
     }
 
     // compute the least date between two date columns that have the same provided format
@@ -94,6 +98,11 @@ abstract class StepUtils {
         Column column1Ts = getUnixTimeStampCol(dateColumn1, date1Format);
         Column column2Ts = getUnixTimeStampCol(dateColumn2, date2Format);
         return functions.least(column1Ts, column2Ts);
+    }
+
+    protected LocalDate parseStringToLocalDate(String stringDate, String pattern){
+
+        return LocalDate.parse(stringDate, DateTimeFormatter.ofPattern(pattern));
     }
 
     // replace oldString with newString and convert to Double column
@@ -127,12 +136,6 @@ abstract class StepUtils {
         return dfCols;
     }
 
-    // convert a string column representing a date from the given input format to the given output date format
-    protected Column stringDateFormat(Column col, String inputF, String outputF){
-
-        return functions.from_unixtime(functions.unix_timestamp(col, inputF), outputF);
-    }
-
     // convert a Java list into a scala.collection.Seq
     protected Seq<String> toScalaStringSeq(List<String> list){
         return JavaConversions.asScalaBuffer(list).toSeq();
@@ -140,7 +143,7 @@ abstract class StepUtils {
 
     protected Seq<Column> toScalaColSeq(List<Column> list) { return JavaConversions.asScalaBuffer(list).toSeq();}
 
-        // creates a list of aggregate column expressions to be used over windowspec w on dataframe df
+    // creates a list of aggregate column expressions to be used over windowspec w on dataframe df
     protected List<Column> windowSum(Dataset<Row> df, Map<String, String> columnMap, WindowSpec w){
 
         List<Column> columnList = new ArrayList<>();

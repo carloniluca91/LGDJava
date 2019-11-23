@@ -54,7 +54,7 @@ public class SofferenzePreview extends AbstractStep {
         Column ufficioCol = functions.lit(ufficio).as("ufficio");
 
         // ToString(ToDate('$data_a','yyyyMMdd'),'yyyy-MM-dd') as datarif
-        Column dataRifCol = stringDateFormat(functions.lit(dataA), "yyyyMMdd", "yyyy-MM-dd").as("datarif");
+        Column dataRifCol = dateFormat(functions.lit(dataA), "yyyyMMdd", "yyyy-MM-dd").as("datarif");
 
         /*
         (double)REPLACE(saldoposizione,',','.')         as saldoposizione,
@@ -76,8 +76,8 @@ public class SofferenzePreview extends AbstractStep {
         ToString(ToDate(datainizio,'yyyyMMdd'),'yyyy-MM-dd') as datainizio,
         ToString(ToDate(datafine,'yyyyMMdd'),'yyyy-MM-dd')   as datafine
          */
-        Column dataInizioCol = stringDateFormat(soffBase.col("datainizio"), "yyyyMMdd", "yyyy-MM-dd").alias("datainizio");
-        Column dataFineCol = stringDateFormat(soffBase.col("datafine"), "yyyyMMdd", "yyyy-MM-dd").alias("datafine");
+        Column dataInizioCol = dateFormat(soffBase.col("datainizio"), "yyyyMMdd", "yyyy-MM-dd").alias("datainizio");
+        Column dataFineCol = dateFormat(soffBase.col("datafine"), "yyyyMMdd", "yyyy-MM-dd").alias("datafine");
 
         // GROUP soff_base BY ( istituto, ndg, numerosofferenza );
         WindowSpec soffGen2Window = Window.partitionBy(

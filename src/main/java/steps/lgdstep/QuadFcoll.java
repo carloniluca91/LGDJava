@@ -45,8 +45,8 @@ public class QuadFcoll extends AbstractStep {
         // ToString(ToDate( data_collegamento,'ddMMMyyyy'),'yyyyMMdd')  as data_collegamento
 
         Dataset<Row> fcoll = fcollLoad
-                .withColumn("data_inizio_DEF", stringDateFormat(fcollLoad.col("data_inizio_DEF"), "ddMMyyyy", "yyyyMMdd"))
-                .withColumn("data_collegamento", stringDateFormat(fcollLoad.col("data_collegamento"), "ddMMyyyy", "yyyyMMdd"));
+                .withColumn("data_inizio_DEF", dateFormat(fcollLoad.col("data_inizio_DEF"), "ddMMyyyy", "yyyyMMdd"))
+                .withColumn("data_collegamento", dateFormat(fcollLoad.col("data_collegamento"), "ddMMyyyy", "yyyyMMdd"));
 
         // 39
 
@@ -65,8 +65,8 @@ public class QuadFcoll extends AbstractStep {
         // ToString(ToDate( datainizioDEF,'yy-MM-dd'),'yyyyMMdd')   as datainizioDEF
         // ToString(ToDate( dataFINEDEF,'yy-MM-dd'),'yyyyMMdd')   as dataFINEDEF
         Dataset<Row> oldFposi = oldFposiLoad.filter(filterConditionCol)
-                .withColumn("datainizioDEF", stringDateFormat(oldFposiLoad.col("datainizioDEF"), "yy-MM-dd", "yyyyMMdd"))
-                .withColumn("dataFINEDEF", stringDateFormat(oldFposiLoad.col("dataFINEDEF"), "yy-MM-dd", "yyyyMMdd"));
+                .withColumn("datainizioDEF", dateFormat(oldFposiLoad.col("datainizioDEF"), "yy-MM-dd", "yyyyMMdd"))
+                .withColumn("dataFINEDEF", dateFormat(oldFposiLoad.col("dataFINEDEF"), "yy-MM-dd", "yyyyMMdd"));
 
         // 76
 

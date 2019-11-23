@@ -84,7 +84,7 @@ public class FrappPuma extends AbstractStep {
                         0,6 );
         */
         Column leastDateCol = functions.least(getUnixTimeStampCol(
-                functions.add_months(stringDateFormat(tlbcidef.col("datafinedef"),
+                functions.add_months(dateFormat(tlbcidef.col("datafinedef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -1), "yyyy-MM-dd"),
                 getUnixTimeStampCol(functions.lit(dataA), "yyyy-MM-dd"));
 

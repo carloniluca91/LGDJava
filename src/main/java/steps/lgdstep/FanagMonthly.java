@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class FanagMonthly extends AbstractStep{
+public class FanagMonthly extends AbstractStep {
 
     private int numeroMesi1;
     private int numeroMesi2;
@@ -34,8 +34,6 @@ public class FanagMonthly extends AbstractStep{
         logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
-
-    @Override
     public void run() {
 
         String csvFormat = getPropertyValue("csv.format");
@@ -82,9 +80,20 @@ public class FanagMonthly extends AbstractStep{
                 .and(tlbuact.col("ndg").equalTo(cicliNdgPrinc.col("ndg_collegato")));
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
+        /*
         Column dtRiferimentoDataInizioDefConditionCol = getUnixTimeStampCol(tlbuact.col("dt_riferimento"), "yyyyMMdd").geq(
                 getUnixTimeStampCol(functions.add_months(castStringColToDateCol(cicliNdgPrinc.col("datainiziodef"), "yyyyMMdd"),
                         - numeroMesi1), "yyyy-MM-dd"));
+
+         */
+
+        //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
+        Column dtRiferimentoDataInizioDefConditionCol = getUnixTimeStampCol(tlbuact.col("dt_riferimento"), "yyyyMMdd").geq(
+                getUnixTimeStampCol(functions.callUDF("subtractDuration",
+                        cicliNdgPrinc.col("datainiziodef"),
+                        functions.lit("yyyyMMdd"),
+                        functions.lit(numeroMesi1)), "yyyyMMdd"));
+
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
         Column leastDateCol = leastDate(

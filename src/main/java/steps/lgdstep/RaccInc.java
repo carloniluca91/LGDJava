@@ -45,7 +45,7 @@ public class RaccInc extends AbstractStep {
                 Paths.get(stepInputDir, tlbmignPathCsv).toString());
 
         // AddDuration(ToDate(data_migraz,'yyyyMMdd'),'P1M') AS month_up
-        Column dataMigrazDateCol = stringDateFormat(tlbmign.col("data_migraz"), "yyyyMMdd", "yyyy-MM-dd");
+        Column dataMigrazDateCol = dateFormat(tlbmign.col("data_migraz"), "yyyyMMdd", "yyyy-MM-dd");
         Column monthUpCol = functions.date_format(functions.add_months(dataMigrazDateCol, 1), "yyyyMMdd");
 
         List<Column> tlbmignSelectList = new ArrayList<>();
