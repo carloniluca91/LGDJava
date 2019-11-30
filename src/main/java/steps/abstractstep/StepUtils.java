@@ -130,7 +130,7 @@ abstract class StepUtils {
     // create a list of columns to be selected from the given dataset
     protected List<Column> selectDfColumns(Dataset<Row> df, List<String> columnNames){
 
-        List<Column> dfCols = new ArrayList<Column>();
+        List<Column> dfCols = new ArrayList<>();
         for (String columnName: columnNames){
             dfCols.add(df.col(columnName));
         }
@@ -141,7 +141,7 @@ abstract class StepUtils {
     // create a list of columns to be selected from the given dataset, giving an alias to each column
     protected List<Column> selectDfColumns(Dataset<Row> df, Map<String,String> columnMap){
 
-        List<Column> dfCols = new ArrayList<Column>();
+        List<Column> dfCols = new ArrayList<>();
         Set<Map.Entry<String, String>> entryList = columnMap.entrySet();
         for (Map.Entry<String, String> entry: entryList){
 

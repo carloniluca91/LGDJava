@@ -141,6 +141,8 @@ public abstract class AbstractStep extends StepUtils {
 
                 };
 
+        sparkSession.udf().register("addDuration", addDurationUdf, DataTypes.StringType);
+
         // SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         UDF3<String, String, Integer, String> subtractDurationUdf = (UDF3<String, String, Integer, String>)
                 (date, datePattern, months) -> {
@@ -149,6 +151,8 @@ public abstract class AbstractStep extends StepUtils {
                     LocalDate localDate = LocalDate.parse(date, dateTimeFormatter);
                     return localDate.minusMonths(months).format(dateTimeFormatter);
                 };
+
+        sparkSession.udf().register("substractDuration", subtractDurationUdf, DataTypes.StringType);
 
         // change date format
         UDF3<String, String, String, String> changeDateFormatUdf = (UDF3<String, String, String, String>)
@@ -163,15 +167,19 @@ public abstract class AbstractStep extends StepUtils {
                     }
                 };
 
+        sparkSession.udf().register("changeDateFormat", changeDateFormatUdf, DataTypes.StringType);
+
         // return the greatest date between two dates with same pattern
         UDF3<String, String, String, String> greatestDateUdf = (UDF3<String, String, String, String>)
                 (stringFirstDate, stringSecondDate, commonPattern) -> {
 
                     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(commonPattern);
                     LocalDate firstDate = LocalDate.parse(stringFirstDate, dateTimeFormatter);
-                    LocalDate seconddate = LocalDate.parse(stringSecondDate, dateTimeFormatter);
-                    return firstDate.compareTo(seconddate) >= 0 ? firstDate.format(dateTimeFormatter) : seconddate.format(dateTimeFormatter);
+                    LocalDate secondDate = LocalDate.parse(stringSecondDate, dateTimeFormatter);
+                    return firstDate.compareTo(secondDate) >= 0 ? firstDate.format(dateTimeFormatter) : secondDate.format(dateTimeFormatter);
                 };
+
+        sparkSession.udf().register("greatestDate", greatestDateUdf, DataTypes.StringType);
 
         // return the least date between two dates with same pattern
         UDF3<String, String, String, String> leastDateUdf = (UDF3<String, String, String, String>)
@@ -179,14 +187,11 @@ public abstract class AbstractStep extends StepUtils {
 
                     DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(commonPattern);
                     LocalDate firstDate = LocalDate.parse(stringFirstDate, dateTimeFormatter);
-                    LocalDate seconddate = LocalDate.parse(stringSecondDate, dateTimeFormatter);
-                    return firstDate.compareTo(seconddate) <= 0 ? firstDate.format(dateTimeFormatter) : seconddate.format(dateTimeFormatter);
+                    LocalDate secondDate = LocalDate.parse(stringSecondDate, dateTimeFormatter);
+                    return firstDate.compareTo(secondDate) <= 0 ? firstDate.format(dateTimeFormatter) : secondDate.format(dateTimeFormatter);
                 };
 
-        sparkSession.udf().register("addDuration", addDurationUdf, DataTypes.StringType);
-        sparkSession.udf().register("substractDuration", subtractDurationUdf, DataTypes.StringType);
-        sparkSession.udf().register("changeDateFormat", changeDateFormatUdf, DataTypes.StringType);
-        sparkSession.udf().register("greatestDate", greatestDateUdf, DataTypes.StringType);
+
         sparkSession.udf().register("leastDate", leastDateUdf, DataTypes.StringType);
 
     }

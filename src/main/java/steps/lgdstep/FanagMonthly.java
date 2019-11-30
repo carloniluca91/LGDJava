@@ -2,6 +2,7 @@ package steps.lgdstep;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
+import org.apache.spark.sql.types.DataTypes;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
@@ -80,33 +81,29 @@ public class FanagMonthly extends AbstractStep {
                 .and(tlbuact.col("ndg").equalTo(cicliNdgPrinc.col("ndg_collegato")));
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-        /*
-        Column dtRiferimentoDataInizioDefConditionCol = getUnixTimeStampCol(tlbuact.col("dt_riferimento"), "yyyyMMdd").geq(
-                getUnixTimeStampCol(functions.add_months(castStringColToDateCol(cicliNdgPrinc.col("datainiziodef"), "yyyyMMdd"),
-                        - numeroMesi1), "yyyy-MM-dd"));
-
-         */
-
-        //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-        Column dtRiferimentoDataInizioDefConditionCol = getUnixTimeStampCol(tlbuact.col("dt_riferimento"), "yyyyMMdd").geq(
-                getUnixTimeStampCol(functions.callUDF("subtractDuration",
-                        cicliNdgPrinc.col("datainiziodef"),
-                        functions.lit("yyyyMMdd"),
-                        functions.lit(numeroMesi1)), "yyyyMMdd"));
-
+        Column dtRiferimentoDataInizioDefConditionCol = tlbuact.col("dt_riferimento").cast(DataTypes.IntegerType).geq(
+                functions.callUDF("subtractDuration", cicliNdgPrinc.col("datainiziodef"), functions.lit("yyyyMMdd"),
+                        functions.lit(numeroMesi1)).cast(DataTypes.IntegerType));
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
-        Column leastDateCol = leastDate(
-                functions.add_months(castStringColToDateCol(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd"), -1),
-                functions.lit(dataA), "yyyy-MM-dd");
+        // [a] SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd')
+        Column cicliNdgPrincDataFineDefSubtractDurationCol = functions.callUDF("substractDuration",
+                cicliNdgPrinc.col("datafinedef"),
+                functions.lit("yyyyMMdd"),
+                functions.lit(1).cast(DataTypes.IntegerType),
+                functions.lit("yyyyMMdd"));
+
+        // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
+        Column dataACol = functions.callUDF("changeDateFormat", functions.lit(dataA), functions.lit("yyyy-MM-dd"), functions.lit("yyyyMMdd"));
+        Column leastDateCol = functions.callUDF("leastDate", cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, functions.lit("yyyyMMdd"));
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )
-        Column leastDateAddDurationCol = functions.add_months(functions.from_unixtime(leastDateCol, "yyyy-MM-dd"), numeroMesi2);
+        Column leastDateAddDurationCol = functions.callUDF("addDuration", leastDateCol, functions.lit("yyyyMMdd"), functions.lit(numeroMesi2));
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationCol, 0,6)
-        Column dtRiferimentoLeastDateAddDurationConditionCol = getUnixTimeStampCol(
-                functions.substring(tlbuact.col("dt_riferimento"), 0, 6), "yyyyMM")
-                .leq(getUnixTimeStampCol(functions.date_format(leastDateAddDurationCol, "yyyy-MM"), "yyyy-MM"));
+        Column dtRiferimentoLeastDateAddDurationConditionCol =
+                functions.substring(tlbuact.col("dt_riferimento"), 0, 6).cast(DataTypes.IntegerType).leq(
+                        functions.substring(leastDateAddDurationCol, 0, 6).cast(DataTypes.IntegerType));
 
         // 132
         List<Column> tlbcidefTlbuactPrincSelectColList = new ArrayList<>(selectDfColumns(
@@ -139,21 +136,27 @@ public class FanagMonthly extends AbstractStep {
                 .and(tlbuact.col("ndg").equalTo(cicliNdgColl.col("ndg_collegato")));
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-        dtRiferimentoDataInizioDefConditionCol = getUnixTimeStampCol(tlbuact.col("dt_riferimento"), "yyyyMMdd").geq(
-                getUnixTimeStampCol(functions.add_months(castStringColToDateCol(cicliNdgColl.col("datainiziodef"), "yyyyMMdd"),
-                        - numeroMesi1), "yyyy-MM-dd"));
+        dtRiferimentoDataInizioDefConditionCol = tlbuact.col("dt_riferimento").cast(DataTypes.IntegerType).geq(
+                functions.callUDF("subtractDuration", cicliNdgColl.col("datainiziodef"), functions.lit("yyyyMMdd"),
+                        functions.lit(numeroMesi1)).cast(DataTypes.IntegerType));
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
-        leastDateCol = leastDate(functions.add_months(castStringColToDateCol(cicliNdgColl.col("datafinedef"), "yyyyMMdd"), -1),
-                functions.lit(dataA), "yyyy-MM-dd");
+        // [a] SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd')
+        Column cicliNdgCollDataFineDefSubtractDurationCol = functions.callUDF("substractDuration",
+                cicliNdgColl.col("datafinedef"),
+                functions.lit("yyyyMMdd"),
+                functions.lit(1).cast(DataTypes.IntegerType),
+                functions.lit("yyyyMMdd"));
+
+        leastDateCol = functions.callUDF("leastDate", cicliNdgCollDataFineDefSubtractDurationCol, dataACol, functions.lit("yyyyMMdd"));
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )
-        leastDateAddDurationCol = functions.add_months(functions.from_unixtime(leastDateCol, "yyyy-MM-dd"), numeroMesi2);
+        leastDateAddDurationCol = functions.callUDF("addDuration", leastDateCol, functions.lit("yyyyMMdd"), functions.lit(numeroMesi2));
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationCol, 0,6)
-        dtRiferimentoLeastDateAddDurationConditionCol = getUnixTimeStampCol(
-                functions.substring(tlbuact.col("dt_riferimento"), 0, 6), "yyyyMM")
-                .leq(getUnixTimeStampCol(functions.date_format(leastDateAddDurationCol, "yyyy-MM"), "yyyy-MM"));
+        dtRiferimentoLeastDateAddDurationConditionCol =
+                functions.substring(tlbuact.col("dt_riferimento"), 0, 6).cast(DataTypes.IntegerType).leq(
+                        functions.substring(leastDateAddDurationCol, 0, 6).cast(DataTypes.IntegerType));
 
         // 132
         List<Column> tlbcidefTlbuactCollSelectColList = new ArrayList<>(selectDfColumns(
