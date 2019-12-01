@@ -157,9 +157,8 @@ public class FrappNdgMonthly extends AbstractStep {
         Dataset<Row> tlbcidefTlburtt = tlbcidefUrttPrinc.union(tlbcidefUrttColl).distinct();
 
         String tlbcidefTlburttCsv = getPropertyValue("tlbcidef.tlburtt");
-        logger.info("tlbcidefTlburttCsv: " + tlbcidefTlburttCsv);
+        logger.debug("tlbcidefTlburttCsv: " + tlbcidefTlburttCsv);
 
-        logger.info("tlbcidefTlburtt count: " + tlbcidefTlburtt.count());
         tlbcidefTlburtt.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(stepOutputDir, tlbcidefTlburttCsv).toString());
 
