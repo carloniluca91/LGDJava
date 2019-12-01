@@ -30,24 +30,22 @@ public class Fpasperd extends AbstractStep {
     @Override
     public void run() {
 
+        String csvFormat = getPropertyValue("csv.format");
+        String cicliNdgPathCsv = getPropertyValue("cicli.ndg.path.csv");
+        String tlbcidefLoadPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
+
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("cicliNdgPathCsv: " + cicliNdgPathCsv);
+        logger.debug("tlbcidefLoadPath: " + tlbcidefLoadPath);
+
         // 19
         List<String> tlbcidefLoadColumns = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef", "datafinedef", "datainiziopd",
                 "datainizioristrutt", "datainizioinc", "datainiziosoff", "c_key", "tipo_segmne", "sae_segm", "rae_segm",
                 "segmento", "tp_ndg", "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg",
                 "ndg_collegato", "codicebanca_collegato", "cd_collegamento", "cd_fiscale");
 
-        StructType tlbcidefLoadSchema = getStringTypeSchema(tlbcidefLoadColumns);
-
-        String cicliNdgPathCsv = getPropertyValue("cicli.ndg.path.csv");
-        String tlbcidefLoadPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
-        String csvFormat = getPropertyValue("csv.format");
-
-        logger.debug("cicliNdgPathCsv: " + cicliNdgPathCsv);
-        logger.debug("tlbcidefLoadPath: " + tlbcidefLoadPath);
-        logger.debug("csvFormat: " + csvFormat);
-
-        Dataset<Row> tlbcidefLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(
-                tlbcidefLoadSchema).csv(tlbcidefLoadPath);
+        Dataset<Row> tlbcidefLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tlbcidefLoadColumns)).csv(tlbcidefLoadPath);
 
         // // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
         // tlbcidef::datafinedef in format "yyyyMMdd"
@@ -60,15 +58,14 @@ public class Fpasperd extends AbstractStep {
 
         // 63
         List<String> tlbpaspeColumns = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
-        StructType tlbpaspeSchema = getStringTypeSchema(tlbpaspeColumns);
-
         String tlbpaspeCsv = getPropertyValue("tlbpaspe.filter.csv");
         String tlbpaspeCsvPath = Paths.get(stepInputDir, tlbpaspeCsv).toString();
-        logger.info("tlbpaspeCsv:" + tlbpaspeCsv);
-        logger.info("tlbpaspeCsvPath: " + tlbpaspeCsvPath);
 
-        Dataset<Row> tlbpaspeFilter = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(
-                tlbpaspeSchema).csv(tlbpaspeCsvPath);
+        logger.debug("tlbpaspeCsv:" + tlbpaspeCsv);
+        logger.debug("tlbpaspeCsvPath: " + tlbpaspeCsvPath);
+
+        Dataset<Row> tlbpaspeFilter = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tlbpaspeColumns)).csv(tlbpaspeCsvPath);
 
         // 71
 
@@ -79,29 +76,24 @@ public class Fpasperd extends AbstractStep {
                 .and(tlbpaspeFilter.col("ndg").equalTo(tlbcidef.col("ndg_collegato")));
 
         // BY (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
-        Column dataContDataInizioDefFilterCol = functions.substring(tlbpaspeFilter.col("datacont"), 0, 6)
-                .cast(DataTypes.IntegerType).geq(functions.substring(tlbcidef.col("datainiziodef"), 0, 6)
-                        .cast(DataTypes.IntegerType));
+        Column dataContDataInizioDefFilterCol = substringAndCastToInt(tlbpaspeFilter.col("datacont"), 0, 6)
+                .geq(substringAndCastToInt(tlbcidef.col("datainiziodef"), 0, 6));
 
         // AND (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
-        Column dataContDataFineDefFIlterCol = functions.substring(tlbpaspeFilter.col("datacont"), 0, 6)
-                .cast(DataTypes.IntegerType).lt(functions.substring(tlbcidef.col("datafinedef"), 0, 6)
-                        .cast(DataTypes.IntegerType));
+        Column dataContDataFineDefFIlterCol = substringAndCastToInt(tlbpaspeFilter.col("datacont"), 0, 6)
+                .lt(substringAndCastToInt(tlbcidef.col("datafinedef"), 0, 6));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
         Column daysDiffColl = daysBetween(tlbcidef.col("datafinedef"), tlbpaspeFilter.col("datacont"), "yyyyMMdd");
 
         // list of columns to be selected from dataframe tlbpaspeFilter
         List<String> tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
-        logger.info("tlpaspeFilter columns to be selected: " + tlbpaspeFilterSelectCols.toString());
         List<Column> selectCols = selectDfColumns(tlbpaspeFilter, tlbpaspeFilterSelectCols);
 
         // list of columns to be selected from dataframe tlbcidef
         List<String> tlbcidefSelectCols = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef", "datafinedef");
-        logger.info("tlbcidef columns to be selected: " + tlbcidefSelectCols.toString());
         selectCols.addAll(selectDfColumns(tlbcidef, tlbcidefSelectCols));
 
-        // conversion to scala Seq
         Seq<Column> selectColsSeq = toScalaColSeq(selectCols);
 
         Dataset<Row> tlbcidefTlbpaspeFilterJoin = tlbpaspeFilter.join(tlbcidef, joinCondition, "left");
@@ -167,12 +159,12 @@ public class Fpasperd extends AbstractStep {
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
         //  BY (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
-        dataContDataInizioDefFilterCol = functions.substring(fpasperdNullOut.col("datacont"), 0, 6).cast(DataTypes.IntegerType)
-                .geq(functions.substring(tlbcidef.col("datainiziodef"), 0, 6).cast(DataTypes.IntegerType));
+        dataContDataInizioDefFilterCol = substringAndCastToInt(fpasperdNullOut.col("datacont"), 0, 6)
+                .geq(substringAndCastToInt(tlbcidef.col("datainiziodef"), 0, 6));
 
         // AND (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
-        dataContDataFineDefFIlterCol = functions.substring(fpasperdNullOut.col("datacont"), 0, 6).cast(DataTypes.IntegerType)
-                .lt(functions.substring(tlbcidef.col("datafinedef"), 0, 6).cast(DataTypes.IntegerType));
+        dataContDataFineDefFIlterCol = substringAndCastToInt(fpasperdNullOut.col("datacont"), 0, 6)
+                .lt(substringAndCastToInt(tlbcidef.col("datafinedef"), 0, 6));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
         daysDiffColl = daysBetween(tlbcidef.col("datafinedef"), fpasperdNullOut.col("datacont"), "yyyyMMdd");
@@ -256,8 +248,9 @@ public class Fpasperd extends AbstractStep {
 
         String tlbpaspeossCsv = getPropertyValue("tlbpaspeoss.csv");
         String tlbpaspeossCsvPath = Paths.get(stepInputDir, tlbpaspeossCsv).toString();
-        logger.info("tlbpaspeossCsv: " + tlbpaspeossCsv);
-        logger.info("tlbpaspeossCsvPath: " + tlbpaspeossCsvPath);
+
+        logger.debug("tlbpaspeossCsv: " + tlbpaspeossCsv);
+        logger.debug("tlbpaspeossCsvPath: " + tlbpaspeossCsvPath);
 
         // slightly change the field names for tlbpaspeoss in order to avoid implicit coalesce operator
         // triggered by performing "full_outer" join on columns with same name
@@ -323,12 +316,12 @@ public class Fpasperd extends AbstractStep {
                 .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol, ndgPrincipaleCol, dataInizioDefCol);
 
         String paspePaspeossGenDistCsv = getPropertyValue("paspe.paspeoss.gen.dist.csv");
-        logger.info("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);
-
         String paspePaspeossGenDistCsvPath = Paths.get(stepOutputDir, paspePaspeossGenDistCsv).toString();
-        logger.info("paspePaspeossGenDistCsvPath: " + paspePaspeossGenDistCsvPath);
+
+        logger.debug("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);
+        logger.debug("paspePaspeossGenDistCsvPath: " + paspePaspeossGenDistCsvPath);
 
         paspePaspeossGenDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(paspePaspeossGenDistCsvPath);
-        // 379
+
     }
 }

@@ -3,8 +3,6 @@ package steps.lgdstep;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
@@ -31,19 +29,22 @@ public class FrappNdgMonthly extends AbstractStep {
         stepInputDir = getPropertyValue("frapp.ndg.monthly.input.dir");
         stepOutputDir = getPropertyValue("frapp.ndg.monthly.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("dataA: " + this.dataA);
-        logger.info("numeroMesi1:" + this.numeroMesi1);
-        logger.info("numeroMesi2: " + this.numeroMesi2);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
+        logger.debug("dataA: " + this.dataA);
+        logger.debug("numeroMesi1:" + this.numeroMesi1);
+        logger.debug("numeroMesi2: " + this.numeroMesi2);
     }
 
     public void run() {
 
         String csvFormat = getPropertyValue("csv.format");
         String cicliNdgPathCsv = getPropertyValue("cicli.ndg.path.csv");
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("cicliNdgPathCsv: " + cicliNdgPathCsv);
+        String cicliNdgPathCsvPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
+
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("cicliNdgPathCsv: " + cicliNdgPathCsv);
+        logger.debug("cicliNdgPathCsvPath: " + cicliNdgPathCsvPath);
 
         // 26
         List<String> tlbcidefColumns = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef", "datafinedef", "datainiziopd",
@@ -51,11 +52,8 @@ public class FrappNdgMonthly extends AbstractStep {
                 "tp_ndg", "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg", "ndg_collegato", "codicebanca_collegato",
                 "cd_collegamento", "cd_fiscale", "dt_rif_udct");
 
-        StructType tlbcidefSchema = getStringTypeSchema(tlbcidefColumns);
-        String cicliNdgPathCsvPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
-        logger.info("cicliNdgPathCsvPath: " + cicliNdgPathCsvPath);
-
-        Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbcidefSchema).csv(cicliNdgPathCsvPath);
+        Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tlbcidefColumns)).csv(cicliNdgPathCsvPath);
         // 53
 
         // 58
@@ -70,52 +68,41 @@ public class FrappNdgMonthly extends AbstractStep {
                 "freq_remargining", "cd_prodotto_ris", "durata_originaria", "divisa", "score_erogaz", "durata_residua", "categoria_sof",
                 "categoria_inc", "dur_res_default", "flag_margine", "dt_entrata_def", "tp_contr_rapp", "cd_eplus", "r792_tipocartol");
 
-        StructType tlburttSchema = getStringTypeSchema(tlburttColumns);
         String tlburttCsv = getPropertyValue("tlburtt.csv");
         String tlburttCsvPath = Paths.get(stepInputDir, tlburttCsv).toString();
-        logger.info("tlburttCsv: " + tlburttCsv);
-        logger.info("tlburttCsvPath: " + tlburttCsvPath);
 
-        Dataset<Row> tlburtt = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlburttSchema).csv(tlburttCsvPath);
+        logger.debug("tlburttCsv: " + tlburttCsv);
+        logger.debug("tlburttCsvPath: " + tlburttCsvPath);
+
+        Dataset<Row> tlburtt = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tlburttColumns)).csv(tlburttCsvPath);
         // 107
 
         // 111
         Dataset<Row> tlburttFilter = tlburtt.filter(castCol(tlburtt.col("progr_segmento"), DataTypes.IntegerType).equalTo(0));
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-        // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
-        Column dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(changeDateFormat(cicliNdgPrinc.col("datainiziodef"),
-                        "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
+        Column dtRiferimentoFilterPrincCol = tlburttFilter.col("dt_riferimento").geq(
+                subtractDuration(cicliNdgPrinc.col("datainiziodef"), "yyyyMMdd", numeroMesi1));
 
         /*
-        AddDuration(
-            ToDate(
-                (chararray)LeastDate(
-                            (int)ToString(
-                                    SubtractDuration(ToDate((chararray)
-                                        datafinedef,'yyyyMMdd' ),
-                                        'P1M'),
-                                    'yyyyMMdd')
-                            ,$data_a),
-                'yyyyMMdd' ),
-            '$numero_mesi_2' )
+        AddDuration(ToDate((chararray)
+            LeastDate((int)ToString(
+                SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'),
+                $data_a),
+            'yyyyMMdd' ),'$numero_mesi_2' )
 ;
          */
 
-        // dataFineDefCol in format "yyyy-MM-dd" due to add_months
-        Column dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
-                // datafinedef -1 month in format "yyyy-MM-dd"
-                functions.add_months(changeDateFormat(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
-                        "yyyy-MM-dd"), -1),
-                // dataA, already in format "yyyy-MM-dd"
-                functions.lit(dataA), "yyyy-MM-dd"),
-                // convert to StringType as we must apply SUBSTRING to it
-                "yyyy-MM-dd"), numeroMesi2).cast(DataTypes.StringType);
+        // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
+        Column dataACol = functions.lit(changeDateFormat(this.dataA, "yyyy-MM-dd", "yyyyMMdd"));
+        Column dataFineDefSubtractDurationPrincCol = subtractDuration(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd", 1);
+        Column leastDateDataFineDefDataAPrincCol = leastDate(dataFineDefSubtractDurationPrincCol, dataACol, "yyyyMMdd");
+        Column addDurationLeastDateDataFineDefDataAPrincCol = addDuration(leastDateDataFineDefDataAPrincCol, "yyyyMMdd", numeroMesi2);
 
-        // dt_riferimento in format "yyyyMMdd", dataFineDefCol in format "yyyy-MM-dd" due to add_months
-        Column dataFineDefFilterCol = getUnixTimeStampCol(functions.substring(tlburttFilter.col("dt_riferimento"), 0, 6),
-                "yyyyMM").$less$eq(getUnixTimeStampCol(functions.substring(dataFineDefCol, 0, 7),"yyyy-MM"));
+        // AND SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(AddDuration(...), 0, 6)
+        Column dataFineDefFilterPrincCol = substringAndCastToInt(tlburttFilter.col("dt_riferimento"), 0, 6).leq(
+                substringAndCastToInt(addDurationLeastDateDataFineDefDataAPrincCol, 0, 6));
 
         // list of columns to be selected on cicliNdgPrinc
         List<String> cicliNdgPrincSelectColNames = Arrays.asList("codicebanca", "ndgprincipale", "codicebanca_collegato",
@@ -130,45 +117,42 @@ public class FrappNdgMonthly extends AbstractStep {
         tlbcidefUrttPrincCols.addAll(tlburttFilterSelectCols);
 
         // conversion to scala Seq
-        Seq<Column> tlbcidefUrttPrincColSeq = JavaConverters.asScalaIteratorConverter(tlbcidefUrttPrincCols.iterator()).asScala().toSeq();
+        Seq<Column> tlbcidefUrttPrincColSeq = toScalaColSeq(tlbcidefUrttPrincCols);
         Dataset<Row> tlbcidefUrttPrinc = cicliNdgPrinc.join(tlburttFilter, cicliNdgPrinc.col("codicebanca_collegato").equalTo(
                 tlburttFilter.col("cd_istituto")).and(cicliNdgPrinc.col("ndg_collegato").equalTo(tlburttFilter.col("ndg"))))
-                .filter(dtRiferimentoFilterCol.and(dataFineDefFilterCol))
+                .filter(dtRiferimentoFilterPrincCol.and(dataFineDefFilterPrincCol))
                 .select(tlbcidefUrttPrincColSeq);
 
         // 158
 
-        // as tlbcidefUrttColl follows the same pipeline of tlbcidefUrttPrinc, except for the fact that
-        // tlbcidefUrttColl uses cicliNdgColl as opposed to tlbcidefUrttPrinc that uses cicliNdgPrinc,
-        // we simply slightly modify the previously defined column conditions and select columns
+        // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
+        Column dtRiferimentoFilterCollCol = tlburttFilter.col("dt_riferimento").geq(
+                subtractDuration(cicliNdgColl.col("datainiziodef"), "yyyyMMdd", numeroMesi1));
 
-        // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
-        dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(changeDateFormat(cicliNdgColl.col("datainiziodef"),
-                        "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
+        /*
+        AddDuration(ToDate((chararray)
+            LeastDate((int)ToString(
+                SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'),
+                $data_a),
+            'yyyyMMdd' ),'$numero_mesi_2' )
+;
+         */
 
-        // dataFineDefCol in format "yyyy-MM-dd" due to add_months
-        dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
-                // datafinedef -1 in format "yyyy-MM-dd"
-                functions.add_months(changeDateFormat(cicliNdgColl.col("datafinedef"), "yyyyMMdd",
-                        "yyyy-MM-dd"), -1),
-                // dataA, already in format "yyyy-MM-dd"
-                functions.lit(dataA), "yyyy-MM-dd"),
-                "yyyy-MM-dd"), numeroMesi2).cast(DataTypes.StringType);
+        Column dataFineDefSubtractDurationCollCol = subtractDuration(cicliNdgColl.col("datafinedef"), "yyyyMMdd", 1);
+        Column leastDateDataFineDefDataACollCol = leastDate(dataFineDefSubtractDurationCollCol, dataACol, "yyyyMMdd");
+        Column addDurationLeastDateDataFineDefDataACollCol = addDuration(leastDateDataFineDefDataACollCol, "yyyyMMdd", numeroMesi2);
 
-        // dt_riferimento in format "yyyyMMdd", dataFineDefCol in format "yyyy-MM-dd" due to add_months
-        dataFineDefFilterCol = getUnixTimeStampCol(functions.substring(tlburttFilter.col("dt_riferimento"), 0, 6),
-                "yyyyMM").$less$eq(getUnixTimeStampCol(functions.substring(dataFineDefCol, 0, 7),"yyyy-MM"));
+        // AND SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(AddDuration(...), 0, 6)
+        Column dataFineDefFilterCollCol = substringAndCastToInt(tlburttFilter.col("dt_riferimento"), 0, 6).leq(
+                substringAndCastToInt(addDurationLeastDateDataFineDefDataACollCol, 0, 6));
 
         List<Column> tlbcidefUrttCollCols = selectDfColumns(cicliNdgColl, cicliNdgPrincSelectColNames);
         tlbcidefUrttCollCols.addAll(tlburttFilterSelectCols);
 
-        // conversion to scala Seq
-        Seq<Column> tlbcidefUrttCollColsSeq = JavaConverters.asScalaIteratorConverter(tlbcidefUrttCollCols.iterator()).asScala().toSeq();
         Dataset<Row> tlbcidefUrttColl = cicliNdgColl.join(tlburttFilter, cicliNdgColl.col("codicebanca_collegato").equalTo(
                 tlburttFilter.col("cd_istituto")).and(cicliNdgColl.col("ndg_collegato").equalTo(tlburttFilter.col("ndg"))))
-                .filter(dtRiferimentoFilterCol.and(dataFineDefFilterCol))
-                .select(tlbcidefUrttCollColsSeq);
+                .filter(dtRiferimentoFilterCollCol.and(dataFineDefFilterCollCol))
+                .select(toScalaColSeq(tlbcidefUrttCollCols));
 
         Dataset<Row> tlbcidefTlburtt = tlbcidefUrttPrinc.union(tlbcidefUrttColl).distinct();
 

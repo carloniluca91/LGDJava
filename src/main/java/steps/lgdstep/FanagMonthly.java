@@ -43,19 +43,19 @@ public class FanagMonthly extends AbstractStep {
         String tlbudtcPath = getPropertyValue("tlbduct.path.csv");
         String fanagOutPath = getPropertyValue("fanag.out");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("cicliNdgPath: " + cicliNdgPath);
-        logger.info("tlbuActPath: " + tlbuActPath);
-        logger.info("tlbudtcPath: " + tlbudtcPath);
-        logger.info("fanagOutPath: " + fanagOutPath);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("cicliNdgPath: " + cicliNdgPath);
+        logger.debug("tlbuActPath: " + tlbuActPath);
+        logger.debug("tlbudtcPath: " + tlbudtcPath);
+        logger.debug("fanagOutPath: " + fanagOutPath);
 
         List<String> cicliNdgColumnNames = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef", "datafinedef", "datainiziopd",
                 "datainizioristrutt", "datainizioinc", "datainiziosoff", "c_key", "tipo_segmne", "sae_segm", "rae_segm", "segmento", "tp_ndg",
                 "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg", "ndg_collegato", "codicebanca_collegato",
                 "cd_collegamento", "cd_fiscale", "dt_rif_udct");
 
-        Dataset<Row> cicliNdg = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(cicliNdgColumnNames)).csv(
-                Paths.get(stepInputDir, cicliNdgPath).toString());
+        Dataset<Row> cicliNdg = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(cicliNdgColumnNames))
+                .csv(Paths.get(stepInputDir, cicliNdgPath).toString());
 
         // cicli_ndg_princ = FILTER cicli_ndg BY cd_collegamento IS NULL;
         // cicli_ndg_coll = FILTER cicli_ndg BY cd_collegamento IS NOT NULL;
@@ -70,11 +70,9 @@ public class FanagMonthly extends AbstractStep {
                 "dt_estinz_ctp", "cliente_fido_rev", "tp_controparte", "grande_sett_attiv", "grande_ramo_attiv", "n058_interm_vigil",
                 "n160_cod_ateco");
 
-        List<String> tlbuactLoadSeletcColNames = Arrays.asList("dt_riferimento", "cd_istituto", "ndg", "tp_ndg", "intestazione",
-                "cd_fiscale", "partita_iva", "sae", "rae", "ciae", "provincia", "sportello", "ndg_caponucleo");
-
-        Dataset<Row> tlbuact = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(tlbuactColumnNames)).csv(
-                Paths.get(stepInputDir, tlbuActPath).toString()).selectExpr(toScalaStringSeq(tlbuactLoadSeletcColNames));
+        Dataset<Row> tlbuact = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(tlbuactColumnNames))
+                .csv(Paths.get(stepInputDir, tlbuActPath).toString()).selectExpr("dt_riferimento", "cd_istituto", "ndg", "tp_ndg", "intestazione",
+                        "cd_fiscale", "partita_iva", "sae", "rae", "ciae", "provincia", "sportello", "ndg_caponucleo");
 
         // JOIN  tlbuact BY (cd_istituto, ndg), cicli_ndg_princ BY (codicebanca_collegato, ndg_collegato);
         Column joinCondition = tlbuact.col("cd_istituto").equalTo(cicliNdgPrinc.col("codicebanca_collegato"))
@@ -89,7 +87,7 @@ public class FanagMonthly extends AbstractStep {
         Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDuration(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd", 1);
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        Column dataACol = changeDateFormat(functions.lit(dataA), "yyyy-MM-dd", "yyyyMMdd");
+        Column dataACol = functions.lit(changeDateFormat(this.dataA, "yyyy-MM-dd", "yyyyMMdd"));
         Column leastDateCol = leastDate(cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, "yyyyMMdd");
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )
@@ -97,8 +95,8 @@ public class FanagMonthly extends AbstractStep {
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationCol, 0,6)
         Column dtRiferimentoLeastDateAddDurationConditionCol =
-                functions.substring(tlbuact.col("dt_riferimento"), 0, 6).cast(DataTypes.IntegerType).leq(
-                        functions.substring(leastDateAddDurationCol, 0, 6).cast(DataTypes.IntegerType));
+                substringAndCastToInt(tlbuact.col("dt_riferimento"), 0, 6)
+                        .leq(substringAndCastToInt(leastDateAddDurationCol, 0, 6));
 
         // 132
         List<Column> tlbcidefTlbuactPrincSelectColList = new ArrayList<>(selectDfColumns(
@@ -143,8 +141,8 @@ public class FanagMonthly extends AbstractStep {
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationCol, 0,6)
         dtRiferimentoLeastDateAddDurationConditionCol =
-                functions.substring(tlbuact.col("dt_riferimento"), 0, 6).cast(DataTypes.IntegerType).leq(
-                        functions.substring(leastDateAddDurationCol, 0, 6).cast(DataTypes.IntegerType));
+                substringAndCastToInt(tlbuact.col("dt_riferimento"), 0, 6)
+                        .leq(substringAndCastToInt(leastDateAddDurationCol, 0, 6));
 
         // 132
         List<Column> tlbcidefTlbuactCollSelectColList = new ArrayList<>(selectDfColumns(

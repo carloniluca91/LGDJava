@@ -43,16 +43,17 @@ abstract class StepUtils {
                 functions.lit(upperDate), functions.lit(upperDatePattern));
     }
 
-    protected Column daysBetween(Column dateCol1, Column dateCol2, String commonPattern){
-
-        return functions.callUDF("daysBetween", dateCol1, dateCol2, functions.lit(commonPattern));
-    }
-
     // change the format of string expressing a date
     protected Column changeDateFormat(Column dateColumn, String oldPattern, String newPattern){
 
         return functions.callUDF("changeDateFormat", dateColumn, functions.lit(oldPattern), functions.lit(newPattern));
     }
+
+    protected String changeDateFormat(String date, String oldPattern, String newPattern){
+
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern(oldPattern)).format(DateTimeFormatter.ofPattern(newPattern));
+    }
+
 
     // check if a date is >= other date
     protected Column dateGtOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
@@ -83,6 +84,11 @@ abstract class StepUtils {
         return functions.callUDF("date1LtDate2",
                 dateColumn, functions.lit(dateColumnPattern),
                 otherDateColumn, functions.lit(otherDatePattern));
+    }
+
+    protected Column daysBetween(Column dateCol1, Column dateCol2, String commonPattern){
+
+        return functions.callUDF("daysBetween", dateCol1, dateCol2, functions.lit(commonPattern));
     }
 
     protected Column getQuadJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
@@ -156,6 +162,11 @@ abstract class StepUtils {
         }
 
         return dfCols;
+    }
+
+    protected Column substringAndCastToInt(Column column, int startIndex, int length){
+
+        return functions.substring(column, startIndex, length).cast(DataTypes.IntegerType);
     }
 
     protected Column subtractDuration(Column dateCol, String dateColFormat, int months){
