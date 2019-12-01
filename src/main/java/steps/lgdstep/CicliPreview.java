@@ -166,11 +166,11 @@ public class CicliPreview extends AbstractStep {
         ,ToString(ToDate(datasofferenza,'yyyyMMdd'),'yyyy-MM-dd') as datasofferenza
          */
 
-        Column dataInizioDefCol = dateFormat(fposiBase.col("datainiziodef"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziodef");
-        Column dataFineDefCol = dateFormat(fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef");
-        Column dataInizioPdCol = dateFormat(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
-        Column dataInizioIncCol = dateFormat(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
-        Column dataInizioRistruttCol = dateFormat(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
+        Column dataInizioDefCol = changeDateFormat(fposiBase.col("datainiziodef"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziodef");
+        Column dataFineDefCol = changeDateFormat(fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef");
+        Column dataInizioPdCol = changeDateFormat(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
+        Column dataInizioIncCol = changeDateFormat(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
+        Column dataInizioRistruttCol = changeDateFormat(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
 
         Column dataSofferenzaCol = functions.callUDF(dataSofferenzaUdfName, fposiBase.col("datasofferenza"));
 

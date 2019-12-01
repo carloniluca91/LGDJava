@@ -18,6 +18,11 @@ import java.util.Set;
 
 abstract class StepUtils {
 
+    protected Column addDuration(Column dateCol, String dateColFormat, int months){
+
+        return functions.callUDF("addDuration", dateCol, functions.lit(dateColFormat), functions.lit(months));
+    }
+
     protected Column castCol(Column column, DataType dataType){
         return column.cast(dataType);
     }
@@ -38,8 +43,13 @@ abstract class StepUtils {
                 functions.lit(upperDate), functions.lit(upperDatePattern));
     }
 
+    protected Column daysBetween(Column dateCol1, Column dateCol2, String commonPattern){
+
+        return functions.callUDF("daysBetween", dateCol1, dateCol2, functions.lit(commonPattern));
+    }
+
     // change the format of string expressing a date
-    protected Column dateFormat(Column dateColumn, String oldPattern, String newPattern){
+    protected Column changeDateFormat(Column dateColumn, String oldPattern, String newPattern){
 
         return functions.callUDF("changeDateFormat", dateColumn, functions.lit(oldPattern), functions.lit(newPattern));
     }
@@ -106,12 +116,9 @@ abstract class StepUtils {
         return functions.unix_timestamp(column, dateFormat);
     }
 
-    // compute the least date between two date columns that have the same provided format
     protected Column leastDate(Column dateColumn1, Column dateColumn2, String commonDateFormat){
 
-        Column column1Ts = getUnixTimeStampCol(dateColumn1, commonDateFormat);
-        Column column2Ts = getUnixTimeStampCol(dateColumn2, commonDateFormat);
-        return functions.least(column1Ts, column2Ts);
+        return functions.callUDF("leastDate", dateColumn1, dateColumn2, functions.lit(commonDateFormat));
     }
 
     // convert a string into a LocalDate object
@@ -151,7 +158,11 @@ abstract class StepUtils {
         return dfCols;
     }
 
-    // convert a Java list into a scala.collection.Seq
+    protected Column subtractDuration(Column dateCol, String dateColFormat, int months){
+
+        return functions.callUDF("substractDuration", dateCol, functions.lit(dateColFormat), functions.lit(months));
+    }
+
     protected Seq<String> toScalaStringSeq(List<String> list){
         return JavaConversions.asScalaBuffer(list).toSeq();
     }

@@ -4,8 +4,8 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
+import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
@@ -51,9 +51,7 @@ public class Fpasperd extends AbstractStep {
 
         // // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
         // tlbcidef::datafinedef in format "yyyyMMdd"
-        Column dataFineDefCol = dateFormat(tlbcidefLoad.col("datafinedef"),
-                "yyyyMMdd", "yyyy-MM-dd");
-        dataFineDefCol = functions.date_format(functions.add_months(dataFineDefCol, 2), "yyyyMMdd").as("datafinedef");
+        Column dataFineDefCol = addDuration(tlbcidefLoad.col("datafinedef"), "yyyyMMdd", 2).as("datafinedef");
 
         Dataset<Row> tlbcidef = tlbcidefLoad.select(functions.col("codicebanca"), functions.col("ndgprincipale"),
                 functions.col("datainiziodef"), dataFineDefCol, functions.col("codicebanca_collegato"),
@@ -81,19 +79,17 @@ public class Fpasperd extends AbstractStep {
                 .and(tlbpaspeFilter.col("ndg").equalTo(tlbcidef.col("ndg_collegato")));
 
         // BY (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
-        Column dataContDataInizioDefFilterCol = getUnixTimeStampCol(
-                functions.substring(tlbpaspeFilter.col("datacont"), 0, 6), "yyyyMM")
-                .$greater$eq(getUnixTimeStampCol(functions.substring(tlbcidef.col("datainiziodef"), 0, 6), "yyyyMM"));
+        Column dataContDataInizioDefFilterCol = functions.substring(tlbpaspeFilter.col("datacont"), 0, 6)
+                .cast(DataTypes.IntegerType).geq(functions.substring(tlbcidef.col("datainiziodef"), 0, 6)
+                        .cast(DataTypes.IntegerType));
 
         // AND (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
-        Column dataContDataFineDefFIlterCol = getUnixTimeStampCol(
-                functions.substring(tlbpaspeFilter.col("datacont"), 0, 6), "yyyyMM")
-                .$less(getUnixTimeStampCol(functions.substring(tlbcidef.col("datafinedef"), 0, 6), "yyyyMM"));
+        Column dataContDataFineDefFIlterCol = functions.substring(tlbpaspeFilter.col("datacont"), 0, 6)
+                .cast(DataTypes.IntegerType).lt(functions.substring(tlbcidef.col("datafinedef"), 0, 6)
+                        .cast(DataTypes.IntegerType));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
-        Column daysDiffColl = functions.datediff(
-                dateFormat(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                dateFormat(tlbpaspeFilter.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
+        Column daysDiffColl = daysBetween(tlbcidef.col("datafinedef"), tlbpaspeFilter.col("datacont"), "yyyyMMdd");
 
         // list of columns to be selected from dataframe tlbpaspeFilter
         List<String> tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -106,7 +102,7 @@ public class Fpasperd extends AbstractStep {
         selectCols.addAll(selectDfColumns(tlbcidef, tlbcidefSelectCols));
 
         // conversion to scala Seq
-        Seq<Column> selectColsSeq = JavaConverters.asScalaIteratorConverter(selectCols.iterator()).asScala().toSeq();
+        Seq<Column> selectColsSeq = toScalaColSeq(selectCols);
 
         Dataset<Row> tlbcidefTlbpaspeFilterJoin = tlbpaspeFilter.join(tlbcidef, joinCondition, "left");
         Dataset<Row> fpasperdBetweenGen = tlbpaspeFilter.join(tlbcidef, joinCondition, "left")
@@ -133,11 +129,11 @@ public class Fpasperd extends AbstractStep {
         tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
         selectCols = selectDfColumns(tlbpaspeFilter, tlbpaspeFilterSelectCols);
 
-        selectCols.add(functions.lit(null).as("codicebanca"));
-        selectCols.add(functions.lit(null).as("ndgprincipale"));
-        selectCols.add(functions.lit(null).as("datainiziodef"));
+        selectCols.add(functions.lit(null).cast(DataTypes.StringType).as("codicebanca"));
+        selectCols.add(functions.lit(null).cast(DataTypes.StringType).as("ndgprincipale"));
+        selectCols.add(functions.lit(null).cast(DataTypes.StringType).as("datainiziodef"));
 
-        selectColsSeq = JavaConverters.asScalaIteratorConverter(selectCols.iterator()).asScala().toSeq();
+        selectColsSeq = toScalaColSeq(selectCols);
         Dataset<Row> fpasperdOtherGen = tlbcidefTlbpaspeFilterJoin.filter(tlbcidef.col("codicebanca").isNotNull())
                 .select(selectColsSeq);
 
@@ -145,14 +141,12 @@ public class Fpasperd extends AbstractStep {
 
         // 152
 
-        List<String> joinColumns = Arrays.asList("cd_istituto", "ndg", "datacont");
-        Seq<String> joinColumnsSeq = JavaConverters.asScalaIteratorConverter(joinColumns.iterator()).asScala().toSeq();
+        Seq<String> joinColumnsSeq = toScalaStringSeq(Arrays.asList("cd_istituto", "ndg", "datacont"));
 
         List<String> fpasperdOtherGenSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale",
                 "importo", "codicebanca", "ndgprincipale", "datainiziodef");
         List<Column> fpasperdOtherGenSelectCols = selectDfColumns(fpasperdOtherGen, fpasperdOtherGenSelectColNames);
-        Seq<Column> fpasperdOtherGenSelectColsSeq = JavaConverters.asScalaIteratorConverter(
-                fpasperdOtherGenSelectCols.iterator()).asScala().toSeq();
+        Seq<Column> fpasperdOtherGenSelectColsSeq = toScalaColSeq(fpasperdOtherGenSelectCols);
 
         Dataset<Row> fpasperdOtherOut = fpasperdOtherGen.join(fpasperdBetweenOut, joinColumnsSeq, "left")
                 .filter(fpasperdBetweenOut.col("cd_istituto").isNull()).select(fpasperdOtherGenSelectColsSeq);
@@ -173,21 +167,15 @@ public class Fpasperd extends AbstractStep {
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
         //  BY (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
-        dataContDataInizioDefFilterCol = getUnixTimeStampCol(functions.substring(
-                fpasperdNullOut.col("datacont"), 0, 6), "yyyyMM").$greater$eq(
-                        getUnixTimeStampCol(functions.substring(tlbcidef.col("datainiziodef"), 0, 6),
-                                "yyyyMM"));
+        dataContDataInizioDefFilterCol = functions.substring(fpasperdNullOut.col("datacont"), 0, 6).cast(DataTypes.IntegerType)
+                .geq(functions.substring(tlbcidef.col("datainiziodef"), 0, 6).cast(DataTypes.IntegerType));
 
         // AND (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
-        dataContDataFineDefFIlterCol = getUnixTimeStampCol(functions.substring(
-                fpasperdNullOut.col("datacont"), 0, 6), "yyyyMM").$less(
-                        getUnixTimeStampCol(functions.substring(tlbcidef.col("datafinedef"), 0, 6),
-                                "yyyyMM"));
+        dataContDataFineDefFIlterCol = functions.substring(fpasperdNullOut.col("datacont"), 0, 6).cast(DataTypes.IntegerType)
+                .lt(functions.substring(tlbcidef.col("datafinedef"), 0, 6).cast(DataTypes.IntegerType));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
-        daysDiffColl = functions.datediff(
-                dateFormat(tlbcidef.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd"),
-                dateFormat(fpasperdNullOut.col("datacont"), "yyyyMMdd", "yyyy-MM-dd"));
+        daysDiffColl = daysBetween(tlbcidef.col("datafinedef"), fpasperdNullOut.col("datacont"), "yyyyMMdd");
 
         // columns to be selected from dataframe fpasperdNullOut
         List<String> fpasperdNullOutSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -195,8 +183,7 @@ public class Fpasperd extends AbstractStep {
 
         // add columns to be selected from tlbcidef
         principFpasperdBetweenGenCols.addAll(selectDfColumns(tlbcidef, tlbcidefSelectCols));
-        Seq<Column> principFpasperdBetweenGenColsSeq = JavaConverters.asScalaIteratorConverter(principFpasperdBetweenGenCols
-                .iterator()).asScala().toSeq();
+        Seq<Column> principFpasperdBetweenGenColsSeq = toScalaColSeq(principFpasperdBetweenGenCols);
 
         Dataset<Row> principFpasperdBetweenGen = fpasperdNullOut.join(tlbcidef, joinCondition, "left")
                 .filter(dataContDataInizioDefFilterCol.and(dataContDataFineDefFIlterCol))
@@ -220,11 +207,11 @@ public class Fpasperd extends AbstractStep {
 
         selectCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
 
-        selectCols.add(functions.lit(null).as("codicebanca"));
-        selectCols.add(functions.lit(null).as("ndgprincipale"));
-        selectCols.add(functions.lit(null).as("datainiziodef"));
+        selectCols.add(functions.lit(null).cast(DataTypes.StringType).as("codicebanca"));
+        selectCols.add(functions.lit(null).cast(DataTypes.StringType).as("ndgprincipale"));
+        selectCols.add(functions.lit(null).cast(DataTypes.StringType).as("datainiziodef"));
 
-        selectColsSeq = JavaConverters.asScalaIteratorConverter(selectCols.iterator()).asScala().toSeq();
+        selectColsSeq = toScalaColSeq(selectCols);
         Dataset<Row> principFpasperdOtherGen = fpasperdNullOut.join(tlbcidef, joinCondition, "left").filter(
                 tlbcidef.col("codicebanca").isNotNull()).select(selectColsSeq);
 
@@ -237,7 +224,7 @@ public class Fpasperd extends AbstractStep {
         List<Column> principFpasperdOtherGenSelectCols = selectDfColumns(principFpasperdOtherGen,
                 principFpasperdOtherOutColNames);
 
-        selectColsSeq = JavaConverters.asScalaIteratorConverter(principFpasperdOtherGenSelectCols.iterator()).asScala().toSeq();
+        selectColsSeq = toScalaColSeq(principFpasperdOtherGenSelectCols);
         Dataset<Row> principFpasperdOtherOut = principFpasperdOtherGen.join(principFpasperdBetweenOut, joinColumnsSeq, "left")
                 .filter(principFpasperdBetweenOut.col("cd_istituto").isNull()).select(selectColsSeq);
 
@@ -248,11 +235,11 @@ public class Fpasperd extends AbstractStep {
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
         List<Column> principFpasperdNullOutCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
-        principFpasperdNullOutCols.add(functions.lit(null).as("codicebanca"));
-        principFpasperdNullOutCols.add(functions.lit(null).as("ndgprincipale"));
-        principFpasperdNullOutCols.add(functions.lit(null).as("datainiziodef"));
+        principFpasperdNullOutCols.add(functions.lit(null).cast(DataTypes.StringType).as("codicebanca"));
+        principFpasperdNullOutCols.add(functions.lit(null).cast(DataTypes.StringType).as("ndgprincipale"));
+        principFpasperdNullOutCols.add(functions.lit(null).cast(DataTypes.StringType).as("datainiziodef"));
 
-        selectColsSeq = JavaConverters.asScalaIteratorConverter(principFpasperdNullOutCols.iterator()).asScala().toSeq();
+        selectColsSeq = toScalaColSeq(principFpasperdNullOutCols);
         Dataset<Row> principFpasperdNullOut = fpasperdNullOut.join(tlbcidef, joinCondition, "left").filter(
                 tlbcidef.col("codicebanca").isNull()).select(selectColsSeq);
 

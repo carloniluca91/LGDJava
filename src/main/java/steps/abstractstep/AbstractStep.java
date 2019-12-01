@@ -129,7 +129,7 @@ public abstract class AbstractStep extends StepUtils {
 
     private void registerUDFsForDateManipulation(){
 
-        // UDFS THAT MANIPULATE DATES (ADD_DURATION, SUBTRACT_DURATION, CHANGE_FORMAT, GREATEST, LEAST)
+        // UDFS THAT MANIPULATE DATES
 
         // AddDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         UDF3<String, String, Integer, String> addDurationUdf = (UDF3<String, String, Integer, String>)
@@ -193,6 +193,20 @@ public abstract class AbstractStep extends StepUtils {
 
 
         sparkSession.udf().register("leastDate", leastDateUdf, DataTypes.StringType);
+
+        // return the number of days between two dates with same pattern, in absolute value
+        // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
+        UDF3<String, String, String, Long> daysBetweenUdf = (UDF3<String, String, String, Long>)
+                (stringFirstDate, stringSecondDate, commonPattern) -> {
+
+                    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(commonPattern);
+                    LocalDate firstDate = LocalDate.parse(stringFirstDate, dateTimeFormatter);
+                    LocalDate secondDate = LocalDate.parse(stringSecondDate, dateTimeFormatter);
+                    return Math.abs(firstDate.minusDays(secondDate.toEpochDay()).toEpochDay());
+
+                };
+
+        sparkSession.udf().register("daysBetween", daysBetweenUdf, DataTypes.LongType);
 
     }
 

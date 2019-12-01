@@ -82,23 +82,18 @@ public class FanagMonthly extends AbstractStep {
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         Column dtRiferimentoDataInizioDefConditionCol = tlbuact.col("dt_riferimento").cast(DataTypes.IntegerType).geq(
-                functions.callUDF("subtractDuration", cicliNdgPrinc.col("datainiziodef"), functions.lit("yyyyMMdd"),
-                        functions.lit(numeroMesi1)).cast(DataTypes.IntegerType));
+                subtractDuration(cicliNdgPrinc.col("datainiziodef"), "yyyyMMdd", numeroMesi1).cast(DataTypes.IntegerType));
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
         // [a] SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd')
-        Column cicliNdgPrincDataFineDefSubtractDurationCol = functions.callUDF("substractDuration",
-                cicliNdgPrinc.col("datafinedef"),
-                functions.lit("yyyyMMdd"),
-                functions.lit(1).cast(DataTypes.IntegerType),
-                functions.lit("yyyyMMdd"));
+        Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDuration(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd", 1);
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        Column dataACol = functions.callUDF("changeDateFormat", functions.lit(dataA), functions.lit("yyyy-MM-dd"), functions.lit("yyyyMMdd"));
-        Column leastDateCol = functions.callUDF("leastDate", cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, functions.lit("yyyyMMdd"));
+        Column dataACol = changeDateFormat(functions.lit(dataA), "yyyy-MM-dd", "yyyyMMdd");
+        Column leastDateCol = leastDate(cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, "yyyyMMdd");
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )
-        Column leastDateAddDurationCol = functions.callUDF("addDuration", leastDateCol, functions.lit("yyyyMMdd"), functions.lit(numeroMesi2));
+        Column leastDateAddDurationCol = addDuration(leastDateCol, "yyyyMMdd", numeroMesi2);
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationCol, 0,6)
         Column dtRiferimentoLeastDateAddDurationConditionCol =
@@ -137,21 +132,14 @@ public class FanagMonthly extends AbstractStep {
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         dtRiferimentoDataInizioDefConditionCol = tlbuact.col("dt_riferimento").cast(DataTypes.IntegerType).geq(
-                functions.callUDF("subtractDuration", cicliNdgColl.col("datainiziodef"), functions.lit("yyyyMMdd"),
-                        functions.lit(numeroMesi1)).cast(DataTypes.IntegerType));
+                subtractDuration(cicliNdgColl.col("datainiziodef"),"yyyyMMdd", numeroMesi1).cast(DataTypes.IntegerType));
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
-        // [a] SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd')
-        Column cicliNdgCollDataFineDefSubtractDurationCol = functions.callUDF("substractDuration",
-                cicliNdgColl.col("datafinedef"),
-                functions.lit("yyyyMMdd"),
-                functions.lit(1).cast(DataTypes.IntegerType),
-                functions.lit("yyyyMMdd"));
-
-        leastDateCol = functions.callUDF("leastDate", cicliNdgCollDataFineDefSubtractDurationCol, dataACol, functions.lit("yyyyMMdd"));
+        Column cicliNdgCollDataFineDefSubtractDurationCol = subtractDuration(cicliNdgColl.col("datafinedef"), "yyyyMMdd", 1);
+        leastDateCol = leastDate(cicliNdgCollDataFineDefSubtractDurationCol, dataACol, "yyyyMMdd");
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )
-        leastDateAddDurationCol = functions.callUDF("addDuration", leastDateCol, functions.lit("yyyyMMdd"), functions.lit(numeroMesi2));
+        leastDateAddDurationCol = addDuration(leastDateCol, "yyyyMMdd", numeroMesi2);
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationCol, 0,6)
         dtRiferimentoLeastDateAddDurationConditionCol =

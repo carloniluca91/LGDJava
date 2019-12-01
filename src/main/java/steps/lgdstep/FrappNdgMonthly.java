@@ -85,7 +85,7 @@ public class FrappNdgMonthly extends AbstractStep {
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         Column dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(dateFormat(cicliNdgPrinc.col("datainiziodef"),
+                getUnixTimeStampCol(functions.add_months(changeDateFormat(cicliNdgPrinc.col("datainiziodef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
 
         /*
@@ -106,7 +106,7 @@ public class FrappNdgMonthly extends AbstractStep {
         // dataFineDefCol in format "yyyy-MM-dd" due to add_months
         Column dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
                 // datafinedef -1 month in format "yyyy-MM-dd"
-                functions.add_months(dateFormat(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
+                functions.add_months(changeDateFormat(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd",
                         "yyyy-MM-dd"), -1),
                 // dataA, already in format "yyyy-MM-dd"
                 functions.lit(dataA), "yyyy-MM-dd"),
@@ -144,13 +144,13 @@ public class FrappNdgMonthly extends AbstractStep {
 
         // dt_riferimento in format "yyyyMMdd", datainiziodef in format "yyyy-MM-dd" due to add_months
         dtRiferimentoFilterCol = getUnixTimeStampCol(tlburttFilter.col("dt_riferimento"), "yyyyMMdd").$greater$eq(
-                getUnixTimeStampCol(functions.add_months(dateFormat(cicliNdgColl.col("datainiziodef"),
+                getUnixTimeStampCol(functions.add_months(changeDateFormat(cicliNdgColl.col("datainiziodef"),
                         "yyyyMMdd", "yyyy-MM-dd"), -numeroMesi1), "yyyy-MM-dd"));
 
         // dataFineDefCol in format "yyyy-MM-dd" due to add_months
         dataFineDefCol = functions.add_months(functions.from_unixtime(leastDate(
                 // datafinedef -1 in format "yyyy-MM-dd"
-                functions.add_months(dateFormat(cicliNdgColl.col("datafinedef"), "yyyyMMdd",
+                functions.add_months(changeDateFormat(cicliNdgColl.col("datafinedef"), "yyyyMMdd",
                         "yyyy-MM-dd"), -1),
                 // dataA, already in format "yyyy-MM-dd"
                 functions.lit(dataA), "yyyy-MM-dd"),
