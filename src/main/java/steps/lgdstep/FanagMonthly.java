@@ -87,7 +87,8 @@ public class FanagMonthly extends AbstractStep {
         Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDuration(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd", 1);
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        Column dataACol = functions.lit(changeDateFormat(this.dataA, "yyyy-MM-dd", "yyyyMMdd"));
+        String dataAPattern = getPropertyValue("params.dataa.pattern");
+        Column dataACol = functions.lit(changeDateFormat(this.dataA, dataAPattern, "yyyyMMdd"));
         Column leastDateCol = leastDate(cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, "yyyyMMdd");
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )

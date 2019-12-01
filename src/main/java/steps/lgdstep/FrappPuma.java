@@ -80,7 +80,8 @@ public class FrappPuma extends AbstractStep {
         */
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        Column dataACol = functions.lit(changeDateFormat(dataA, "yyyy-MM-dd", "yyyyMMdd"));
+        String dataAPattern = getPropertyValue("params.dataa.pattern");
+        Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, "yyyyMMdd"));
         Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(tlbcidef.col("datafinedef"), "yyyyMMdd", 1),
                 dataACol, "yyyMMdd");
 
