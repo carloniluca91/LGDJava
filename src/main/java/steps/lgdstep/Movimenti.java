@@ -2,7 +2,6 @@ package steps.lgdstep;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.StructType;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
@@ -27,9 +26,9 @@ public class Movimenti extends AbstractStep {
         stepInputDir = getPropertyValue("movimenti.input.dir");
         stepOutputDir = getPropertyValue("movimenti.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("dataOsservazione: " + this.dataOsservazione);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
+        logger.debug("dataOsservazione: " + this.dataOsservazione);
     }
 
     @Override
@@ -38,21 +37,21 @@ public class Movimenti extends AbstractStep {
         String csvFormat = getPropertyValue("csv.format");
         String tlbmovcontaCsv = getPropertyValue("tlbmovconta.csv");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("tlbmovcontaCsv: " + tlbmovcontaCsv);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("tlbmovcontaCsv: " + tlbmovcontaCsv);
 
         List<String> tlbmovcontaColumnNames = Arrays.asList("mo_dt_riferimento", "mo_istituto", "mo_ndg", "mo_sportello",
                 "mo_conto", "mo_conto_esteso", "mo_num_soff", "mo_cat_rapp_soff", "mo_fil_rapp_soff", "mo_num_rapp_soff",
                 "mo_id_movimento", "mo_categoria", "mo_causale", "mo_dt_contabile", "mo_dt_valuta", "mo_imp_movimento",
                 "mo_flag_extracont", "mo_flag_storno", "mo_ndg_principale", "mo_dt_inizio_ciclo");
 
-        StructType tlbmovContaSchema = getStringTypeSchema(tlbmovcontaColumnNames);
-        Dataset<Row> tlbmovconta = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbmovContaSchema)
-                .csv(Paths.get(stepInputDir, tlbmovcontaCsv).toString());
+        Dataset<Row> tlbmovconta = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tlbmovcontaColumnNames)).csv(Paths.get(stepInputDir, tlbmovcontaCsv).toString());
 
         // FILTER tlbmovconta BY mo_dt_contabile <= $data_osservazione;
-        Column filterCondition = getUnixTimeStampCol(tlbmovconta.col("mo_dt_contabile"), "yyyyMMdd")
-                .leq(getUnixTimeStampCol(functions.lit(dataOsservazione), "yyyy-MM-dd"));
+        String dataOsservazionePattern = getPropertyValue("params.dataosservazione.pattern");
+        Column dataOsservazioneCol = functions.lit(changeDateFormat(dataOsservazione, dataOsservazionePattern, "yyyyMMdd"));
+        Column filterCondition = tlbmovconta.col("mo_dt_contabile").leq(dataOsservazioneCol);
 
         Map<String, String> selectColMap = new HashMap<>();
         selectColMap.put("mo_istituto", "istituto");
@@ -77,7 +76,7 @@ public class Movimenti extends AbstractStep {
         Dataset<Row> movOutDist = tlbmovconta.filter(filterCondition).select(selectColSeq).distinct();
 
         String movOutDistPath = getPropertyValue("mov.out.dist");
-        logger.info("movOutDistPath: " + movOutDistPath);
+        logger.debug("movOutDistPath: " + movOutDistPath);
 
         movOutDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(stepOutputDir, movOutDistPath).toString());
