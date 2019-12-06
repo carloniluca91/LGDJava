@@ -23,14 +23,16 @@ abstract class StepUtils {
         return functions.callUDF("addDuration", dateCol, functions.lit(dateColFormat), functions.lit(months));
     }
 
-    protected Column castCol(Column column, DataType dataType){
-        return column.cast(dataType);
+    // change the format of string expressing a date
+    protected Column changeDateFormat(Column dateColumn, String oldPattern, String newPattern){
+
+        return functions.callUDF("changeDateFormat", dateColumn, functions.lit(oldPattern), functions.lit(newPattern));
     }
 
-    // convert a string column representing a date from the given input format to the given output date format
-    protected Column castStringColToDateCol(Column col, String inputF){
+    // change date format from oldPattern to newPattern
+    protected String changeDateFormat(String date, String oldPattern, String newPattern){
 
-        return castCol(functions.from_unixtime(functions.unix_timestamp(col, inputF), "yyyy-MM-dd"), DataTypes.DateType);
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern(oldPattern)).format(DateTimeFormatter.ofPattern(newPattern));
     }
 
     // check if a date is within a given interval
@@ -43,19 +45,17 @@ abstract class StepUtils {
                 functions.lit(upperDate), functions.lit(upperDatePattern));
     }
 
-    // change the format of string expressing a date
-    protected Column changeDateFormat(Column dateColumn, String oldPattern, String newPattern){
+    // check if a date is within a given interval
+    protected Column dateBetween(Column dateColumn, String dateColumnPattern, Column lowerDate, String lowerDatePattern,
+                                 Column upperDate, String upperDatePattern){
 
-        return functions.callUDF("changeDateFormat", dateColumn, functions.lit(oldPattern), functions.lit(newPattern));
+        return functions.callUDF("dateBetween",
+                dateColumn, functions.lit(dateColumnPattern),
+                lowerDate, functions.lit(lowerDatePattern),
+                upperDate, functions.lit(upperDatePattern));
     }
 
-    protected String changeDateFormat(String date, String oldPattern, String newPattern){
-
-        return LocalDate.parse(date, DateTimeFormatter.ofPattern(oldPattern)).format(DateTimeFormatter.ofPattern(newPattern));
-    }
-
-
-    // check if a date is >= other date
+    // check if a date is > other date
     protected Column dateGtOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
 
         return functions.callUDF("date1GtDate2",
@@ -115,11 +115,6 @@ abstract class StepUtils {
         }
 
         return schema;
-    }
-
-    // compute unixtimestamp for a generic column  using the given format
-    protected Column getUnixTimeStampCol(Column column, String dateFormat){
-        return functions.unix_timestamp(column, dateFormat);
     }
 
     protected Column leastDate(Column dateColumn1, Column dateColumn2, String commonDateFormat){

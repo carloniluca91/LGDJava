@@ -19,8 +19,8 @@ public class RaccInc extends AbstractStep {
         super(loggerName);
         logger = Logger.getLogger(loggerName);
 
-        stepInputDir = getPropertyValue("racc.inc.input.dir");
-        stepOutputDir = getPropertyValue("racc.inc.output.dir");
+        stepInputDir = getLGDPropertyValue("racc.inc.input.dir");
+        stepOutputDir = getLGDPropertyValue("racc.inc.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -29,8 +29,8 @@ public class RaccInc extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String tlbmignPathCsv = getPropertyValue("tlbmign.path.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String tlbmignPathCsv = getLGDPropertyValue("tlbmign.path.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("tlbmignPathCsv: " + tlbmignPathCsv);

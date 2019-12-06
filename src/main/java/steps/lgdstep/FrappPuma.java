@@ -24,8 +24,8 @@ public class FrappPuma extends AbstractStep {
 
         this.dataA = dataA;
 
-        stepInputDir = getPropertyValue("frapp.puma.input.dir");
-        stepOutputDir = getPropertyValue("frapp.puma.output.dir");
+        stepInputDir = getLGDPropertyValue("frapp.puma.input.dir");
+        stepOutputDir = getLGDPropertyValue("frapp.puma.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -35,9 +35,9 @@ public class FrappPuma extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String cicliNdgPath = getPropertyValue("cicli.ndg.path.csv");
-        String tlbgaranPath = getPropertyValue("tlbgaran.path");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String cicliNdgPath = getLGDPropertyValue("cicli.ndg.path.csv");
+        String tlbgaranPath = getLGDPropertyValue("tlbgaran.path");
 
         logger.debug("csvFormat: " + csvFormat);
         logger.debug("cicliNdgPath: " + cicliNdgPath);
@@ -80,7 +80,7 @@ public class FrappPuma extends AbstractStep {
         */
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        String dataAPattern = getPropertyValue("params.dataa.pattern");
+        String dataAPattern = getLGDPropertyValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, "yyyyMMdd"));
         Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(tlbcidef.col("datafinedef"), "yyyyMMdd", 1),
                 dataACol, "yyyMMdd");
@@ -129,7 +129,7 @@ public class FrappPuma extends AbstractStep {
 
         Dataset<Row> frappPumaOut = tlbcidefTlbgaranPrinc.union(tlbcidefTlbgaranColl).distinct();
 
-        String frappPumaOutPath = getPropertyValue("frapp.puma.out");
+        String frappPumaOutPath = getLGDPropertyValue("frapp.puma.out");
         logger.debug("frappPumaOutPath: " + frappPumaOutPath);
 
         frappPumaOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite)

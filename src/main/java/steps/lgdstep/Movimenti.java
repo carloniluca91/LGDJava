@@ -23,8 +23,8 @@ public class Movimenti extends AbstractStep {
 
         this.dataOsservazione = dataOsservazione;
 
-        stepInputDir = getPropertyValue("movimenti.input.dir");
-        stepOutputDir = getPropertyValue("movimenti.output.dir");
+        stepInputDir = getLGDPropertyValue("movimenti.input.dir");
+        stepOutputDir = getLGDPropertyValue("movimenti.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -34,8 +34,8 @@ public class Movimenti extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String tlbmovcontaCsv = getPropertyValue("tlbmovconta.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String tlbmovcontaCsv = getLGDPropertyValue("tlbmovconta.csv");
 
         logger.debug("csvFormat: " + csvFormat);
         logger.debug("tlbmovcontaCsv: " + tlbmovcontaCsv);
@@ -49,7 +49,7 @@ public class Movimenti extends AbstractStep {
                 .schema(getStringTypeSchema(tlbmovcontaColumnNames)).csv(Paths.get(stepInputDir, tlbmovcontaCsv).toString());
 
         // FILTER tlbmovconta BY mo_dt_contabile <= $data_osservazione;
-        String dataOsservazionePattern = getPropertyValue("params.dataosservazione.pattern");
+        String dataOsservazionePattern = getLGDPropertyValue("params.dataosservazione.pattern");
         Column dataOsservazioneCol = functions.lit(changeDateFormat(dataOsservazione, dataOsservazionePattern, "yyyyMMdd"));
         Column filterCondition = tlbmovconta.col("mo_dt_contabile").leq(dataOsservazioneCol);
 
@@ -75,7 +75,7 @@ public class Movimenti extends AbstractStep {
         Seq<Column> selectColSeq = toScalaColSeq(selectDfColumns(tlbmovconta, selectColMap));
         Dataset<Row> movOutDist = tlbmovconta.filter(filterCondition).select(selectColSeq).distinct();
 
-        String movOutDistPath = getPropertyValue("mov.out.dist");
+        String movOutDistPath = getLGDPropertyValue("mov.out.dist");
         logger.debug("movOutDistPath: " + movOutDistPath);
 
         movOutDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(

@@ -28,8 +28,8 @@ public class FanagMonthly extends AbstractStep {
         this.numeroMesi2 = numeroMesi2;
         this.dataA = dataA;
 
-        stepInputDir = getPropertyValue("fanag.monthly.input.dir");
-        stepOutputDir = getPropertyValue("fanag.monthly.output.dir");
+        stepInputDir = getLGDPropertyValue("fanag.monthly.input.dir");
+        stepOutputDir = getLGDPropertyValue("fanag.monthly.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -37,11 +37,11 @@ public class FanagMonthly extends AbstractStep {
 
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String cicliNdgPath = getPropertyValue("cicli.ndg.path.csv");
-        String tlbuActPath = getPropertyValue("tlbuact.csv");
-        String tlbudtcPath = getPropertyValue("tlbduct.path.csv");
-        String fanagOutPath = getPropertyValue("fanag.out");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String cicliNdgPath = getLGDPropertyValue("cicli.ndg.path.csv");
+        String tlbuActPath = getLGDPropertyValue("tlbuact.csv");
+        String tlbudtcPath = getLGDPropertyValue("tlbduct.path.csv");
+        String fanagOutPath = getLGDPropertyValue("fanag.out");
 
         logger.debug("csvFormat: " + csvFormat);
         logger.debug("cicliNdgPath: " + cicliNdgPath);
@@ -87,7 +87,7 @@ public class FanagMonthly extends AbstractStep {
         Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDuration(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd", 1);
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        String dataAPattern = getPropertyValue("params.dataa.pattern");
+        String dataAPattern = getLGDPropertyValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(this.dataA, dataAPattern, "yyyyMMdd"));
         Column leastDateCol = leastDate(cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, "yyyyMMdd");
 

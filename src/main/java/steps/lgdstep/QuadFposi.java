@@ -2,7 +2,6 @@ package steps.lgdstep;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.StructType;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
@@ -23,22 +22,24 @@ public class QuadFposi extends AbstractStep {
 
         this.ufficio = ufficio;
 
-        stepInputDir = getPropertyValue("quad.fposi.input.dir");
-        stepOutputDir = getPropertyValue("quad.fposi.output.dir");
+        stepInputDir = getLGDPropertyValue("quad.fposi.input.dir");
+        stepOutputDir = getLGDPropertyValue("quad.fposi.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("$ufficio = " + this.ufficio);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
+        logger.debug("$ufficio = " + this.ufficio);
     }
 
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String hadoopFposiCsv = getPropertyValue("hadoop.fposi.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String hadoopFposiCsv = getLGDPropertyValue("hadoop.fposi.csv");
+        String oldfposiLoadCsv = getLGDPropertyValue("old.fposi.load.csv");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("hadoopFposiCsv: " + hadoopFposiCsv);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("hadoopFposiCsv: " + hadoopFposiCsv);
+        logger.debug("oldfposiLoadCsv: " + oldfposiLoadCsv);
 
         // 17
         List<String> hadoopFposiColNames = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef", "datafinedef",
@@ -47,32 +48,39 @@ public class QuadFposi extends AbstractStep {
                 "rae_segm", "ciae_ndg", "provincia_segm", "ateco", "segmento", "databilseg", "strbilseg", "attivobilseg",
                 "fatturbilseg");
 
-        StructType hadoopFposiSchema = getStringTypeSchema(hadoopFposiColNames);
-        Dataset<Row> hadoopFposi = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(hadoopFposiSchema)
+        Dataset<Row> hadoopFposi = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(hadoopFposiColNames))
                 .csv(Paths.get(stepInputDir, hadoopFposiCsv).toString());
 
         // 45
 
         // 51
-        String oldfposiLoadCsv = getPropertyValue("old.fposi.load.csv");
-        logger.info("oldfposiLoadCsv: " + oldfposiLoadCsv);
 
         List<String> oldfposiLoadColNames = Arrays.asList("datainizioDEF", "dataFINEDEF", "dataINIZIOPD", "datainizioinc",
                 "dataSOFFERENZA", "codicebanca", "ndgprincipale", "flagincristrut", "cumulo");
 
-        StructType oldfposiLoadSchema = getStringTypeSchema(oldfposiLoadColNames);
-        Dataset<Row> oldfposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(oldfposiLoadSchema)
+        Dataset<Row> oldfposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(oldfposiLoadColNames))
                 .csv(Paths.get(stepInputDir, oldfposiLoadCsv).toString());
 
         // 63
 
         // 70
 
-        Column DATAINIZIODEFCol = castStringColToDateCol(oldfposiLoad.col("datainizioDEF"), "yy-MM-dd").alias("DATAINIZIODEF");
-        Column DATAFINEDEFCol = castStringColToDateCol(oldfposiLoad.col("dataFINEDEF"), "yy-MM-dd").alias("DATAFINEDEF");
-        Column DATAINIZIOPDCol = castStringColToDateCol(oldfposiLoad.col("dataINIZIOPD"), "yy-MM-dd").alias("DATAINIZIOPD");
-        Column DATAINIZIOINCCol = castStringColToDateCol(oldfposiLoad.col("datainizioinc"), "yy-MM-dd").alias("DATAINIZIOINC");
-        Column DATASOFFERENZACol = castStringColToDateCol(oldfposiLoad.col("dataSOFFERENZA"), "yy-MM-dd").alias("DATASOFFERENZA");
+        /*
+        ToString(ToDate( datainizioDEF,'yy-MM-dd'),'yyyyMMdd')   as DATAINIZIODEF
+        ,ToString(ToDate( dataFINEDEF,'yy-MM-dd'),'yyyyMMdd')     as DATAFINEDEF
+        ,ToString(ToDate( dataINIZIOPD,'yy-MM-dd'),'yyyyMMdd')    as DATAINIZIOPD
+        ,ToString(ToDate( datainizioinc,'yy-MM-dd'),'yyyyMMdd')   as DATAINIZIOINC
+        ,ToString(ToDate( dataSOFFERENZA,'yy-MM-dd'),'yyyyMMdd')  as DATASOFFERENZA
+         */
+
+        String newDatePattern = "yyyyMMdd";
+        Column DATAINIZIODEFCol = changeDateFormat(oldfposiLoad.col("datainizioDEF"), "yy-MM-dd", newDatePattern).alias("DATAINIZIODEF");
+        Column DATAFINEDEFCol = changeDateFormat(oldfposiLoad.col("dataFINEDEF"), "yy-MM-dd", newDatePattern).alias("DATAFINEDEF");
+        Column DATAINIZIOPDCol = changeDateFormat(oldfposiLoad.col("dataINIZIOPD"), "yy-MM-dd", newDatePattern).alias("DATAINIZIOPD");
+        Column DATAINIZIOINCCol = changeDateFormat(oldfposiLoad.col("datainizioinc"), "yy-MM-dd", newDatePattern).alias("DATAINIZIOINC");
+        Column DATASOFFERENZACol = changeDateFormat(oldfposiLoad.col("dataSOFFERENZA"), "yy-MM-dd", newDatePattern).alias("DATASOFFERENZA");
 
         Dataset<Row> oldFposiGen = oldfposiLoad.select(DATAINIZIODEFCol, DATAFINEDEFCol, DATAINIZIOPDCol, DATAINIZIOINCCol, DATASOFFERENZACol,
                 oldfposiLoad.col("codicebanca").alias("CODICEBANCA"), oldfposiLoad.col("ndgprincipale").alias("NDGPRINCIPALE"),
@@ -88,9 +96,8 @@ public class QuadFposi extends AbstractStep {
         and ToDate( DATAINIZIODEF,'yyyyMMdd') <= ToDate( '20071231','yyyyMMdd' );
          */
 
-        Column DATAINIZIODEFFilterCol = getUnixTimeStampCol(oldFposiGen.col("DATAINIZIODEF"), "yyyy-MM-dd").between(
-                getUnixTimeStampCol(functions.lit("20070131"), "yyyyMMdd"),
-                getUnixTimeStampCol(functions.lit("20071231"), "yyyyMMdd"));
+        Column DATAINIZIODEFFilterCol = dateBetween(oldFposiGen.col("DATAINIZIODEF"), "yyyy-MM-dd",
+                "20070131", "yyyyMMdd", "20071231", "yyyyMMdd");
         Dataset<Row> oldFposi = oldFposiGen.filter(DATAINIZIODEFFilterCol);
 
         // 85
@@ -131,13 +138,13 @@ public class QuadFposi extends AbstractStep {
 
         Dataset<Row> abbinatiOut = hadoopFposiOldFposiJoin.filter(abbinatiOutFilterCol).select(toScalaColSeq(selectColList));
 
-        String hadoopFposiOutDir = getPropertyValue("hadoop.fposi.out");
-        String oldFposiOutDir = getPropertyValue("old.fposi.out");
-        String abbinatiOutDir = getPropertyValue("abbinati.out");
+        String hadoopFposiOutDir = getLGDPropertyValue("hadoop.fposi.out");
+        String oldFposiOutDir = getLGDPropertyValue("old.fposi.out");
+        String abbinatiOutDir = getLGDPropertyValue("abbinati.out");
 
-        logger.info("hadoopFposiOutDir: " + hadoopFposiOutDir);
-        logger.info("oldFposiOutDir: " + oldFposiOutDir);
-        logger.info("abbinatiOutDir: " + abbinatiOutDir);
+        logger.debug("hadoopFposiOutDir: " + hadoopFposiOutDir);
+        logger.debug("oldFposiOutDir: " + oldFposiOutDir);
+        logger.debug("abbinatiOutDir: " + abbinatiOutDir);
 
         hadoopFposiOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(stepOutputDir, hadoopFposiOutDir).toString());

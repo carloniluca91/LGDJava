@@ -19,25 +19,25 @@ public class QuadFrapp extends AbstractStep {
 
         this.ufficio = ufficio;
 
-        stepInputDir = getPropertyValue("quad.frapp.input.dir");
-        stepOutputDir = getPropertyValue("quad.frapp.output.dir");
+        stepInputDir = getLGDPropertyValue("quad.frapp.input.dir");
+        stepOutputDir = getLGDPropertyValue("quad.frapp.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String hadoopFrappCsv = getPropertyValue("hadoop.frapp.csv");
-        String oldFrappLoadCsv = getPropertyValue("old.frapp.load.csv");
-        String fcollCsv = getPropertyValue("fcoll.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String hadoopFrappCsv = getLGDPropertyValue("hadoop.frapp.csv");
+        String oldFrappLoadCsv = getLGDPropertyValue("old.frapp.load.csv");
+        String fcollCsv = getLGDPropertyValue("fcoll.csv");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("hadoopFrappCsv: " + hadoopFrappCsv);
-        logger.info("oldFrappLoadCsv: " + oldFrappLoadCsv);
-        logger.info("fcollCsv: " + fcollCsv);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("hadoopFrappCsv: " + hadoopFrappCsv);
+        logger.debug("oldFrappLoadCsv: " + oldFrappLoadCsv);
+        logger.debug("fcollCsv: " + fcollCsv);
 
         List<String> hadoopFrappColumnNames = Arrays.asList("codicebanca", "ndg", "sportello", "conto", "datariferimento", "contoesteso",
                 "formatecnica", "dataaccensione", "dataestinzione", "datascadenza", "r046tpammortam", "r071tprapporto", "r209periodliquid",
@@ -53,7 +53,8 @@ public class QuadFrapp extends AbstractStep {
                 "d0475impdervalintng", "qcaprateascad", "qcaprateimpag", "qintrateimpag", "qcapratemora", "qintratemora", "accontiratescad",
                 "imporigprestito", "d6998", "d6970", "d0075addebitiinsosp", "codicebanca_princ", "ndgprincipale", "datainiziodef");
 
-        Dataset<Row> hadoopFrapp = sparkSession.read().format(csvFormat).option("sep", ",").schema(getStringTypeSchema(hadoopFrappColumnNames))
+        Dataset<Row> hadoopFrapp = sparkSession.read().format(csvFormat).option("sep", ",")
+                .schema(getStringTypeSchema(hadoopFrappColumnNames))
                 .csv(Paths.get(stepInputDir, hadoopFrappCsv).toString());
 
         List<String> oldFrappLoadColumnNames = Arrays.asList("CODICEBANCA", "NDG", "SPORTELLO", "CONTO", "PROGR_SEGMENTO", "DT_RIFERIMENTO",
@@ -71,13 +72,15 @@ public class QuadFrapp extends AbstractStep {
                 "QCAPRATEASCAD", "QCAPRATEIMPAG", "QINTERRATEIMPAG", "QCAPRATEMORA", "QINTERRATEMORA", "ACCONTIRATESCAD", "IMPORIGPRESTITO",
                 "CDFISC", "D6998_GAR_TITOLI", "D6970_GAR_PERS", "ADDEBITI_IN_SOSP");
 
-        Dataset<Row> oldFrappLoad = sparkSession.read().format(csvFormat).option("sep", ",").schema(getStringTypeSchema(oldFrappLoadColumnNames))
+        Dataset<Row> oldFrappLoad = sparkSession.read().format(csvFormat).option("sep", ",")
+                .schema(getStringTypeSchema(oldFrappLoadColumnNames))
                 .csv(Paths.get(stepInputDir, oldFrappLoadCsv).toString());
 
         List<String> fcollColumnNames = Arrays.asList("CODICEBANCA", "NDGPRINCIPALE", "DATAINIZIODEF", "DATAFINEDEF",
                 "DATA_DEFAULT", "ISTITUTO_COLLEGATO", "NDG_COLLEGATO", "DATA_COLLEGAMENTO", "CUMULO");
 
-        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",").schema(getStringTypeSchema(fcollColumnNames))
+        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",")
+                .schema(getStringTypeSchema(fcollColumnNames))
                 .csv(Paths.get(stepInputDir, fcollCsv).toString());
 
         // JOIN oldfrapp_load BY (CODICEBANCA, NDG), fcoll BY (ISTITUTO_COLLEGATO, NDG_COLLEGATO);
@@ -89,12 +92,9 @@ public class QuadFrapp extends AbstractStep {
         // BY ToDate(oldfrapp_load::DT_RIFERIMENTO,'yyyyMMdd') >= ToDate( fcoll::DATAINIZIODEF,'yyyyMMdd')
         // AND ToDate(oldfrapp_load::DT_RIFERIMENTO,'yyyyMMdd') <= ToDate( fcoll::DATAFINEDEF,'yyyyMMdd'  )
 
-        Column dtRiferimentoDataInizioDef = getUnixTimeStampCol(oldFrappLoad.col("DT_RIFERIMENTO"), "yyyyMMdd")
-                .geq(getUnixTimeStampCol(fcoll.col("DATAINIZIODEF"), "yyyyMMdd"));
-        Column dtRiferimentoDataFineDef = getUnixTimeStampCol(oldFrappLoad.col("DT_RIFERIMENTO"), "yyyyMMdd")
-                .leq(getUnixTimeStampCol(fcoll.col("DATAFINEDEF"), "yyyyMMdd"));
-
-        Column filterCondition = dtRiferimentoDataInizioDef.and(dtRiferimentoDataFineDef);
+        Column filterCondition = dateBetween(oldFrappLoad.col("DT_RIFERIMENTO"), "yyyyMMdd",
+                fcoll.col("DATAINIZIODEF"), "yyyyMMdd",
+                fcoll.col("DATAFINEDEF"), "yyyyMMdd");
 
         Dataset<Row> oldFrapp = oldFrappLoad.join(fcoll, joinCondition).filter(filterCondition).select(oldFrappLoad.col("*"),
                 fcoll.col("CODICEBANCA").alias("CODICEBANCA_PRINC"), fcoll.col("NDGPRINCIPALE"), fcoll.col("DATAINIZIODEF"));
@@ -117,11 +117,11 @@ public class QuadFrapp extends AbstractStep {
                 .filter(hadoopFrapp.col("codicebanca").isNull())
                 .select(functions.lit(ufficio).alias("ufficio"), hadoopFrapp.col("*"), oldFrapp.col("*"));
 
-        String hadoopFrappOutPath = getPropertyValue("hadoop.frapp.out");
-        String oldFrappOutPath = getPropertyValue("old.frapp.out");
+        String hadoopFrappOutPath = getLGDPropertyValue("hadoop.frapp.out");
+        String oldFrappOutPath = getLGDPropertyValue("old.frapp.out");
 
-        logger.info("hadoopFrappOutPath: " + hadoopFrappOutPath);
-        logger.info("oldFrappOutPath: " + oldFrappOutPath);
+        logger.debug("hadoopFrappOutPath: " + hadoopFrappOutPath);
+        logger.debug("oldFrappOutPath: " + oldFrappOutPath);
 
         hadoopFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite)
                 .csv(Paths.get(stepOutputDir, hadoopFrappOutPath).toString());

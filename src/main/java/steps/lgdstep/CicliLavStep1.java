@@ -27,8 +27,8 @@ public class CicliLavStep1 extends AbstractStep {
         this.dataDa = dataDa;
         this.dataA = dataA;
 
-        stepInputDir = getPropertyValue("ciclilav.step1.input.dir");
-        stepOutputDir = getPropertyValue("ciclilav.step1.output.dir");
+        stepInputDir = getLGDPropertyValue("ciclilav.step1.input.dir");
+        stepOutputDir = getLGDPropertyValue("ciclilav.step1.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -39,9 +39,9 @@ public class CicliLavStep1 extends AbstractStep {
     public void run(){
 
         // retrieve csv_format, input data directory and file name from configuration.properties file
-        String csvFormat = getPropertyValue("csv.format");
-        String tlbcidefCsv = getPropertyValue("tlbcidef.csv");
-        String tlbcraccCsv = getPropertyValue("tlbcracc.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String tlbcidefCsv = getLGDPropertyValue("tlbcidef.csv");
+        String tlbcraccCsv = getLGDPropertyValue("tlbcracc.csv");
         String tlbcdefPath = Paths.get(stepInputDir, tlbcidefCsv).toString();
 
         logger.debug("csv format: " + csvFormat);
@@ -158,8 +158,8 @@ public class CicliLavStep1 extends AbstractStep {
                 cicliRacc1.col("dt_fine_ciclo"), cdIstiCedCol, ndgCedCol, dtRifCraccCol);
         // 176
 
-        String ciclilavStep1OutCsv = getPropertyValue("ciclilav.step1.out.csv");
-        String ciclilavStep1FilecraccCsv = getPropertyValue("ciclilav.step1.filecracc.csv");
+        String ciclilavStep1OutCsv = getLGDPropertyValue("ciclilav.step1.out.csv");
+        String ciclilavStep1FilecraccCsv = getLGDPropertyValue("ciclilav.step1.filecracc.csv");
 
         logger.debug("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
         logger.debug("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);

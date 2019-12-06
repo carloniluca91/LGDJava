@@ -24,8 +24,8 @@ public class SofferenzePreview extends AbstractStep {
         this.ufficio = ufficio;
         this.dataA = dataA;
 
-        stepInputDir = getPropertyValue("sofferenze.preview.input.dir");
-        stepOutputDir = getPropertyValue("sofferenze.preview.output.dir");
+        stepInputDir = getLGDPropertyValue("sofferenze.preview.input.dir");
+        stepOutputDir = getLGDPropertyValue("sofferenze.preview.output.dir");
 
         logger.info("stepInputDir: " + stepInputDir);
         logger.info("stepOutputDir: " + stepOutputDir);
@@ -36,8 +36,8 @@ public class SofferenzePreview extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String soffOutDirCsv = getPropertyValue("soff.outdir.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String soffOutDirCsv = getLGDPropertyValue("soff.outdir.csv");
 
         logger.info("csvFormat: " + csvFormat);
         logger.info("soffOutDirCsv: " + soffOutDirCsv);
@@ -96,7 +96,7 @@ public class SofferenzePreview extends AbstractStep {
                 dataInizioCol, dataFineCol, soffBase.col("statopratica"),
                 saldoPosizioneSumCol, saldoPosizioneContabSumCol);
 
-        String soffGen2Path = getPropertyValue("soff.gen2");
+        String soffGen2Path = getLGDPropertyValue("soff.gen2");
         logger.info("soffGen2Path: " + soffGen2Path);
 
         soffGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
@@ -116,7 +116,7 @@ public class SofferenzePreview extends AbstractStep {
                         functions.sum(soffBase.col("saldoposizione")).as("saldoposizione"),
                         functions.sum(soffBase.col("saldoposizionecontab")).as("saldoposizionecontab"));
 
-        String soffSintGen2Path = getPropertyValue("soff.gen.sint2");
+        String soffSintGen2Path = getLGDPropertyValue("soff.gen.sint2");
         logger.info("soffSintGen2Path: " + soffSintGen2Path);
         soffSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(stepOutputDir, soffSintGen2Path).toString());

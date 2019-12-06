@@ -20,8 +20,8 @@ public class Fpasperd extends AbstractStep {
         super(loggerName);
         logger = Logger.getLogger(loggerName);
 
-        stepInputDir = getPropertyValue("fpasperd.input.dir");
-        stepOutputDir = getPropertyValue("fpasperd.output.dir");
+        stepInputDir = getLGDPropertyValue("fpasperd.input.dir");
+        stepOutputDir = getLGDPropertyValue("fpasperd.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -30,8 +30,8 @@ public class Fpasperd extends AbstractStep {
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String cicliNdgPathCsv = getPropertyValue("cicli.ndg.path.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String cicliNdgPathCsv = getLGDPropertyValue("cicli.ndg.path.csv");
         String tlbcidefLoadPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
 
         logger.debug("csvFormat: " + csvFormat);
@@ -58,7 +58,7 @@ public class Fpasperd extends AbstractStep {
 
         // 63
         List<String> tlbpaspeColumns = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
-        String tlbpaspeCsv = getPropertyValue("tlbpaspe.filter.csv");
+        String tlbpaspeCsv = getLGDPropertyValue("tlbpaspe.filter.csv");
         String tlbpaspeCsvPath = Paths.get(stepInputDir, tlbpaspeCsv).toString();
 
         logger.debug("tlbpaspeCsv:" + tlbpaspeCsv);
@@ -246,7 +246,7 @@ public class Fpasperd extends AbstractStep {
 
         // 336
 
-        String tlbpaspeossCsv = getPropertyValue("tlbpaspeoss.csv");
+        String tlbpaspeossCsv = getLGDPropertyValue("tlbpaspeoss.csv");
         String tlbpaspeossCsvPath = Paths.get(stepInputDir, tlbpaspeossCsv).toString();
 
         logger.debug("tlbpaspeossCsv: " + tlbpaspeossCsv);
@@ -315,7 +315,7 @@ public class Fpasperd extends AbstractStep {
         Dataset<Row> paspePaspeossGenDist = fpasperdOutDistinct.join(tlbpaspeoss, joinCondition, "full_outer")
                 .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol, ndgPrincipaleCol, dataInizioDefCol);
 
-        String paspePaspeossGenDistCsv = getPropertyValue("paspe.paspeoss.gen.dist.csv");
+        String paspePaspeossGenDistCsv = getLGDPropertyValue("paspe.paspeoss.gen.dist.csv");
         String paspePaspeossGenDistCsvPath = Paths.get(stepOutputDir, paspePaspeossGenDistCsv).toString();
 
         logger.debug("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);

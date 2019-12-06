@@ -4,8 +4,6 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
-import org.apache.spark.sql.types.StructType;
-import scala.collection.JavaConverters;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
@@ -19,41 +17,41 @@ public class Posaggr extends AbstractStep {
         super(loggerName);
         logger = Logger.getLogger(loggerName);
 
-        stepInputDir = getPropertyValue("posaggr.input.dir");
-        stepOutputDir =  getPropertyValue("posaggr.output.dir");
+        stepInputDir = getLGDPropertyValue("posaggr.input.dir");
+        stepOutputDir =  getLGDPropertyValue("posaggr.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String tblcompCsvPath = getPropertyValue("tblcomp.path.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String tblcompCsvPath = getLGDPropertyValue("tblcomp.path.csv");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("tlbcompCsvPath: " + tblcompCsvPath);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("tlbcompCsvPath: " + tblcompCsvPath);
 
         // 19
         List<String> tblcompColNames = Arrays.asList("dt_riferimento", "c_key", "tipo_segmne", "cd_istituto", "ndg");
-        StructType tblcompSchema = getStringTypeSchema(tblcompColNames);
-        Dataset<Row> tblcomp = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tblcompSchema).csv(
-                Paths.get(stepInputDir, tblcompCsvPath).toString());
+        Dataset<Row> tblcomp = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tblcompColNames))
+                .csv(Paths.get(stepInputDir, tblcompCsvPath).toString());
 
         // 27
 
         // 32
-        String tlbaggrCsvPath = getPropertyValue("tlbaggr.path.csv");
-        logger.info("tlbaggrCsvPath: " + tlbaggrCsvPath);
+        String tlbaggrCsvPath = getLGDPropertyValue("tlbaggr.path.csv");
+        logger.debug("tlbaggrCsvPath: " + tlbaggrCsvPath);
 
         List<String> tlbaggrColNames = Arrays.asList("dt_riferimento", "c_key_aggr", "ndg_gruppo", "cod_fiscale",
                 "tipo_segmne_aggr", "segmento", "tipo_motore", "cd_istituto", "ndg", "rae", "sae", "tp_ndg", "prov_segm",
                 "fonte_segmento", "utilizzo_cr", "accordato_cr", "databil", "strutbil", "fatturbil", "attivobil",
                 "codimp_cebi", "tot_acco_agr", "tot_util_agr", "n058_int_vig");
-        StructType tlbaggrSchema = getStringTypeSchema(tlbaggrColNames);
-        Dataset<Row> tlbaggr = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbaggrSchema).csv(
-                Paths.get(stepInputDir, tlbaggrCsvPath).toString());
+        Dataset<Row> tlbaggr = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tlbaggrColNames))
+                .csv(Paths.get(stepInputDir, tlbaggrCsvPath).toString());
 
         // 59
 
@@ -72,31 +70,31 @@ public class Posaggr extends AbstractStep {
 
         // 89
 
-        String tlbposiLoadCsvPath = getPropertyValue("tlbposi.load.csv");
-        logger.info("tlbposiLoadCsvPath: " + tlbposiLoadCsvPath);
+        String tlbposiLoadCsvPath = getLGDPropertyValue("tlbposi.load.csv");
+        logger.debug("tlbposiLoadCsvPath: " + tlbposiLoadCsvPath);
 
         List<String> tlbposiLoadColNames = Arrays.asList("dt_riferimento", "cd_istituto", "ndg", "c_key", "cod_fiscale",
                 "ndg_gruppo", "bo_acco", "bo_util", "tot_add_sosp", "tot_val_intr", "ca_acco", "ca_util", "fl_incaglio",
                 "fl_soff", "fl_inc_ogg", "fl_ristr", "fl_pd_90", "fl_pd_180", "util_cassa", "fido_op_cassa", "utilizzo_titoli",
                 "esposizione_titoli");
-        StructType tlbposiLoadSchema = getStringTypeSchema(tlbposiLoadColNames);
-        Dataset<Row> tlbposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbposiLoadSchema).csv(
-                Paths.get(stepInputDir, tlbposiLoadCsvPath).toString());
+        Dataset<Row> tlbposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tlbposiLoadColNames))
+                .csv(Paths.get(stepInputDir, tlbposiLoadCsvPath).toString());
 
         // 114
 
         // 116
 
-        Dataset<Row> tlbposi = tlbposiLoad.select(functions.col("dt_riferimento"), functions.col("cd_istituto"),
-                functions.col("ndg"), functions.col("c_key"), functions.col("cod_fiscale"), functions.col("ndg_gruppo"),
+        Dataset<Row> tlbposi = tlbposiLoad.select(tlbposiLoad.col("dt_riferimento"), tlbposiLoad.col("cd_istituto"),
+                tlbposiLoad.col("ndg"), tlbposiLoad.col("c_key"), tlbposiLoad.col("cod_fiscale"), tlbposiLoad.col("ndg_gruppo"),
                 replaceAndConvertToDouble(tlbposiLoad, "bo_acco", ",", "."),
                 replaceAndConvertToDouble(tlbposiLoad, "bo_util", ",", "."),
                 replaceAndConvertToDouble(tlbposiLoad, "tot_add_sosp", ",", "."),
                 replaceAndConvertToDouble(tlbposiLoad, "tot_val_intr", ",", "."),
                 replaceAndConvertToDouble(tlbposiLoad, "ca_acco", ",", "."),
                 replaceAndConvertToDouble(tlbposiLoad, "ca_util", ",", "."),
-                functions.col("fl_incaglio"), functions.col("fl_soff"), functions.col("fl_inc_ogg"),
-                functions.col("fl_ristr"), functions.col("fl_pd_90"), functions.col("fl_pd_180"),
+                tlbposiLoad.col("fl_incaglio"), tlbposiLoad.col("fl_soff"), tlbposiLoad.col("fl_inc_ogg"),
+                tlbposiLoad.col("fl_ristr"), tlbposiLoad.col("fl_pd_90"), tlbposiLoad.col("fl_pd_180"),
                 replaceAndConvertToDouble(tlbposiLoad, "util_cassa", ",", "."),
                 replaceAndConvertToDouble(tlbposiLoad, "fido_op_cassa", ",", "."),
                 replaceAndConvertToDouble(tlbposiLoad, "utilizzo_titoli", ",", "."),
@@ -106,8 +104,7 @@ public class Posaggr extends AbstractStep {
 
         // 147
         // JOIN tblcomp_tlbaggr BY (dt_riferimento,cd_istituto,ndg), tlbposi BY (dt_riferimento,cd_istituto,ndg);
-        List<String> joinColumnList = Arrays.asList("dt_riferimento", "cd_istituto", "ndg");
-        Seq<String> joinColumnSeq = JavaConverters.asScalaIteratorConverter(joinColumnList.iterator()).asScala().toSeq();
+        Seq<String> joinColumnSeq = toScalaStringSeq((Arrays.asList("dt_riferimento", "cd_istituto", "ndg")));
 
         List<String> selectColumnNames = Arrays.asList(
                 "dt_riferimento", "cd_istituto", "ndg", "c_key_aggr", "tipo_segmne_aggr", "segmento", "tp_ndg");
@@ -119,7 +116,7 @@ public class Posaggr extends AbstractStep {
         selectColumnNames = Arrays.asList("bo_acco", "bo_util", "tot_add_sosp", "tot_val_intr", "ca_acco", "ca_util",
                 "util_cassa", "fido_op_cassa", "utilizzo_titoli", "esposizione_titoli");
         selectColumnList.addAll(selectDfColumns(tlbposi, selectColumnNames));
-        Seq<Column> selectColumnSeq = JavaConverters.asScalaIteratorConverter(selectColumnList.iterator()).asScala().toSeq();
+        Seq<Column> selectColumnSeq = toScalaColSeq(selectColumnList);
 
         Dataset<Row> tblcompTlbaggrTlbposi = tlbcompTlbaggr.join(tlbposi, joinColumnSeq, "inner").select(selectColumnSeq);
 
@@ -171,14 +168,13 @@ public class Posaggr extends AbstractStep {
         List<Column> windowSumCols = windowSum(tblcompTlbaggrTlbposi, sumWindowColumns, w);
         tblcompTlbaggrTlbposiSelectList.addAll(windowSumCols);
 
-        Seq<Column> tblcompTlbaggrTlbposiSelectListselectColumnSeq =
-                JavaConverters.asScalaIteratorConverter(selectColumnList.iterator()).asScala().toSeq();
+        Seq<Column> tblcompTlbaggrTlbposiSelectListselectColumnSeq = toScalaColSeq(selectColumnList);
         Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(tblcompTlbaggrTlbposiSelectListselectColumnSeq);
 
-        String posaggrCsvPath = getPropertyValue("posaggr.csv");
-        logger.info("posaggrOutputPath: " + posaggrCsvPath);
+        String posaggrCsvPath = getLGDPropertyValue("posaggr.csv");
+        logger.debug("posaggrOutputPath: " + posaggrCsvPath);
 
-        posaggr.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(stepOutputDir, posaggrCsvPath).toString());
+        posaggr.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite)
+                .csv(Paths.get(stepOutputDir, posaggrCsvPath).toString());
     }
 }

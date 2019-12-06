@@ -26,8 +26,8 @@ public class FrappNdgMonthly extends AbstractStep {
         this.numeroMesi1 = numeroMesi1;
         this.numeroMesi2 = numeroMesi2;
 
-        stepInputDir = getPropertyValue("frapp.ndg.monthly.input.dir");
-        stepOutputDir = getPropertyValue("frapp.ndg.monthly.output.dir");
+        stepInputDir = getLGDPropertyValue("frapp.ndg.monthly.input.dir");
+        stepOutputDir = getLGDPropertyValue("frapp.ndg.monthly.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -38,8 +38,8 @@ public class FrappNdgMonthly extends AbstractStep {
 
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String cicliNdgPathCsv = getPropertyValue("cicli.ndg.path.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String cicliNdgPathCsv = getLGDPropertyValue("cicli.ndg.path.csv");
         String cicliNdgPathCsvPath = Paths.get(stepInputDir, cicliNdgPathCsv).toString();
 
         logger.debug("csvFormat: " + csvFormat);
@@ -68,7 +68,7 @@ public class FrappNdgMonthly extends AbstractStep {
                 "freq_remargining", "cd_prodotto_ris", "durata_originaria", "divisa", "score_erogaz", "durata_residua", "categoria_sof",
                 "categoria_inc", "dur_res_default", "flag_margine", "dt_entrata_def", "tp_contr_rapp", "cd_eplus", "r792_tipocartol");
 
-        String tlburttCsv = getPropertyValue("tlburtt.csv");
+        String tlburttCsv = getLGDPropertyValue("tlburtt.csv");
         String tlburttCsvPath = Paths.get(stepInputDir, tlburttCsv).toString();
 
         logger.debug("tlburttCsv: " + tlburttCsv);
@@ -79,7 +79,7 @@ public class FrappNdgMonthly extends AbstractStep {
         // 107
 
         // 111
-        Dataset<Row> tlburttFilter = tlburtt.filter(castCol(tlburtt.col("progr_segmento"), DataTypes.IntegerType).equalTo(0));
+        Dataset<Row> tlburttFilter = tlburtt.filter(tlburtt.col("progr_segmento").cast(DataTypes.IntegerType).equalTo(0));
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         Column dtRiferimentoFilterPrincCol = tlburttFilter.col("dt_riferimento").geq(
@@ -95,7 +95,7 @@ public class FrappNdgMonthly extends AbstractStep {
          */
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        String dataAPattern = getPropertyValue("params.dataa.pattern");
+        String dataAPattern = getLGDPropertyValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(this.dataA, dataAPattern, "yyyyMMdd"));
         Column dataFineDefSubtractDurationPrincCol = subtractDuration(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd", 1);
         Column leastDateDataFineDefDataAPrincCol = leastDate(dataFineDefSubtractDurationPrincCol, dataACol, "yyyyMMdd");
@@ -157,7 +157,7 @@ public class FrappNdgMonthly extends AbstractStep {
 
         Dataset<Row> tlbcidefTlburtt = tlbcidefUrttPrinc.union(tlbcidefUrttColl).distinct();
 
-        String tlbcidefTlburttCsv = getPropertyValue("tlbcidef.tlburtt");
+        String tlbcidefTlburttCsv = getLGDPropertyValue("tlbcidef.tlburtt");
         logger.debug("tlbcidefTlburttCsv: " + tlbcidefTlburttCsv);
 
         tlbcidefTlburtt.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(

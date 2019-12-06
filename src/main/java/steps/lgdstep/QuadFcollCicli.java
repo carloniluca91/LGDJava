@@ -19,30 +19,30 @@ public class QuadFcollCicli extends AbstractStep {
 
         this.ufficio = ufficio;
 
-        stepInputDir = getPropertyValue("quad.fcoll.cicli.input.dir");
-        stepOutputDir = getPropertyValue("quad.fcoll.cicli.output.dir");
+        stepInputDir = getLGDPropertyValue("quad.fcoll.cicli.input.dir");
+        stepOutputDir = getLGDPropertyValue("quad.fcoll.cicli.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String fcollCsv = getPropertyValue("fcoll.csv");
-        String cicliNdgLoadCsv = getPropertyValue("cicli.ndg.load.csv");
-        String fileOutPath = getPropertyValue("file.out");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String fcollCsv = getLGDPropertyValue("fcoll.csv");
+        String cicliNdgLoadCsv = getLGDPropertyValue("cicli.ndg.load.csv");
+        String fileOutPath = getLGDPropertyValue("file.out");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("fcollCsv: " + fcollCsv);
-        logger.info("cicliNdgLoadCsv: " + cicliNdgLoadCsv);
-        logger.info("fileOutCsv: " + fileOutPath);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("fcollCsv: " + fcollCsv);
+        logger.debug("cicliNdgLoadCsv: " + cicliNdgLoadCsv);
+        logger.debug("fileOutCsv: " + fileOutPath);
 
         List<String> fcollColumnNames = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef", "datafinedef",
                 "data_default", "istituto_collegato", "ndg_collegato", "data_collegamento", "cumulo");
-
-        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",").schema(getStringTypeSchema(fcollColumnNames))
+        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",")
+                .schema(getStringTypeSchema(fcollColumnNames))
                 .csv(Paths.get(stepInputDir, fcollCsv).toString());
 
         List<String> cicliNdgLoadColumnNames = Arrays.asList("cd_isti", "ndg_principale", "dt_inizio_ciclo", "dt_fine_ciclo",
@@ -50,7 +50,8 @@ public class QuadFcollCicli extends AbstractStep {
                 "rae_segm", "segmento", "tp_ndg", "provincia_segm", "databilseg", "strbilseg", "attivobilseg", "fatturbilseg",
                 "ndg_coll","cd_isti_coll");
 
-        Dataset<Row> cicliNdgLoad = sparkSession.read().format(csvFormat).option("sep", ",").schema(getStringTypeSchema(cicliNdgLoadColumnNames))
+        Dataset<Row> cicliNdgLoad = sparkSession.read().format(csvFormat).option("sep", ",")
+                .schema(getStringTypeSchema(cicliNdgLoadColumnNames))
                 .csv(Paths.get(stepInputDir, cicliNdgLoadCsv).toString());
 
         // JOIN cicli_ndg_load BY (cd_isti_coll, ndg_coll) FULL OUTER,

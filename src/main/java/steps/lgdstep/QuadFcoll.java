@@ -16,29 +16,30 @@ public class QuadFcoll extends AbstractStep {
         super(loggerName);
         logger = Logger.getLogger(loggerName);
 
-        stepInputDir = getPropertyValue("quad.fcoll.input.dir");
-        stepOutputDir = getPropertyValue("quad.fcoll.output.dir");
+        stepInputDir = getLGDPropertyValue("quad.fcoll.input.dir");
+        stepOutputDir = getLGDPropertyValue("quad.fcoll.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override
     public void run() {
 
-        String csvFormat = getPropertyValue("csv.format");
-        String fcollCsv = getPropertyValue("fcoll.csv");
-        String oldFposiLoadCsv = getPropertyValue("oldfposi.csv");
-        String fileoutdist = getPropertyValue("fileoutdist");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String fcollCsv = getLGDPropertyValue("fcoll.csv");
+        String oldFposiLoadCsv = getLGDPropertyValue("oldfposi.csv");
+        String fileoutdist = getLGDPropertyValue("fileoutdist");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("fcollCsv: " + fcollCsv);
-        logger.info("oldFposiLoadCsv: " + oldFposiLoadCsv);
-        logger.info("fileoutdist: " + fileoutdist);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("fcollCsv: " + fcollCsv);
+        logger.debug("oldFposiLoadCsv: " + oldFposiLoadCsv);
+        logger.debug("fileoutdist: " + fileoutdist);
 
         // 17
         List<String> fcollLoadColumnNames = Arrays.asList("cumulo", "cd_istituto_COLL", "ndg_COLL", "data_inizio_DEF", "data_collegamento", "pri");
-        Dataset<Row> fcollLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(fcollLoadColumnNames))
+        Dataset<Row> fcollLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(fcollLoadColumnNames))
                 .csv(Paths.get(stepInputDir, fcollCsv).toString());
 
         // ToString(ToDate( data_inizio_DEF,'ddMMMyyyy'),'yyyyMMdd')    as data_inizio_DEF
@@ -54,7 +55,8 @@ public class QuadFcoll extends AbstractStep {
         List<String> oldFposiLoafColumnNames = Arrays.asList(
                 "datainizioDEF", "dataFINEDEF", "dataINIZIOPD", "datainizioinc",
                 "dataSOFFERENZA", "codicebanca", "ndgprincipale", "flagincristrut", "cumulo");
-        Dataset<Row> oldFposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(getStringTypeSchema(oldFposiLoafColumnNames))
+        Dataset<Row> oldFposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(oldFposiLoafColumnNames))
                 .csv(Paths.get(stepInputDir, oldFposiLoadCsv).toString());
 
         // FILTER oldfposi_load BY dataINIZIOPD is not null OR datainizioinc is not null OR dataSOFFERENZA is not null
@@ -101,7 +103,6 @@ public class QuadFcoll extends AbstractStep {
         Dataset<Row> fileOutDist = oldFposi.join(fcoll, oldFposi.col("cumulo").equalTo(fcoll.col("cumulo")), "left")
                 .select(toScalaColSeq(fileOutDistSelectColList)).distinct();
 
-        fileOutDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite)
-                .csv(Paths.get(stepOutputDir, fileoutdist).toString());
+        fileOutDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(stepOutputDir, fileoutdist).toString());
     }
 }

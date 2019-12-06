@@ -38,8 +38,8 @@ public abstract class AbstractStep extends StepUtils {
             InputStream inputConfigFile = new FileInputStream(configFilePath);
             configProperties.load(inputConfigFile);
 
-            dataDaPattern = getPropertyValue("params.datada.pattern");
-            dataAPattern = getPropertyValue("params.dataa.pattern");
+            dataDaPattern = getLGDPropertyValue("params.datada.pattern");
+            dataAPattern = getLGDPropertyValue("params.dataa.pattern");
             logger.debug("dataDaPattern: " + dataDaPattern);
             logger.debug("dataAPattern: " + dataAPattern);
 
@@ -51,7 +51,7 @@ public abstract class AbstractStep extends StepUtils {
         }
     }
 
-    public String getPropertyValue(String key) {
+    public String getLGDPropertyValue(String key) {
         return configProperties.getProperty(key);
     }
 
@@ -80,6 +80,8 @@ public abstract class AbstractStep extends StepUtils {
                     return localDate1.compareTo(localDate2) > 0;
                 };
 
+        sparkSession.udf().register("date1GtDate2", date1GreaterThanDate2Udf, DataTypes.BooleanType);
+
         // returns true if date1 (with pattern date1Pattern) >= date 2 (with pattern date2Pattern)
         UDF4<String, String, String, String, Boolean> date1GreaterOrEqThanDate2Udf = (UDF4<String, String, String, String, Boolean>)
                 (date1, date1Pattern, date2, date2Pattern) -> {
@@ -88,6 +90,8 @@ public abstract class AbstractStep extends StepUtils {
                     LocalDate localDate2 = LocalDate.parse(date2, DateTimeFormatter.ofPattern(date2Pattern));
                     return localDate1.compareTo(localDate2) >= 0;
                 };
+
+        sparkSession.udf().register("date1GeqDate2", date1GreaterOrEqThanDate2Udf, DataTypes.BooleanType);
 
         // returns true if date1 (with pattern date1Pattern) < date 2 (with pattern date2Pattern)
         UDF4<String, String, String, String, Boolean> date1LessThanDate2Udf = (UDF4<String, String, String, String, Boolean>)
@@ -98,6 +102,8 @@ public abstract class AbstractStep extends StepUtils {
                     return localDate1.compareTo(localDate2) < 0;
                 };
 
+        sparkSession.udf().register("date1LtDate2", date1LessThanDate2Udf, DataTypes.BooleanType);
+
         // returns true if date1 (with pattern date1Pattern) <= date 2 (with pattern date2Pattern)
         UDF4<String, String, String, String, Boolean> date1LessOrEqualThanDate2Udf = (UDF4<String, String, String, String, Boolean>)
                 (date1, date1Pattern, date2, date2Pattern) -> {
@@ -106,6 +112,8 @@ public abstract class AbstractStep extends StepUtils {
                     LocalDate localDate2 = LocalDate.parse(date2, DateTimeFormatter.ofPattern(date2Pattern));
                     return localDate1.compareTo(localDate2) <= 0;
                 };
+
+        sparkSession.udf().register("date1LeqDate2", date1LessOrEqualThanDate2Udf, DataTypes.BooleanType);
 
         // return true if lowerDate (with pattern lowerDatePattern) <= date (with pattern datePattern) <= dateUpper (with pattern upperDatePattern)
         UDF6<String, String, String, String, String, String, Boolean> dateBetweenLowerDateAndUpperDate =
@@ -118,11 +126,6 @@ public abstract class AbstractStep extends StepUtils {
                             return (localDate.compareTo(lowerDate) >= 0) & (localDate.compareTo(upperDate) <= 0);
                         };
 
-        // registration
-        sparkSession.udf().register("date1GtDate2", date1GreaterThanDate2Udf, DataTypes.BooleanType);
-        sparkSession.udf().register("date1GeqDate2", date1GreaterOrEqThanDate2Udf, DataTypes.BooleanType);
-        sparkSession.udf().register("date1LtDate2", date1LessThanDate2Udf, DataTypes.BooleanType);
-        sparkSession.udf().register("date1LeqDate2", date1LessOrEqualThanDate2Udf, DataTypes.BooleanType);
         sparkSession.udf().register("dateBetween", dateBetweenLowerDateAndUpperDate, DataTypes.BooleanType);
 
     }

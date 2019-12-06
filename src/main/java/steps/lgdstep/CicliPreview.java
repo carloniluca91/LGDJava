@@ -35,8 +35,8 @@ public class CicliPreview extends AbstractStep {
         this.dataA = dataA;
         this.ufficio = ufficio;
 
-        stepInputDir = getPropertyValue("cicli.preview.input.dir");
-        stepOutputDir = getPropertyValue("cicli.preview.output.dir");
+        stepInputDir = getLGDPropertyValue("cicli.preview.input.dir");
+        stepOutputDir = getLGDPropertyValue("cicli.preview.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -46,8 +46,8 @@ public class CicliPreview extends AbstractStep {
 
     public void run(){
 
-        String csvFormat = getPropertyValue("csv.format");
-        String fposiOutdirCsv = getPropertyValue("fposi.outdir.csv");
+        String csvFormat = getLGDPropertyValue("csv.format");
+        String fposiOutdirCsv = getLGDPropertyValue("fposi.outdir.csv");
         String fposiOutdirCsvPath = Paths.get(stepInputDir, fposiOutdirCsv).toString();
 
         logger.debug("csvFormat: " + csvFormat);
@@ -209,7 +209,7 @@ public class CicliPreview extends AbstractStep {
         // 127
 
         // 129
-        String fposiGen2OutCsv = getPropertyValue("fposi.gen2.csv");
+        String fposiGen2OutCsv = getLGDPropertyValue("fposi.gen2.csv");
         String fposiGen2OutPath = Paths.get(stepOutputDir, fposiGen2OutCsv).toString();
 
         logger.debug("fposiGen2OutCsv: " + fposiGen2OutCsv);
@@ -253,7 +253,7 @@ public class CicliPreview extends AbstractStep {
                 totAccordatoDatDefCol, totUtilizzDatDefCol);
         // 169
 
-        String fposiSintGen2Csv = getPropertyValue("fposi.sint.gen2");
+        String fposiSintGen2Csv = getLGDPropertyValue("fposi.sint.gen2");
         String fposiSintGen2Path = Paths.get(stepOutputDir, fposiSintGen2Csv).toString();
 
         logger.debug("fposiSintGen2Csv: " + fposiSintGen2Csv);
