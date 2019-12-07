@@ -96,7 +96,7 @@ public class QuadFposi extends AbstractStep {
         and ToDate( DATAINIZIODEF,'yyyyMMdd') <= ToDate( '20071231','yyyyMMdd' );
          */
 
-        Column DATAINIZIODEFFilterCol = dateBetween(oldFposiGen.col("DATAINIZIODEF"), "yyyy-MM-dd",
+        Column DATAINIZIODEFFilterCol = dateBetween(oldFposiGen.col("DATAINIZIODEF"), newDatePattern,
                 "20070131", "yyyyMMdd", "20071231", "yyyyMMdd");
         Dataset<Row> oldFposi = oldFposiGen.filter(DATAINIZIODEFFilterCol);
 
