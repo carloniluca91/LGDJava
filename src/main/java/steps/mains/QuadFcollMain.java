@@ -1,4 +1,4 @@
-package steps.main;
+package steps.mains;
 
 import steps.lgdstep.QuadFcoll;
 

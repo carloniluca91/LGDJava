@@ -1,4 +1,4 @@
-package steps.main;
+package steps.mains;
 
 import org.apache.commons.cli.Option;
 import steps.lgdstep.SofferenzePreview;
