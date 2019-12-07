@@ -3,7 +3,6 @@ package steps.lgdstep;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 
@@ -22,8 +21,8 @@ public class RaccInc extends AbstractStep {
         stepInputDir = getLGDPropertyValue("racc.inc.input.dir");
         stepOutputDir = getLGDPropertyValue("racc.inc.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override
@@ -32,21 +31,20 @@ public class RaccInc extends AbstractStep {
         String csvFormat = getLGDPropertyValue("csv.format");
         String tlbmignPathCsv = getLGDPropertyValue("tlbmign.path.csv");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("tlbmignPathCsv: " + tlbmignPathCsv);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("tlbmignPathCsv: " + tlbmignPathCsv);
 
         List<String> tlbmignColumnNames = Arrays.asList("cd_isti_ced", "ndg_ced", "cd_abi_ced", "cd_isti_ric", "ndg_ric",
                 "cd_abi_ric", "fl01_anag", "fl02_anag", "fl03_anag", "fl04_anag", "fl05_anag", "fl06_anag", "fl07_anag",
                 "fl08_anag", "fl09_anag", "fl10_anag", "cod_migraz", "data_migraz", "data_ini_appl", "data_fin_appl",
                 "data_ini_appl2");
 
-        StructType tlbmignSchema = getStringTypeSchema(tlbmignColumnNames);
-        Dataset<Row> tlbmign = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(tlbmignSchema).csv(
-                Paths.get(stepInputDir, tlbmignPathCsv).toString());
+        Dataset<Row> tlbmign = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(tlbmignColumnNames))
+                .csv(Paths.get(stepInputDir, tlbmignPathCsv).toString());
 
         // AddDuration(ToDate(data_migraz,'yyyyMMdd'),'P1M') AS month_up
-        Column dataMigrazDateCol = changeDateFormat(tlbmign.col("data_migraz"), "yyyyMMdd", "yyyy-MM-dd");
-        Column monthUpCol = functions.date_format(functions.add_months(dataMigrazDateCol, 1), "yyyyMMdd");
+        Column monthUpCol = addDuration(tlbmign.col("data_migraz"), "yyyyMMdd", 1);
 
         List<Column> tlbmignSelectList = new ArrayList<>();
         tlbmignSelectList.add(tlbmign.col("cd_isti_ric").as("ist_ric_inc"));
@@ -59,7 +57,7 @@ public class RaccInc extends AbstractStep {
 
         Seq<Column> tlbmignSelectSeq = toScalaColSeq(tlbmignSelectList);
         Dataset<Row> raccIncOut = tlbmign.select(tlbmignSelectSeq).withColumn("month_up", monthUpCol).drop("data_migraz");
-        raccIncOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                stepOutputDir);
+
+        raccIncOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(stepOutputDir);
     }
 }

@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
-import org.apache.spark.sql.types.StructType;
 import steps.abstractstep.AbstractStep;
 
 import java.nio.file.Paths;
@@ -27,10 +26,10 @@ public class SofferenzePreview extends AbstractStep {
         stepInputDir = getLGDPropertyValue("sofferenze.preview.input.dir");
         stepOutputDir = getLGDPropertyValue("sofferenze.preview.output.dir");
 
-        logger.info("stepInputDir: " + stepInputDir);
-        logger.info("stepOutputDir: " + stepOutputDir);
-        logger.info("ufficio: " + this.ufficio);
-        logger.info("dataA: " + this.dataA);
+        logger.debug("stepInputDir: " + stepInputDir);
+        logger.debug("stepOutputDir: " + stepOutputDir);
+        logger.debug("ufficio: " + this.ufficio);
+        logger.debug("dataA: " + this.dataA);
     }
 
     @Override
@@ -38,15 +37,19 @@ public class SofferenzePreview extends AbstractStep {
 
         String csvFormat = getLGDPropertyValue("csv.format");
         String soffOutDirCsv = getLGDPropertyValue("soff.outdir.csv");
+        String soffGen2Path = getLGDPropertyValue("soff.gen2");
+        String soffSintGen2Path = getLGDPropertyValue("soff.gen.sint2");
 
-        logger.info("csvFormat: " + csvFormat);
-        logger.info("soffOutDirCsv: " + soffOutDirCsv);
+        logger.debug("csvFormat: " + csvFormat);
+        logger.debug("soffOutDirCsv: " + soffOutDirCsv);
+        logger.debug("soffGen2Path: " + soffGen2Path);
+        logger.debug("soffSintGen2Path: " + soffSintGen2Path);
 
         List<String> soffLoadColumnNames = Arrays.asList("istituto", "ndg", "numerosofferenza", "datainizio", "datafine",
                 "statopratica", "saldoposizione", "saldoposizionecontab");
-        StructType soffLoadSchema = getStringTypeSchema(soffLoadColumnNames);
-        Dataset<Row> soffLoad = sparkSession.read().format(csvFormat).option("delimiter", ",").schema(soffLoadSchema).csv(
-                Paths.get(stepInputDir, soffOutDirCsv).toString());
+        Dataset<Row> soffLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
+                .schema(getStringTypeSchema(soffLoadColumnNames))
+                .csv(Paths.get(stepInputDir, soffOutDirCsv).toString());
 
         // 37
 
@@ -54,7 +57,7 @@ public class SofferenzePreview extends AbstractStep {
         Column ufficioCol = functions.lit(ufficio).as("ufficio");
 
         // ToString(ToDate('$data_a','yyyyMMdd'),'yyyy-MM-dd') as datarif
-        Column dataRifCol = changeDateFormat(functions.lit(dataA), "yyyyMMdd", "yyyy-MM-dd").as("datarif");
+        Column dataRifCol = functions.lit(changeDateFormat(dataA, "yyyyMMdd", "yyyy-MM-dd")).as("datarif");
 
         /*
         (double)REPLACE(saldoposizione,',','.')         as saldoposizione,
@@ -96,9 +99,6 @@ public class SofferenzePreview extends AbstractStep {
                 dataInizioCol, dataFineCol, soffBase.col("statopratica"),
                 saldoPosizioneSumCol, saldoPosizioneContabSumCol);
 
-        String soffGen2Path = getLGDPropertyValue("soff.gen2");
-        logger.info("soffGen2Path: " + soffGen2Path);
-
         soffGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
                 Paths.get(stepOutputDir, soffGen2Path).toString());
 
@@ -116,10 +116,7 @@ public class SofferenzePreview extends AbstractStep {
                         functions.sum(soffBase.col("saldoposizione")).as("saldoposizione"),
                         functions.sum(soffBase.col("saldoposizionecontab")).as("saldoposizionecontab"));
 
-        String soffSintGen2Path = getLGDPropertyValue("soff.gen.sint2");
-        logger.info("soffSintGen2Path: " + soffSintGen2Path);
-        soffSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(stepOutputDir, soffSintGen2Path).toString());
+        soffSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(stepOutputDir, soffSintGen2Path).toString());
 
         // 123
     }

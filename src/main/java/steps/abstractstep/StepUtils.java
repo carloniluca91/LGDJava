@@ -18,9 +18,9 @@ import java.util.Set;
 
 abstract class StepUtils {
 
-    protected Column addDuration(Column dateCol, String dateColFormat, int months){
+    protected Column addDuration(Column dateCol, String dateColFormat, int numberOfMonths){
 
-        return functions.callUDF("addDuration", dateCol, functions.lit(dateColFormat), functions.lit(months));
+        return functions.callUDF("addDuration", dateCol, functions.lit(dateColFormat), functions.lit(numberOfMonths));
     }
 
     // change the format of string expressing a date

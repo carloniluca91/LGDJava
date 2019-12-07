@@ -29,9 +29,15 @@ public class Posaggr extends AbstractStep {
 
         String csvFormat = getLGDPropertyValue("csv.format");
         String tblcompCsvPath = getLGDPropertyValue("tblcomp.path.csv");
+        String tlbaggrCsvPath = getLGDPropertyValue("tlbaggr.path.csv");
+        String tlbposiLoadCsvPath = getLGDPropertyValue("tlbposi.load.csv");
+        String posaggrCsvPath = getLGDPropertyValue("posaggr.csv");
 
         logger.debug("csvFormat: " + csvFormat);
         logger.debug("tlbcompCsvPath: " + tblcompCsvPath);
+        logger.debug("tlbaggrCsvPath: " + tlbaggrCsvPath);
+        logger.debug("tlbposiLoadCsvPath: " + tlbposiLoadCsvPath);
+        logger.debug("posaggrOutputPath: " + posaggrCsvPath);
 
         // 19
         List<String> tblcompColNames = Arrays.asList("dt_riferimento", "c_key", "tipo_segmne", "cd_istituto", "ndg");
@@ -42,8 +48,6 @@ public class Posaggr extends AbstractStep {
         // 27
 
         // 32
-        String tlbaggrCsvPath = getLGDPropertyValue("tlbaggr.path.csv");
-        logger.debug("tlbaggrCsvPath: " + tlbaggrCsvPath);
 
         List<String> tlbaggrColNames = Arrays.asList("dt_riferimento", "c_key_aggr", "ndg_gruppo", "cod_fiscale",
                 "tipo_segmne_aggr", "segmento", "tipo_motore", "cd_istituto", "ndg", "rae", "sae", "tp_ndg", "prov_segm",
@@ -69,9 +73,6 @@ public class Posaggr extends AbstractStep {
         // 79
 
         // 89
-
-        String tlbposiLoadCsvPath = getLGDPropertyValue("tlbposi.load.csv");
-        logger.debug("tlbposiLoadCsvPath: " + tlbposiLoadCsvPath);
 
         List<String> tlbposiLoadColNames = Arrays.asList("dt_riferimento", "cd_istituto", "ndg", "c_key", "cod_fiscale",
                 "ndg_gruppo", "bo_acco", "bo_util", "tot_add_sosp", "tot_val_intr", "ca_acco", "ca_util", "fl_incaglio",
@@ -170,9 +171,6 @@ public class Posaggr extends AbstractStep {
 
         Seq<Column> tblcompTlbaggrTlbposiSelectListselectColumnSeq = toScalaColSeq(selectColumnList);
         Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(tblcompTlbaggrTlbposiSelectListselectColumnSeq);
-
-        String posaggrCsvPath = getLGDPropertyValue("posaggr.csv");
-        logger.debug("posaggrOutputPath: " + posaggrCsvPath);
 
         posaggr.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite)
                 .csv(Paths.get(stepOutputDir, posaggrCsvPath).toString());
