@@ -71,21 +71,6 @@ abstract class StepUtils {
                 functions.lit(otherDate), functions.lit(otherDatePattern));
     }
 
-    // check if a date is < other date
-    protected Column dateLtOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
-
-        return functions.callUDF("date1LtDate2",
-                dateColumn, functions.lit(dateColumnPattern),
-                functions.lit(otherDate), functions.lit(otherDatePattern));
-    }
-
-    protected Column dateLtOtherDate(Column dateColumn, String dateColumnPattern, Column otherDateColumn, String otherDatePattern){
-
-        return functions.callUDF("date1LtDate2",
-                dateColumn, functions.lit(dateColumnPattern),
-                otherDateColumn, functions.lit(otherDatePattern));
-    }
-
     protected Column daysBetween(Column dateCol1, Column dateCol2, String commonPattern){
 
         return functions.callUDF("daysBetween", dateCol1, dateCol2, functions.lit(commonPattern));
