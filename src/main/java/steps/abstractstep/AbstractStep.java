@@ -1,12 +1,5 @@
 package steps.abstractstep;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Properties;
-
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.api.java.UDF3;
@@ -14,12 +7,16 @@ import org.apache.spark.sql.api.java.UDF4;
 import org.apache.spark.sql.api.java.UDF6;
 import org.apache.spark.sql.types.DataTypes;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Properties;
+
 public abstract class AbstractStep extends StepUtils {
 
     protected Logger logger;
     protected static SparkSession sparkSession;
     private static Properties configProperties;
-    private static final String configFilePath = "src/main/resources/lgd.properties";
 
     // input and output dirs for a step
     protected String stepInputDir;
@@ -35,8 +32,7 @@ public abstract class AbstractStep extends StepUtils {
         try{
 
             configProperties = new Properties();
-            InputStream inputConfigFile = new FileInputStream(configFilePath);
-            configProperties.load(inputConfigFile);
+            configProperties.load(getClass().getClassLoader().getResourceAsStream("./lgd.properties"));
 
             dataDaPattern = getLGDPropertyValue("params.datada.pattern");
             dataAPattern = getLGDPropertyValue("params.dataa.pattern");
