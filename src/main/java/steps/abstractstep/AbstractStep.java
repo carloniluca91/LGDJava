@@ -1,5 +1,7 @@
 package steps.abstractstep;
 
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.api.java.UDF3;
@@ -7,16 +9,14 @@ import org.apache.spark.sql.api.java.UDF4;
 import org.apache.spark.sql.api.java.UDF6;
 import org.apache.spark.sql.types.DataTypes;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.Properties;
 
 public abstract class AbstractStep extends StepUtils {
 
     protected Logger logger;
-    protected static SparkSession sparkSession;
-    private static Properties configProperties;
+    protected SparkSession sparkSession;
+    private PropertiesConfiguration configProperties;
 
     // input and output dirs for a step
     protected String stepInputDir;
@@ -29,9 +29,9 @@ public abstract class AbstractStep extends StepUtils {
 
         logger = Logger.getLogger(loggerName);
 
-        try{
+        try {
 
-            configProperties = new Properties();
+            configProperties = new PropertiesConfiguration();
             configProperties.load(getClass().getClassLoader().getResourceAsStream("./lgd.properties"));
 
             dataDaPattern = getLGDPropertyValue("params.datada.pattern");
@@ -41,14 +41,16 @@ public abstract class AbstractStep extends StepUtils {
 
             getSparkSessionWithUDFs();
         }
-        catch (IOException ex){
+        catch (ConfigurationException ex){
 
-            logger.error(ex.getMessage());
+            logger.error("ConfigurationException occurred");
+            logger.error("ex.getMessage(): " + ex.getMessage());
+            logger.error(ex);
         }
     }
 
     public String getLGDPropertyValue(String key) {
-        return configProperties.getProperty(key);
+        return configProperties.getString(key);
     }
 
     private void getSparkSessionWithUDFs(){
@@ -209,5 +211,5 @@ public abstract class AbstractStep extends StepUtils {
 
     }
 
-    public void run(){}
+    abstract public void run();
 }
