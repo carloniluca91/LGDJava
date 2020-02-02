@@ -2,15 +2,17 @@ package steps.lgdstep;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.*;
+import org.apache.spark.sql.types.StructType;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
+import steps.abstractstep.StepUtils;
+import steps.schemas.CicliLavStep1Schema;
 
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
+
 
 public class CicliLavStep1 extends AbstractStep {
 
@@ -18,11 +20,9 @@ public class CicliLavStep1 extends AbstractStep {
     private String dataDa;
     private String dataA;
 
-    public CicliLavStep1(String loggerName, String dataDa, String dataA) {
+    public CicliLavStep1(String dataDa, String dataA) {
 
-        super(loggerName);
-
-        logger = Logger.getLogger(loggerName);
+        logger = Logger.getLogger(CicliLavStep1.class);
 
         this.dataDa = dataDa;
         this.dataA = dataA;
@@ -39,28 +39,24 @@ public class CicliLavStep1 extends AbstractStep {
     public void run(){
 
         // retrieve csv_format, input data directory and file name from configuration.properties file
-        String csvFormat = getLGDPropertyValue("csv.format");
-        String tlbcidefCsv = getLGDPropertyValue("tlbcidef.csv");
-        String tlbcraccCsv = getLGDPropertyValue("tlbcracc.csv");
-        String tlbcdefPath = Paths.get(stepInputDir, tlbcidefCsv).toString();
+        String tlbcidefCsvPath = getLGDPropertyValue("tlbcidef.csv");
+        String tlbcraccCsvPath = getLGDPropertyValue("tlbcracc.csv");
 
-        logger.debug("csv format: " + csvFormat);
-        logger.debug("tlbcidefCsv: " +  tlbcidefCsv);
-        logger.debug("tlbcraccCsv: " + tlbcraccCsv);
-        logger.debug("tlbcdefPath: " + tlbcdefPath);
+        logger.debug("tlbcidefCsvPath: " +  tlbcidefCsvPath);
+        logger.debug("tlbcraccCsvPath: " + tlbcraccCsvPath);
 
         // 22
-        List<String> tlbcidefColumns = Arrays.asList("cd_isti", "ndg_principale", "cod_cr", "dt_inizio_ciclo", "dt_ingresso_status",
-                "status_ingresso", "dt_uscita_status", "status_uscita", "dt_fine_ciclo", "indi_pastdue", "indi_impr_priv");
-        StructType tlbcidefSchema = getStringTypeSchema(tlbcidefColumns);
+        Map<String, String> tlbcidefPigSchema = CicliLavStep1Schema.getTlbcidefPigSchema();
+        StructType tlbcidefSchema = StepUtils.fromPigSchemaToStructType(tlbcidefPigSchema);
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(tlbcidefSchema).csv(tlbcdefPath);
+                .schema(tlbcidefSchema).csv(tlbcidefCsvPath);
 
         // 37
 
         // 40
         // FILTER tlbcidef BY dt_inizio_ciclo >= $data_da AND dt_inizio_ciclo <= $data_a;
-        Column dtInizioCicloFilterCol = dateBetween(tlbcidef.col("dt_inizio_ciclo"), "yyyyMMdd",
+        Column dtInizioCicloFilterCol = StepUtils.dateBetween(
+                StepUtils.toStringType(tlbcidef.col("dt_inizio_ciclo")), "yyyyMMdd",
                 dataDa, dataDaPattern, dataA, dataAPattern);
 
         Column statusIngressoTrimCol = functions.trim(functions.col("status_ingresso"));
@@ -82,8 +78,9 @@ public class CicliLavStep1 extends AbstractStep {
         Column dataInizioSoffCol = functions.when(statusIngressoTrimCol.equalTo(functions.lit("SOFF")),
                 functions.col("dt_ingresso_status")).otherwise(null).as("datainiziosoff");
 
-        Dataset<Row> tlbcidefUnpivot = tlbcidef.filter(dtInizioCicloFilterCol).select(functions.col("cd_isti"),
-                functions.col("ndg_principale"), functions.col("dt_inizio_ciclo"), functions.col("dt_fine_ciclo"),
+        Dataset<Row> tlbcidefUnpivot = tlbcidef.filter(dtInizioCicloFilterCol).select(
+                functions.col("cd_isti"), functions.col("ndg_principale"),
+                functions.col("dt_inizio_ciclo"), functions.col("dt_fine_ciclo"),
                 dataInizioPdCol, dataInizioIncCol, dataInizioRistruttCol, dataInizioSoffCol);
 
         // 55
@@ -97,20 +94,20 @@ public class CicliLavStep1 extends AbstractStep {
         // 71
 
         // 78
-        String tlbcraccPath = Paths.get(stepInputDir, tlbcraccCsv).toString();
-        List<String> tlbcraccColumns = Arrays.asList("data_rif", "cd_isti", "ndg", "cod_raccordo", "data_val");
-        StructType tlbcraccSchema = getStringTypeSchema(tlbcraccColumns);
+        Map<String, String> tlbcraccLoadPigSchema = CicliLavStep1Schema.getTlbcraccLoadPigSchema();
+        StructType tlbcraccSchema = StepUtils.fromPigSchemaToStructType(tlbcraccLoadPigSchema);
         Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(tlbcraccSchema).csv(tlbcraccPath);
+                .schema(tlbcraccSchema).csv(tlbcraccCsvPath);
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
-        LocalDate defaultDataA = parseStringToLocalDate("20150731", "yyyyMMdd");
-        LocalDate dataADate = parseStringToLocalDate(dataA, dataAPattern);
+        LocalDate defaultDataA = StepUtils.parseStringToLocalDate("20150731", "yyyyMMdd");
+        LocalDate dataADate = StepUtils.parseStringToLocalDate(dataA, dataAPattern);
         String greatestDateString = dataADate.compareTo(defaultDataA) <= 0 ?
                 defaultDataA.format(DateTimeFormatter.ofPattern(dataAPattern)) : dataADate.format(DateTimeFormatter.ofPattern(dataDaPattern));
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
-        Column tlbraccFilterCol = dateLeqOtherDate(tlbcraccLoad.col("data_rif"),"yyyy-MM-dd",
+        Column tlbraccFilterCol = StepUtils.dateLeqOtherDate(
+                StepUtils.toStringType(tlbcraccLoad.col("data_rif")),"yyyy-MM-dd",
                 greatestDateString, "yyyy-MM-dd");
 
         Dataset<Row> tlbcracc = tlbcraccLoad.filter(tlbraccFilterCol);
@@ -130,7 +127,7 @@ public class CicliLavStep1 extends AbstractStep {
         // 110
 
         // 119
-        Seq<String> joinColsSeq = toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));  // conversion to scala Seq
+        Seq<String> joinColsSeq = StepUtils.toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));  // conversion to scala Seq
 
         // (tlbcracc::cd_isti is not null ? tlbcracc::cd_isti : cicli_racc_1::cd_isti) as cd_isti_ced
         Column cdIstiCedCol = functions.when(tlbcraccClone.col("cd_isti_clone").isNotNull(), tlbcraccClone.col("cd_isti_clone"))
@@ -164,10 +161,7 @@ public class CicliLavStep1 extends AbstractStep {
         logger.debug("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
         logger.debug("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
-        ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(stepOutputDir, ciclilavStep1OutCsv).toString());
-
-        ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(
-                Paths.get(stepOutputDir, ciclilavStep1FilecraccCsv).toString());
+        ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(ciclilavStep1OutCsv);
+        ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(ciclilavStep1FilecraccCsv);
     }
 }

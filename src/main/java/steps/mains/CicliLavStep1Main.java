@@ -5,18 +5,20 @@ import steps.lgdstep.CicliLavStep1;
 import steps.params.OptionFactory;
 import steps.params.StepParams;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class CicliLavStep1Main {
 
     public static void main(String[] args){
 
-        // define options
+        // DEFINE STEP OPTIONS
         Option dataDaOption = OptionFactory.getDataDaOption();
         Option dataAOption = OptionFactory.getDataAOpton();
+        List<Option> cicliLavstep1OptionList = Arrays.asList(dataDaOption, dataAOption);
 
-        String loggerName = CicliLavStep1Main.class.getSimpleName();
-        StepParams stepParams = new StepParams(loggerName, args, dataDaOption, dataAOption);
-        CicliLavStep1 cicliLavStep1 = new CicliLavStep1(loggerName, stepParams.getDataDa(), stepParams.getDataA());
+        StepParams stepParams = new StepParams(args, cicliLavstep1OptionList);
+        CicliLavStep1 cicliLavStep1 = new CicliLavStep1(stepParams.getDataDa(), stepParams.getDataA());
         cicliLavStep1.run();
-
     }
 }

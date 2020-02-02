@@ -1,38 +1,33 @@
 package steps.params;
 
-import org.apache.commons.cli.BasicParser;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
+import lombok.Getter;
+import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class StepParams {
 
     private Logger logger;
 
-    private String dataDa;
-    private String dataA;
-    private String ufficio;
-    private int numeroMesi1;
-    private int numeroMesi2;
-    private String dataOsservazione;
+    @Getter private String dataDa;
+    @Getter private String dataA;
+    @Getter private String ufficio;
+    @Getter private int numeroMesi1;
+    @Getter private int numeroMesi2;
+    @Getter private String dataOsservazione;
 
     private List<Option> optionList;
     private Options stepParamsOptions;
     private CommandLine commandLine;
 
-    public StepParams(String loggerName, String[] args, Option ... options){
+    public StepParams(String[] args, List<Option> optionList){
 
-        logger = Logger.getLogger(loggerName);
-        optionList = Arrays.asList(options);
+        logger = Logger.getLogger(getClass());
+        this.optionList = optionList;
         stepParamsOptions = new Options();
 
-        for (Option option: options){
+        for (Option option: optionList){
 
             option.setRequired(true);
             stepParamsOptions.addOption(option);
@@ -59,30 +54,10 @@ public class StepParams {
 
         } catch (ParseException e) {
 
-            logger.error(e.getMessage());
+            logger.error("ParseException occurred");
+            logger.error("e.getMessage(): " + e.getMessage());
+            logger.error(e);
         }
-    }
-
-    public String getDataA() {
-        return dataA;
-    }
-
-    public String getDataDa() {
-        return dataDa;
-    }
-
-    public String getDataOsservazione() { return dataOsservazione; }
-
-    public int getNumeroMesi1() {
-        return numeroMesi1;
-    }
-
-    public int getNumeroMesi2() {
-        return numeroMesi2;
-    }
-
-    public String getUfficio() {
-        return ufficio;
     }
 
     private void setDataA(){
