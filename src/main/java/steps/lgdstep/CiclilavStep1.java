@@ -51,8 +51,6 @@ public class CiclilavStep1 extends AbstractStep {
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcidefSchema).csv(tlbcidefCsvPath);
 
-        tlbcidef.show();
-
         // 37
 
         // 40
@@ -101,8 +99,6 @@ public class CiclilavStep1 extends AbstractStep {
         Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcraccSchema).csv(tlbcraccCsvPath);
 
-        tlbcraccLoad.show();
-
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
         LocalDate defaultDataA = StepUtils.parseStringToLocalDate("20150731", "yyyyMMdd");
         LocalDate dataADate = StepUtils.parseStringToLocalDate(dataA, dataAPattern);
@@ -131,7 +127,8 @@ public class CiclilavStep1 extends AbstractStep {
         // 110
 
         // 119
-        Seq<String> joinColsSeq = StepUtils.toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));  // conversion to scala Seq
+        // conversion to scala Seq
+        Seq<String> joinColsSeq = StepUtils.toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));
 
         // (tlbcracc::cd_isti is not null ? tlbcracc::cd_isti : cicli_racc_1::cd_isti) as cd_isti_ced
         Column cdIstiCedCol = functions.when(tlbcraccClone.col("cd_isti_clone").isNotNull(), tlbcraccClone.col("cd_isti_clone"))
