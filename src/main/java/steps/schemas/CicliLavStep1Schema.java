@@ -1,13 +1,13 @@
 package steps.schemas;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CicliLavStep1Schema {
 
     public static Map<String, String> getTlbcidefPigSchema(){
 
-        return new HashMap<String, String>() {{
+        return new LinkedHashMap<String, String>() {{
             put("cd_isti", "chararray");
             put("ndg_principale", "chararray");
             put("cod_cr", "chararray");
@@ -23,7 +23,7 @@ public class CicliLavStep1Schema {
 
     public static Map<String, String> getTlbcraccLoadPigSchema() {
 
-        return new HashMap<String, String>() {{
+        return new LinkedHashMap<String, String>() {{
             put("data_rif", "int");
             put("cd_isti", "chararray");
             put("ndg", "chararray");
