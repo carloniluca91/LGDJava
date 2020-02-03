@@ -11,7 +11,7 @@ public abstract class AbstractStep {
 
     protected Logger logger;
     protected SparkSession sparkSession;
-    private PropertiesConfiguration configProperties;
+    private PropertiesConfiguration propertiesConfiguration;
 
     // input and output dirs for a step
     protected String stepInputDir;
@@ -27,8 +27,8 @@ public abstract class AbstractStep {
 
         try {
 
-            configProperties = new PropertiesConfiguration();
-            configProperties.load(getClass().getClassLoader().getResourceAsStream("./lgd.properties"));
+            propertiesConfiguration = new PropertiesConfiguration();
+            propertiesConfiguration.load(AbstractStep.class.getClassLoader().getResourceAsStream("lgd.properties"));
 
             csvFormat = getLGDPropertyValue("csv.format");
             dataDaPattern = getLGDPropertyValue("params.datada.pattern");
@@ -49,15 +49,12 @@ public abstract class AbstractStep {
     }
 
     public String getLGDPropertyValue(String key) {
-        return configProperties.getString(key);
+        return propertiesConfiguration.getString(key);
     }
 
     private void getSparkSessionWithUDFs(){
 
-        sparkSession = new SparkSession.Builder()
-                .appName("LGDApp")
-                .master("local")
-                .getOrCreate();
+        sparkSession = new SparkSession.Builder().getOrCreate();
 
         registerUDFsForDateComparison();
         registerUDFsForDateManipulation();

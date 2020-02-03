@@ -14,15 +14,15 @@ import java.util.Arrays;
 import java.util.Map;
 
 
-public class CicliLavStep1 extends AbstractStep {
+public class CiclilavStep1 extends AbstractStep {
 
     // required parameters
     private String dataDa;
     private String dataA;
 
-    public CicliLavStep1(String dataDa, String dataA) {
+    public CiclilavStep1(String dataDa, String dataA) {
 
-        logger = Logger.getLogger(CicliLavStep1.class);
+        logger = Logger.getLogger(CiclilavStep1.class);
 
         this.dataDa = dataDa;
         this.dataA = dataA;
@@ -50,6 +50,8 @@ public class CicliLavStep1 extends AbstractStep {
         StructType tlbcidefSchema = StepUtils.fromPigSchemaToStructType(tlbcidefPigSchema);
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcidefSchema).csv(tlbcidefCsvPath);
+
+        tlbcidef.show();
 
         // 37
 
@@ -98,6 +100,8 @@ public class CicliLavStep1 extends AbstractStep {
         StructType tlbcraccSchema = StepUtils.fromPigSchemaToStructType(tlbcraccLoadPigSchema);
         Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcraccSchema).csv(tlbcraccCsvPath);
+
+        tlbcraccLoad.show();
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
         LocalDate defaultDataA = StepUtils.parseStringToLocalDate("20150731", "yyyyMMdd");

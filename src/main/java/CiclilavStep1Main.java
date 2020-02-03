@@ -1,14 +1,12 @@
-package steps.mains;
-
 import org.apache.commons.cli.Option;
-import steps.lgdstep.CicliLavStep1;
+import steps.lgdstep.CiclilavStep1;
 import steps.params.OptionFactory;
 import steps.params.StepParams;
 
 import java.util.Arrays;
 import java.util.List;
 
-public class CicliLavStep1Main {
+public class CiclilavStep1Main {
 
     public static void main(String[] args){
 
@@ -18,7 +16,7 @@ public class CicliLavStep1Main {
         List<Option> cicliLavstep1OptionList = Arrays.asList(dataDaOption, dataAOption);
 
         StepParams stepParams = new StepParams(args, cicliLavstep1OptionList);
-        CicliLavStep1 cicliLavStep1 = new CicliLavStep1(stepParams.getDataDa(), stepParams.getDataA());
-        cicliLavStep1.run();
+        CiclilavStep1 ciclilavStep1 = new CiclilavStep1(stepParams.getDataDa(), stepParams.getDataA());
+        ciclilavStep1.run();
     }
 }
