@@ -38,12 +38,15 @@ public class CiclilavStep1 extends AbstractStep {
 
     public void run(){
 
-        // retrieve csv_format, input data directory and file name from configuration.properties file
         String tlbcidefCsvPath = getLGDPropertyValue("tlbcidef.csv");
         String tlbcraccCsvPath = getLGDPropertyValue("tlbcracc.csv");
+        String ciclilavStep1OutCsv = getLGDPropertyValue("ciclilav.step1.out.csv");
+        String ciclilavStep1FilecraccCsv = getLGDPropertyValue("ciclilav.step1.filecracc.csv");
 
         logger.debug("tlbcidefCsvPath: " +  tlbcidefCsvPath);
         logger.debug("tlbcraccCsvPath: " + tlbcraccCsvPath);
+        logger.debug("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
+        logger.debug("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
         // 22
         Map<String, String> tlbcidefPigSchema = CicliLavStep1Schema.getTlbcidefPigSchema();
@@ -154,13 +157,8 @@ public class CiclilavStep1 extends AbstractStep {
         Dataset<Row> ciclilavStep1Filecracc = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left").select(
                 cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
                 cicliRacc1.col("dt_fine_ciclo"), cdIstiCedCol, ndgCedCol, dtRifCraccCol);
+
         // 176
-
-        String ciclilavStep1OutCsv = getLGDPropertyValue("ciclilav.step1.out.csv");
-        String ciclilavStep1FilecraccCsv = getLGDPropertyValue("ciclilav.step1.filecracc.csv");
-
-        logger.debug("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
-        logger.debug("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
         ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(ciclilavStep1OutCsv);
         ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(ciclilavStep1FilecraccCsv);

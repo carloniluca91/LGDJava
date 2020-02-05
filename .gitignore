@@ -1,6 +1,4 @@
 .idea/*
-data/*
 target/*
-log/*
 src/main/test/*
 spark-warehouse

@@ -126,10 +126,10 @@ public class StepUtils {
         
         DataType dataType;
         switch (pigColumnType){
-            
-            case "chararray": dataType = DataTypes.StringType;
-            case "int": dataType = DataTypes.IntegerType;
-            default: dataType = DataTypes.StringType;
+
+            case "int": dataType = DataTypes.IntegerType; break;
+            case "double": dataType = DataTypes.DoubleType; break;
+            default: dataType = DataTypes.StringType; break;
         }
         
         return dataType;

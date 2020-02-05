@@ -6,17 +6,17 @@ import steps.params.StepParams;
 import java.util.Arrays;
 import java.util.List;
 
-public class CiclilavStep1Main {
+public class CiclilavStep1Main{
 
     public static void main(String[] args){
 
-        // DEFINE STEP OPTIONS
+        // OPTIONS REQUIRED
         Option dataDaOption = OptionFactory.getDataDaOption();
-        Option dataAOption = OptionFactory.getDataAOpton();
-        List<Option> cicliLavstep1OptionList = Arrays.asList(dataDaOption, dataAOption);
+        Option dataAOpton = OptionFactory.getDataAOpton();
+        List<Option> ciclilavStep1Options = Arrays.asList(dataDaOption, dataAOpton);
 
-        StepParams stepParams = new StepParams(args, cicliLavstep1OptionList);
-        CiclilavStep1 ciclilavStep1 = new CiclilavStep1(stepParams.getDataDa(), stepParams.getDataA());
+        StepParams stepParams = new StepParams(args, ciclilavStep1Options);
+        CiclilavStep1 ciclilavStep1 = new CiclilavStep1(stepParams.getDataDa(),stepParams.getDataA());
         ciclilavStep1.run();
     }
 }
