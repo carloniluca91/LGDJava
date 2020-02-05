@@ -38,8 +38,8 @@ public class CiclilavStep1 extends AbstractStep {
 
     public void run(){
 
-        String tlbcidefCsvPath = getLGDPropertyValue("tlbcidef.csv");
-        String tlbcraccCsvPath = getLGDPropertyValue("tlbcracc.csv");
+        String tlbcidefCsvPath = getLGDPropertyValue("ciclilav.step1.tlbcidef.csv");
+        String tlbcraccCsvPath = getLGDPropertyValue("ciclilav.step1.tlbcracc.csv");
         String ciclilavStep1OutCsv = getLGDPropertyValue("ciclilav.step1.out.csv");
         String ciclilavStep1FilecraccCsv = getLGDPropertyValue("ciclilav.step1.filecracc.csv");
 

@@ -41,9 +41,9 @@ public class CicliPreview extends AbstractStep {
 
     public void run(){
 
-        String fposiOutdirCsvPath = getLGDPropertyValue("fposi.outdir.csv");
-        String fposiGen2OutCsv = getLGDPropertyValue("fposi.gen2.csv");
-        String fposiSintGen2Csv = getLGDPropertyValue("fposi.sint.gen2");
+        String fposiOutdirCsvPath = getLGDPropertyValue("cicli.preview.fposi.outdir.csv");
+        String fposiGen2OutCsv = getLGDPropertyValue("cicli.preview.fposi.gen2.csv");
+        String fposiSintGen2Csv = getLGDPropertyValue("cicli.preview.fposi.sint.gen2");
 
         logger.debug("fposiOutdirCsvPath: " + fposiOutdirCsvPath);
         logger.debug("fposiGen2OutCsv: " + fposiGen2OutCsv);
