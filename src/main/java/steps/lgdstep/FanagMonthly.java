@@ -30,6 +30,10 @@ public class FanagMonthly extends AbstractStep {
         stepInputDir = getLGDPropertyValue("fanag.monthly.input.dir");
         stepOutputDir = getLGDPropertyValue("fanag.monthly.output.dir");
 
+        logger.debug("numeroMesi1: " + this.numeroMesi1);
+        logger.debug("numeroMesi2: " + this.numeroMesi2);
+        logger.debug("dataA: " + this.dataA);
+
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
     }
