@@ -2,7 +2,6 @@ package steps.lgdstep;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.StructType;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.CicliLavStep1Schema;
@@ -10,7 +9,6 @@ import steps.schemas.CicliLavStep1Schema;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Map;
 
 import static steps.abstractstep.StepUtils.*;
 
@@ -50,10 +48,9 @@ public class CiclilavStep1 extends AbstractStep {
         logger.debug("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
         // 22
-        Map<String, String> tlbcidefPigSchema = CicliLavStep1Schema.getTlbcidefPigSchema();
-        StructType tlbcidefSchema = fromPigSchemaToStructType(tlbcidefPigSchema);
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(tlbcidefSchema).csv(tlbcidefCsvPath);
+                .schema(fromPigSchemaToStructType(CicliLavStep1Schema.getTlbcidefPigSchema()))
+                .csv(tlbcidefCsvPath);
 
         // 37
 
@@ -97,10 +94,9 @@ public class CiclilavStep1 extends AbstractStep {
         // 71
 
         // 78
-        Map<String, String> tlbcraccLoadPigSchema = CicliLavStep1Schema.getTlbcraccLoadPigSchema();
-        StructType tlbcraccSchema = fromPigSchemaToStructType(tlbcraccLoadPigSchema);
         Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(tlbcraccSchema).csv(tlbcraccCsvPath);
+                .schema(fromPigSchemaToStructType(CicliLavStep1Schema.getTlbcraccLoadPigSchema()))
+                .csv(tlbcraccCsvPath);
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
         LocalDate defaultDataA = parseStringToLocalDate("20150731", "yyyyMMdd");

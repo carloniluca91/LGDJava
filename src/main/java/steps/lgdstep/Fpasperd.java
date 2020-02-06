@@ -5,14 +5,12 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.FpasperdSchema;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static steps.abstractstep.StepUtils.*;
 
@@ -43,10 +41,9 @@ public class Fpasperd extends AbstractStep {
         logger.debug("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);
 
         // 19
-        Map<String, String> tlbcidefLoadPigSchema = FpasperdSchema.getTlbcidefLoadPigSchema();
-        StructType tlbcidefLoadStructType = fromPigSchemaToStructType(tlbcidefLoadPigSchema);
         Dataset<Row> tlbcidefLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(tlbcidefLoadStructType).csv(cicliNdgPathCsv);
+                .schema(fromPigSchemaToStructType(FpasperdSchema.getTlbcidefLoadPigSchema()))
+                .csv(cicliNdgPathCsv);
 
         // // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
         // tlbcidef::datafinedef in format "yyyyMMdd"
@@ -58,10 +55,9 @@ public class Fpasperd extends AbstractStep {
         // 56
 
         // 63
-        Map<String, String> tlbpaspeFilterPigSchema = FpasperdSchema.getTlbpaspeFilterPigSchema();
-        StructType tlbpaspeFilterStructType = fromPigSchemaToStructType(tlbpaspeFilterPigSchema);
         Dataset<Row> tlbpaspeFilter = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(tlbpaspeFilterStructType).csv(tlbpaspeCsv);
+                .schema(fromPigSchemaToStructType(FpasperdSchema.getTlbpaspeFilterPigSchema()))
+                .csv(tlbpaspeCsv);
 
         // 71
 
@@ -249,11 +245,9 @@ public class Fpasperd extends AbstractStep {
         // 331
 
         // 336
-
-        Map<String, String> tlbpaspeossPigSchema = FpasperdSchema.getTlbpaspeossPigSchema();
-        StructType tlbpaspeossStructype = fromPigSchemaToStructType(tlbpaspeossPigSchema);
         Dataset<Row> tlbpaspeoss = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(tlbpaspeossStructype).csv(tlbpaspeossCsv);
+                .schema(fromPigSchemaToStructType(FpasperdSchema.getTlbpaspeossPigSchema()))
+                .csv(tlbpaspeossCsv);
         // 344
 
         // 346

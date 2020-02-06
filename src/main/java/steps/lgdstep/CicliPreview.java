@@ -6,11 +6,8 @@ import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.CicliPreviewSchema;
-
-import java.util.Map;
 
 import static steps.abstractstep.StepUtils.*;
 
@@ -51,10 +48,9 @@ public class CicliPreview extends AbstractStep {
         logger.debug("fposiSintGen2Csv: " + fposiSintGen2Csv);
 
         // 21
-        Map<String, String> fposiOutDirPigSchema = CicliPreviewSchema.getFposiOutDirPigSchema();
-        StructType fposiLoadSchema = fromPigSchemaToStructType(fposiOutDirPigSchema);
         Dataset<Row> fposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fposiLoadSchema).csv(fposiOutdirCsvPath);
+                .schema(fromPigSchemaToStructType(CicliPreviewSchema.getFposiOutDirPigSchema()))
+                .csv(fposiOutdirCsvPath);
 
         //36
 
