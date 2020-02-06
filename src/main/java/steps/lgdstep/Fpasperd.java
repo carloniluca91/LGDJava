@@ -250,8 +250,6 @@ public class Fpasperd extends AbstractStep {
 
         // 336
 
-        // slightly change the field names for tlbpaspeoss in order to avoid implicit coalesce operator
-        // triggered by performing "full_outer" join on columns with same name
         Map<String, String> tlbpaspeossPigSchema = FpasperdSchema.getTlbpaspeossPigSchema();
         StructType tlbpaspeossStructype = fromPigSchemaToStructType(tlbpaspeossPigSchema);
         Dataset<Row> tlbpaspeoss = sparkSession.read().format(csvFormat).option("delimiter", ",")

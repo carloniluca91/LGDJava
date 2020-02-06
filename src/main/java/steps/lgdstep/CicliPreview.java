@@ -8,10 +8,11 @@ import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import steps.abstractstep.AbstractStep;
-import steps.abstractstep.StepUtils;
 import steps.schemas.CicliPreviewSchema;
 
 import java.util.Map;
+
+import static steps.abstractstep.StepUtils.*;
 
 public class CicliPreview extends AbstractStep {
 
@@ -51,7 +52,7 @@ public class CicliPreview extends AbstractStep {
 
         // 21
         Map<String, String> fposiOutDirPigSchema = CicliPreviewSchema.getFposiOutDirPigSchema();
-        StructType fposiLoadSchema = StepUtils.fromPigSchemaToStructType(fposiOutDirPigSchema);
+        StructType fposiLoadSchema = fromPigSchemaToStructType(fposiOutDirPigSchema);
         Dataset<Row> fposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(fposiLoadSchema).csv(fposiOutdirCsvPath);
 
@@ -139,7 +140,7 @@ public class CicliPreview extends AbstractStep {
                 .as("stato_anagrafico");
 
         // ( (int)datafinedef > $data_a ? 'A' : 'C' ) as flag_aperto
-        Column flagApertoCol = functions.when(StepUtils.dateGtOtherDate(fposiLoad.col("datafinedef"), "yyyyMMdd",
+        Column flagApertoCol = functions.when(isDateGtOtherDate(fposiLoad.col("datafinedef"), "yyyyMMdd",
                 dataA, dataAPattern), "A").otherwise("C").as("flag_aperto");
 
         Dataset<Row> fposiBase = fposiLoad.select(functions.lit(ufficio).as("ufficio"), functions.col("codicebanca"),
@@ -161,11 +162,11 @@ public class CicliPreview extends AbstractStep {
         ,ToString(ToDate(datasofferenza,'yyyyMMdd'),'yyyy-MM-dd') as datasofferenza
          */
 
-        Column dataInizioDefCol = StepUtils.changeDateFormat(fposiBase.col("datainiziodef"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziodef");
-        Column dataFineDefCol = StepUtils.changeDateFormat(fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef");
-        Column dataInizioPdCol = StepUtils.changeDateFormat(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
-        Column dataInizioIncCol = StepUtils.changeDateFormat(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
-        Column dataInizioRistruttCol = StepUtils.changeDateFormat(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
+        Column dataInizioDefCol = changeDateFormat(fposiBase.col("datainiziodef"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziodef");
+        Column dataFineDefCol = changeDateFormat(fposiBase.col("datafinedef"), "yyyyMMdd", "yyyy-MM-dd").as("datafinedef");
+        Column dataInizioPdCol = changeDateFormat(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
+        Column dataInizioIncCol = changeDateFormat(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
+        Column dataInizioRistruttCol = changeDateFormat(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
         Column dataSofferenzaCol = functions.callUDF(dataSofferenzaUdfName, fposiBase.col("datasofferenza")).as("datasofferenza");
 
         /*

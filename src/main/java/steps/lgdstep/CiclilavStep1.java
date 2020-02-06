@@ -5,13 +5,14 @@ import org.apache.spark.sql.*;
 import org.apache.spark.sql.types.StructType;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
-import steps.abstractstep.StepUtils;
 import steps.schemas.CicliLavStep1Schema;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Map;
+
+import static steps.abstractstep.StepUtils.*;
 
 
 public class CiclilavStep1 extends AbstractStep {
@@ -50,7 +51,7 @@ public class CiclilavStep1 extends AbstractStep {
 
         // 22
         Map<String, String> tlbcidefPigSchema = CicliLavStep1Schema.getTlbcidefPigSchema();
-        StructType tlbcidefSchema = StepUtils.fromPigSchemaToStructType(tlbcidefPigSchema);
+        StructType tlbcidefSchema = fromPigSchemaToStructType(tlbcidefPigSchema);
         Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcidefSchema).csv(tlbcidefCsvPath);
 
@@ -58,8 +59,7 @@ public class CiclilavStep1 extends AbstractStep {
 
         // 40
         // FILTER tlbcidef BY dt_inizio_ciclo >= $data_da AND dt_inizio_ciclo <= $data_a;
-        Column dtInizioCicloFilterCol = StepUtils.dateBetween(
-                StepUtils.toStringType(tlbcidef.col("dt_inizio_ciclo")), "yyyyMMdd",
+        Column dtInizioCicloFilterCol = isDateBetween(toStringType(tlbcidef.col("dt_inizio_ciclo")), "yyyyMMdd",
                 dataDa, dataDaPattern, dataA, dataAPattern);
 
         Column statusIngressoTrimCol = functions.trim(functions.col("status_ingresso"));
@@ -98,19 +98,19 @@ public class CiclilavStep1 extends AbstractStep {
 
         // 78
         Map<String, String> tlbcraccLoadPigSchema = CicliLavStep1Schema.getTlbcraccLoadPigSchema();
-        StructType tlbcraccSchema = StepUtils.fromPigSchemaToStructType(tlbcraccLoadPigSchema);
+        StructType tlbcraccSchema = fromPigSchemaToStructType(tlbcraccLoadPigSchema);
         Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(tlbcraccSchema).csv(tlbcraccCsvPath);
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
-        LocalDate defaultDataA = StepUtils.parseStringToLocalDate("20150731", "yyyyMMdd");
-        LocalDate dataADate = StepUtils.parseStringToLocalDate(dataA, dataAPattern);
+        LocalDate defaultDataA = parseStringToLocalDate("20150731", "yyyyMMdd");
+        LocalDate dataADate = parseStringToLocalDate(dataA, dataAPattern);
         String greatestDateString = dataADate.compareTo(defaultDataA) <= 0 ?
                 defaultDataA.format(DateTimeFormatter.ofPattern(dataAPattern)) : dataADate.format(DateTimeFormatter.ofPattern(dataDaPattern));
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
-        Column tlbraccFilterCol = StepUtils.dateLeqOtherDate(
-                StepUtils.toStringType(tlbcraccLoad.col("data_rif")),"yyyy-MM-dd",
+        Column tlbraccFilterCol = isDateLeqOtherDate(
+                toStringType(tlbcraccLoad.col("data_rif")),"yyyy-MM-dd",
                 greatestDateString, "yyyy-MM-dd");
 
         Dataset<Row> tlbcracc = tlbcraccLoad.filter(tlbraccFilterCol);
@@ -131,7 +131,7 @@ public class CiclilavStep1 extends AbstractStep {
 
         // 119
         // conversion to scala Seq
-        Seq<String> joinColsSeq = StepUtils.toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));
+        Seq<String> joinColsSeq = toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));
 
         // (tlbcracc::cd_isti is not null ? tlbcracc::cd_isti : cicli_racc_1::cd_isti) as cd_isti_ced
         Column cdIstiCedCol = functions.when(tlbcraccClone.col("cd_isti_clone").isNotNull(), tlbcraccClone.col("cd_isti_clone"))

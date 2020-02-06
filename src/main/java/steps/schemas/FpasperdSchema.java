@@ -51,13 +51,17 @@ public class FpasperdSchema {
 
     public static Map<String, String> getTlbpaspeossPigSchema(){
 
+        // slightly change the field names for tlbpaspeoss in order to avoid
+        // implicit coalesce operator triggered by performing "full_outer" join
+        // on columns with same name
+
         return new LinkedHashMap<String, String>(){{
 
-            put("cd_istituto", "chararray");
-            put("ndg", "chararray");
-            put("datacont", "int");
-            put("causale", "chararray");
-            put("importo", "chararray");
+            put("_cd_istituto", "chararray");
+            put("_ndg", "chararray");
+            put("_datacont", "int");
+            put("_causale", "chararray");
+            put("_importo", "chararray");
 
         }};
     }

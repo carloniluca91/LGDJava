@@ -36,8 +36,8 @@ public class StepUtils {
     }
 
     // check if a date is within a given interval
-    public static Column dateBetween(Column dateColumn, String dateColumnPattern, String lowerDate, String lowerDatePattern,
-                                 String upperDate, String upperDatePattern){
+    public static Column isDateBetween(Column dateColumn, String dateColumnPattern, String lowerDate, String lowerDatePattern,
+                                       String upperDate, String upperDatePattern){
 
         return functions.callUDF("dateBetween",
                 dateColumn, functions.lit(dateColumnPattern),
@@ -46,8 +46,8 @@ public class StepUtils {
     }
 
     // check if a date is within a given interval
-    public static Column dateBetween(Column dateColumn, String dateColumnPattern, Column lowerDate, String lowerDatePattern,
-                                 Column upperDate, String upperDatePattern){
+    public static Column isDateBetween(Column dateColumn, String dateColumnPattern, Column lowerDate, String lowerDatePattern,
+                                       Column upperDate, String upperDatePattern){
 
         return functions.callUDF("dateBetween",
                 dateColumn, functions.lit(dateColumnPattern),
@@ -56,7 +56,7 @@ public class StepUtils {
     }
 
     // check if a date is > other date
-    public static Column dateGtOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
+    public static Column isDateGtOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
 
         return functions.callUDF("isDateGtOtherDate",
                 dateColumn, functions.lit(dateColumnPattern),
@@ -64,7 +64,7 @@ public class StepUtils {
     }
 
     // check if a date is <= other date
-    public static Column dateLeqOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
+    public static Column isDateLeqOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
 
         return functions.callUDF("isDateLeqOtherDate",
                 dateColumn, functions.lit(dateColumnPattern),
