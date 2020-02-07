@@ -8,7 +8,8 @@ import java.util.List;
 
 public class StepParams {
 
-    private Logger logger;
+    private final Logger logger  = Logger.getLogger(getClass());
+    private final Options stepOptions = new Options();
 
     @Getter private String dataDa;
     @Getter private String dataA;
@@ -17,20 +18,14 @@ public class StepParams {
     @Getter private int numeroMesi2;
     @Getter private String dataOsservazione;
 
-    private List<Option> optionList;
-    private Options stepParamsOptions;
     private CommandLine commandLine;
 
-    public StepParams(String[] args, List<Option> optionList){
+    public StepParams(String[] args, List<Option> stepOptionList){
 
-        logger = Logger.getLogger(getClass());
-        this.optionList = optionList;
-        stepParamsOptions = new Options();
-
-        for (Option option: optionList){
+        for (Option option: stepOptionList){
 
             option.setRequired(true);
-            stepParamsOptions.addOption(option);
+            stepOptions.addOption(option);
         }
 
         parseArgs(args);
@@ -41,14 +36,14 @@ public class StepParams {
         try {
 
             CommandLineParser commandLineParser = new BasicParser();
-            commandLine = commandLineParser.parse(stepParamsOptions, args);
+            commandLine = commandLineParser.parse(stepOptions, args);
 
-            setDataDa();
-            setDataA();
-            setUfficio();
-            setNumeroMesi1();
-            setNumeroMesi2();
-            setDataOsservazione();
+            parseDataDa();
+            parseDataA();
+            parseUfficio();
+            parseNumeroMesi1();
+            parseNumeroMesi2();
+            parseDataOsservazione();
 
             logger.info("Arguments parsed correctly");
 
@@ -60,60 +55,60 @@ public class StepParams {
         }
     }
 
-    private void setDataA(){
+    private void parseDataA(){
 
         Option option = OptionFactory.getDataAOpton();
-        if (optionList.contains(option)){
+        if (stepOptions.hasOption(option.getLongOpt())){
 
             dataA = commandLine.getOptionValue(option.getLongOpt());
             logger.debug(String.format("%s: %s", option.getDescription(), dataA));
         }
     }
 
-    private void setDataDa(){
+    private void parseDataDa(){
 
         Option option = OptionFactory.getDataDaOption();
-        if (optionList.contains(option)){
+        if (stepOptions.hasOption(option.getLongOpt())){
 
             dataDa = commandLine.getOptionValue(option.getLongOpt());
             logger.debug(String.format("%s: %s", option.getDescription(), dataDa));
         }
     }
 
-    private void setDataOsservazione(){
+    private void parseDataOsservazione(){
 
         Option option = OptionFactory.getDataOsservazioneOption();
-        if (optionList.contains(option)){
+        if (stepOptions.hasOption(option.getLongOpt())){
 
             dataOsservazione = commandLine.getOptionValue(option.getLongOpt());
             logger.debug(String.format("%s: %s", option.getDescription(), dataOsservazione));
         }
     }
 
-    private void setNumeroMesi1(){
+    private void parseNumeroMesi1(){
 
         Option option = OptionFactory.getNumeroMesi1Option();
-        if (optionList.contains(option)){
+        if (stepOptions.hasOption(option.getLongOpt())){
 
             numeroMesi1 = Integer.parseInt(commandLine.getOptionValue(option.getLongOpt()));
             logger.debug(String.format("%s: %s", option.getDescription(), numeroMesi1));
         }
     }
 
-    private void setNumeroMesi2(){
+    private void parseNumeroMesi2(){
 
         Option option = OptionFactory.getNumeroMesi2Option();
-        if (optionList.contains(option)){
+        if (stepOptions.hasOption(option.getLongOpt())){
 
             numeroMesi2 = Integer.parseInt(commandLine.getOptionValue(option.getLongOpt()));
             logger.debug(String.format("%s: %s", option.getDescription(), numeroMesi2));
         }
     }
 
-    private void setUfficio(){
+    private void parseUfficio(){
 
         Option option = OptionFactory.getUfficioOption();
-        if (optionList.contains(option)){
+        if (stepOptions.hasOption(option.getLongOpt())){
 
             ufficio = commandLine.getOptionValue(option.getLongOpt());
             logger.debug(String.format("%s: %s", option.getDescription(), ufficio));

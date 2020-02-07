@@ -31,6 +31,7 @@ public class FrappPuma extends AbstractStep {
         logger.debug("dataA: " + this.dataA);
     }
 
+    @Override
     public void run() {
 
         String cicliNdgPath = getLGDPropertyValue("frapp.puma.cicli.ndg.path");

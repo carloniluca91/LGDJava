@@ -35,6 +35,7 @@ public class CiclilavStep1 extends AbstractStep {
         logger.debug("dataA: " + this.dataA);
     }
 
+    @Override
     public void run(){
 
         String tlbcidefCsvPath = getLGDPropertyValue("ciclilav.step1.tlbcidef.csv");

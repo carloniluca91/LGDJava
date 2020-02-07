@@ -37,6 +37,7 @@ public class FanagMonthly extends AbstractStep {
         logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
+    @Override
     public void run() {
 
         String cicliNdgPath = getLGDPropertyValue("fanag.monthly.cicli.ndg.path.csv");

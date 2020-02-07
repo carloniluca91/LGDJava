@@ -37,6 +37,7 @@ public class CicliPreview extends AbstractStep {
         logger.debug("ufficio: " + this.ufficio);
     }
 
+    @Override
     public void run(){
 
         String fposiOutdirCsvPath = getLGDPropertyValue("cicli.preview.fposi.outdir.csv");

@@ -37,6 +37,7 @@ public class FrappNdgMonthly extends AbstractStep {
         logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
+    @Override
     public void run() {
 
         String cicliNdgPathCsvPath = getLGDPropertyValue("frapp.ndg.monthly.cicli.ndg.path.csv");
