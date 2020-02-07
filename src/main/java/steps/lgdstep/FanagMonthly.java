@@ -6,7 +6,6 @@ import org.apache.spark.sql.types.DataTypes;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.FanagMonthlySchema;
 
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -52,7 +51,7 @@ public class FanagMonthly extends AbstractStep {
 
         Dataset<Row> cicliNdg = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(fromPigSchemaToStructType(FanagMonthlySchema.getCicliNdgPigSchema()))
-                .csv(Paths.get(stepInputDir, cicliNdgPath).toString());
+                .csv(cicliNdgPath);
 
         // cicli_ndg_princ = FILTER cicli_ndg BY cd_collegamento IS NULL;
         // cicli_ndg_coll = FILTER cicli_ndg BY cd_collegamento IS NOT NULL;
@@ -234,6 +233,6 @@ public class FanagMonthly extends AbstractStep {
 
         Dataset<Row> fanagOut = tlbudtc.join(tlbcidefTlbuact, tlbudtcJoinCondition, "inner").select(toScalaColSeq(fanagOutSelectColList));
 
-        fanagOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(Paths.get(stepOutputDir, fanagOutPath).toString());
+        fanagOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(fanagOutPath);
     }
 }
