@@ -9,7 +9,6 @@ import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.RaccSoffSchema;
 
-import java.nio.file.Paths;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -39,7 +38,7 @@ public class RaccSoff extends AbstractStep {
 
         Dataset<Row> dllab = sparkSession.read().format(csvFormat).option("delimiter", ",")
                 .schema(fromPigSchemaToStructType(RaccSoffSchema.getDblabtlbjxd9PigSchema()))
-                .csv(Paths.get(stepInputDir, dblabCsvPath).toString());
+                .csv(dblabCsvPath);
 
         Map<String, String> columnMap = new LinkedHashMap<String, String>(){{
 

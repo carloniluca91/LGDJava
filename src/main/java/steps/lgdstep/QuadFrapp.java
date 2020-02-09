@@ -5,7 +5,6 @@ import org.apache.spark.sql.*;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.QuadFrappSchema;
 
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -92,10 +91,7 @@ public class QuadFrapp extends AbstractStep {
                 .filter(hadoopFrapp.col("codicebanca").isNull())
                 .select(functions.lit(ufficio).alias("ufficio"), hadoopFrapp.col("*"), oldFrapp.col("*"));
 
-        hadoopFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite)
-                .csv(Paths.get(stepOutputDir, hadoopFrappOutPath).toString());
-
-        oldFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite)
-                .csv(Paths.get(stepOutputDir, oldFrappOutPath).toString());
+        hadoopFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(hadoopFrappOutPath);
+        oldFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(oldFrappOutPath);
     }
 }
