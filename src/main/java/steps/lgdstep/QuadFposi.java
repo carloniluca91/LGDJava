@@ -25,7 +25,7 @@ public class QuadFposi extends AbstractStep {
         stepInputDir = getLGDPropertyValue("quad.fposi.input.dir");
         stepOutputDir = getLGDPropertyValue("quad.fposi.output.dir");
 
-        logger.debug("$ufficio = " + this.ufficio);
+        logger.debug("ufficio: " + this.ufficio);
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
 
