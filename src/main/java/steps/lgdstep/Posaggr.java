@@ -8,10 +8,7 @@ import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.PosaggrSchema;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static steps.abstractstep.StepUtils.*;
 
@@ -125,17 +122,19 @@ public class Posaggr extends AbstractStep {
 			  ,DoubleConverter(SUM(tblcomp_tlbaggr_tlbposi.esposizione_titoli)) as esposizione_titoli
          */
 
-        Map<String, String> sumWindowColumns = new HashMap<>();
-        sumWindowColumns.put("bo_acco", "accordato_bo");
-        sumWindowColumns.put("bo_util", "utilizzato_bo");
-        sumWindowColumns.put("tot_add_sosp", "tot_add_sosp");
-        sumWindowColumns.put("tot_val_intr", "tot_val_intr_ps");
-        sumWindowColumns.put("ca_acco", "accordato_ca");
-        sumWindowColumns.put("ca_util", "utilizzato_ca");
-        sumWindowColumns.put("util_cassa", "util_cassa");
-        sumWindowColumns.put("fido_op_cassa", "fido_op_cassa");
-        sumWindowColumns.put("utilizzo_titoli", "utilizzo_titoli");
-        sumWindowColumns.put("esposizione_titoli", "esposizione_titoli");
+        Map<String, String> sumWindowColumns = new LinkedHashMap<String, String>(){{
+
+            put("bo_acco", "accordato_bo");
+            put("bo_util", "utilizzato_bo");
+            put("tot_add_sosp", "tot_add_sosp");
+            put("tot_val_intr", "tot_val_intr_ps");
+            put("ca_acco", "accordato_ca");
+            put("ca_util", "utilizzato_ca");
+            put("util_cassa", "util_cassa");
+            put("fido_op_cassa", "fido_op_cassa");
+            put("utilizzo_titoli", "utilizzo_titoli");
+            put("esposizione_titoli", "esposizione_titoli");
+        }};
 
         // GROUP tblcomp_tlbaggr_tlbposi BY (dt_riferimento, cd_istituto, c_key_aggr, tipo_segmne_aggr)
         WindowSpec w = Window.partitionBy(tblcompTlbaggrTlbposi.col("dt_riferimento"),

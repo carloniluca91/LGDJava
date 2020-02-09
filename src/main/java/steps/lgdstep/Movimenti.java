@@ -7,7 +7,7 @@ import steps.abstractstep.AbstractStep;
 import steps.abstractstep.StepUtils;
 import steps.schemas.MovimentiSchema;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static steps.abstractstep.StepUtils.*;
@@ -49,24 +49,26 @@ public class Movimenti extends AbstractStep {
         Column dataOsservazioneCol = functions.lit(changeDateFormat(dataOsservazione, dataOsservazionePattern, "yyyyMMdd"));
         Column filterCondition = tlbmovconta.col("mo_dt_contabile").leq(dataOsservazioneCol);
 
-        Map<String, String> selectColMap = new HashMap<>();
-        selectColMap.put("mo_istituto", "istituto");
-        selectColMap.put("mo_ndg", "ndg");
-        selectColMap.put("mo_dt_riferimento", "datariferimento");
-        selectColMap.put("mo_sportello", "sportello");
-        selectColMap.put("mo_conto_esteso", "conto");
-        selectColMap.put("mo_num_soff", "numerosofferenza");
-        selectColMap.put("mo_cat_rapp_soff", "catrappsoffer");
-        selectColMap.put("mo_fil_rapp_soff", "filrappsoffer");
-        selectColMap.put("mo_num_rapp_soff", "numrappsoffer");
-        selectColMap.put("mo_id_movimento", "idmovimento");
-        selectColMap.put("mo_categoria", "categoria");
-        selectColMap.put("mo_causale", "causale");
-        selectColMap.put("mo_dt_contabile", "dtcontab");
-        selectColMap.put("mo_dt_valuta", "dtvaluta");
-        selectColMap.put("mo_imp_movimento", "importo");
-        selectColMap.put("mo_flag_extracont", "flagextracontab");
-        selectColMap.put("mo_flag_storno", "flagstorno");
+        Map<String, String> selectColMap = new LinkedHashMap<String, String>(){{
+
+            put("mo_istituto", "istituto");
+            put("mo_ndg", "ndg");
+            put("mo_dt_riferimento", "datariferimento");
+            put("mo_sportello", "sportello");
+            put("mo_conto_esteso", "conto");
+            put("mo_num_soff", "numerosofferenza");
+            put("mo_cat_rapp_soff", "catrappsoffer");
+            put("mo_fil_rapp_soff", "filrappsoffer");
+            put("mo_num_rapp_soff", "numrappsoffer");
+            put("mo_id_movimento", "idmovimento");
+            put("mo_categoria", "categoria");
+            put("mo_causale", "causale");
+            put("mo_dt_contabile", "dtcontab");
+            put("mo_dt_valuta", "dtvaluta");
+            put("mo_imp_movimento", "importo");
+            put("mo_flag_extracont", "flagextracontab");
+            put("mo_flag_storno", "flagstorno");
+        }};
 
         Seq<Column> selectColSeq = toScalaColSeq(selectDfColumns(tlbmovconta, selectColMap));
         Dataset<Row> movOutDist = tlbmovconta.filter(filterCondition).select(selectColSeq).distinct();
