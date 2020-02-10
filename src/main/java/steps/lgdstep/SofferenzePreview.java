@@ -11,18 +11,18 @@ import static steps.abstractstep.StepUtils.*;
 
 public class SofferenzePreview extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(SofferenzePreview.class);
+
     // required parameters
     private String ufficio;
     private String dataA;
 
     public SofferenzePreview(String ufficio, String dataA){
 
-        logger = Logger.getLogger(SofferenzePreview.class);
-
         this.ufficio = ufficio;
         this.dataA = dataA;
-        stepInputDir = getLGDPropertyValue("sofferenze.preview.input.dir");
-        stepOutputDir = getLGDPropertyValue("sofferenze.preview.output.dir");
+        stepInputDir = getValue("sofferenze.preview.input.dir");
+        stepOutputDir = getValue("sofferenze.preview.output.dir");
 
         logger.debug("ufficio: " + this.ufficio);
         logger.debug("dataA: " + this.dataA);
@@ -33,9 +33,9 @@ public class SofferenzePreview extends AbstractStep {
     @Override
     public void run() {
 
-        String soffOutDirCsv = getLGDPropertyValue("sofferenze.preview.soff.outdir.csv");
-        String soffGen2Path = getLGDPropertyValue("sofferenze.preview.soff.gen2");
-        String soffSintGen2Path = getLGDPropertyValue("sofferenze.preview.soff.gen.sint2");
+        String soffOutDirCsv = getValue("sofferenze.preview.soff.outdir.csv");
+        String soffGen2Path = getValue("sofferenze.preview.soff.gen2");
+        String soffSintGen2Path = getValue("sofferenze.preview.soff.gen.sint2");
 
         logger.debug("soffOutDirCsv: " + soffOutDirCsv);
         logger.debug("soffGen2Path: " + soffGen2Path);

@@ -14,12 +14,12 @@ import static steps.abstractstep.StepUtils.*;
 
 public class Posaggr extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(Posaggr.class);
+
     public Posaggr(){
 
-        logger = Logger.getLogger(Posaggr.class);
-
-        stepInputDir = getLGDPropertyValue("posaggr.input.dir");
-        stepOutputDir =  getLGDPropertyValue("posaggr.output.dir");
+        stepInputDir = getValue("posaggr.input.dir");
+        stepOutputDir =  getValue("posaggr.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -28,10 +28,10 @@ public class Posaggr extends AbstractStep {
     @Override
     public void run() {
 
-        String tblcompCsvPath = getLGDPropertyValue("posaggr.tblcomp.path.csv");
-        String tlbaggrCsvPath = getLGDPropertyValue("posaggr.tlbaggr.path.csv");
-        String tlbposiLoadCsvPath = getLGDPropertyValue("posaggr.tlbposi.load.csv");
-        String posaggrCsvPath = getLGDPropertyValue("posaggr.out.csv");
+        String tblcompCsvPath = getValue("posaggr.tblcomp.path.csv");
+        String tlbaggrCsvPath = getValue("posaggr.tlbaggr.path.csv");
+        String tlbposiLoadCsvPath = getValue("posaggr.tlbposi.load.csv");
+        String posaggrCsvPath = getValue("posaggr.out.csv");
 
         logger.debug("tlbcompCsvPath: " + tblcompCsvPath);
         logger.debug("tlbaggrCsvPath: " + tlbaggrCsvPath);

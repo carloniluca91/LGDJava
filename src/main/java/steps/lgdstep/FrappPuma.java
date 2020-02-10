@@ -15,16 +15,16 @@ import static steps.abstractstep.StepUtils.*;
 
 public class FrappPuma extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(FrappPuma.class);
+
     // required parameters
     private String dataA;
 
     public FrappPuma(String dataA){
 
-        logger = Logger.getLogger(FrappPuma.class);
-
         this.dataA = dataA;
-        stepInputDir = getLGDPropertyValue("frapp.puma.input.dir");
-        stepOutputDir = getLGDPropertyValue("frapp.puma.output.dir");
+        stepInputDir = getValue("frapp.puma.input.dir");
+        stepOutputDir = getValue("frapp.puma.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -34,9 +34,9 @@ public class FrappPuma extends AbstractStep {
     @Override
     public void run() {
 
-        String cicliNdgPath = getLGDPropertyValue("frapp.puma.cicli.ndg.path");
-        String tlbgaranPath = getLGDPropertyValue("frapp.puma.tlbgaran.path");
-        String frappPumaOutPath = getLGDPropertyValue("frapp.puma.frapp.puma.out");
+        String cicliNdgPath = getValue("frapp.puma.cicli.ndg.path");
+        String tlbgaranPath = getValue("frapp.puma.tlbgaran.path");
+        String frappPumaOutPath = getValue("frapp.puma.frapp.puma.out");
 
         logger.debug("cicliNdgPath: " + cicliNdgPath);
         logger.debug("tlbgaranPath:" + tlbgaranPath);
@@ -74,7 +74,7 @@ public class FrappPuma extends AbstractStep {
         */
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        String dataAPattern = getLGDPropertyValue("params.dataa.pattern");
+        String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, "yyyyMMdd"));
         Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(tlbcidef.col("datafinedef"), "yyyyMMdd", 1),
                 dataACol, "yyyMMdd");

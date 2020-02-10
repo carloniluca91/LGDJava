@@ -8,6 +8,7 @@ import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.*;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
+import steps.abstractstep.udfs.UDFsNameEnum;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -18,38 +19,90 @@ import java.util.Set;
 
 public class StepUtils {
 
+    /***
+     * calls a registered UDF in order to add numberOfMonths to a String expressing a date
+     * @param dateCol: String column expressing a date
+     * @param dateColFormat: format of String column
+     * @param numberOfMonths: number of months to add
+     * @return: dateCol.plusMonths(numberOfMonths)
+     */
+
     public static Column addDuration(Column dateCol, String dateColFormat, int numberOfMonths){
 
-        return functions.callUDF("addDuration", dateCol, functions.lit(dateColFormat), functions.lit(numberOfMonths));
+        return functions.callUDF(UDFsNameEnum.ADD_DURATION_UDF_NAME,
+                dateCol,
+                functions.lit(dateColFormat),
+                functions.lit(numberOfMonths));
     }
 
-    // change the format of string expressing a date
+    /***
+     * calls a registered UDF in order to changethe format of a String expressing a date
+     * @param dateColumn: String column expressing a date
+     * @param oldPattern: old format of String column
+     * @param newPattern: new format of String column
+     * @return: dateColumn with format updated to newPattern
+     */
+
     public static Column changeDateFormat(Column dateColumn, String oldPattern, String newPattern){
 
-        return functions.callUDF("changeDateFormat", dateColumn, functions.lit(oldPattern), functions.lit(newPattern));
+        return functions.callUDF(UDFsNameEnum.CHANGE_DATE_FORMAT_UDF_NAME,
+                dateColumn, functions.lit(oldPattern),
+                functions.lit(newPattern));
     }
 
-    // change date format from oldPattern to newPattern
+    /***
+     * format a String expressing a date from one format to antoher
+     * @param date: String object expressing a date
+     * @param oldPattern: old format of date
+     * @param newPattern: new format of date
+     * @return: date with format updated to newPattern
+     */
     public static String changeDateFormat(String date, String oldPattern, String newPattern){
 
-        return LocalDate.parse(date, DateTimeFormatter.ofPattern(oldPattern)).format(DateTimeFormatter.ofPattern(newPattern));
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern(oldPattern))
+                .format(DateTimeFormatter.ofPattern(newPattern));
     }
 
-    // check if a date is within a given interval
-    public static Column isDateBetween(Column dateColumn, String dateColumnPattern, String lowerDate, String lowerDatePattern,
+    /***
+     * calls a registered UDF in order to check if a date with pattern dateColumnPattern is within defined by
+     * lowerDate (with pattern lowerDatePattern) and upperDate (with pattern upperDatePattern)
+     * @param dateColumn: String column expressing a date
+     * @param dateColumnPattern: format of String column
+     * @param lowerDate: lower date (String)
+     * @param lowerDatePattern: lower date pattern
+     * @param upperDate: upper date (String)
+     * @param upperDatePattern: upper date pattern
+     * @return: boolean column
+     */
+
+    public static Column isDateBetween(Column dateColumn, String dateColumnPattern,
+                                       String lowerDate, String lowerDatePattern,
                                        String upperDate, String upperDatePattern){
 
-        return functions.callUDF("dateBetween",
+        return functions.callUDF(UDFsNameEnum.IS_DATE_BETWEEN_UDF_NAME,
                 dateColumn, functions.lit(dateColumnPattern),
                 functions.lit(lowerDate), functions.lit(lowerDatePattern),
                 functions.lit(upperDate), functions.lit(upperDatePattern));
     }
 
+    /***
+     * calls a registered UDF in order to check if a date with pattern dateColumnPattern is within defined by
+     * lowerDate (with pattern lowerDatePattern) and upperDate (with pattern upperDatePattern)
+     * @param dateColumn: String column expressing a date
+     * @param dateColumnPattern: format of String column
+     * @param lowerDate: lower date (Column)
+     * @param lowerDatePattern: lower date pattern
+     * @param upperDate: upper date (Column)
+     * @param upperDatePattern: upper date pattern
+     * @return: boolean column
+     */
+
     // check if a date is within a given interval
-    public static Column isDateBetween(Column dateColumn, String dateColumnPattern, Column lowerDate, String lowerDatePattern,
+    public static Column isDateBetween(Column dateColumn, String dateColumnPattern,
+                                       Column lowerDate, String lowerDatePattern,
                                        Column upperDate, String upperDatePattern){
 
-        return functions.callUDF("dateBetween",
+        return functions.callUDF(UDFsNameEnum.IS_DATE_BETWEEN_UDF_NAME,
                 dateColumn, functions.lit(dateColumnPattern),
                 lowerDate, functions.lit(lowerDatePattern),
                 upperDate, functions.lit(upperDatePattern));
@@ -58,7 +111,7 @@ public class StepUtils {
     // check if a date is > other date
     public static Column isDateGtOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
 
-        return functions.callUDF("isDateGtOtherDate",
+        return functions.callUDF(UDFsNameEnum.IS_DATE_GT_OTHERDATE_UDF_NAME,
                 dateColumn, functions.lit(dateColumnPattern),
                 functions.lit(otherDate), functions.lit(otherDatePattern));
     }
@@ -66,14 +119,17 @@ public class StepUtils {
     // check if a date is <= other date
     public static Column isDateLeqOtherDate(Column dateColumn, String dateColumnPattern, String otherDate, String otherDatePattern){
 
-        return functions.callUDF("isDateLeqOtherDate",
+        return functions.callUDF(UDFsNameEnum.IS_DATE_LEQ_OTHERDATE_UDF_NAME,
                 dateColumn, functions.lit(dateColumnPattern),
                 functions.lit(otherDate), functions.lit(otherDatePattern));
     }
 
     public static Column daysBetween(Column dateCol1, Column dateCol2, String commonPattern){
 
-        return functions.callUDF("daysBetween", dateCol1, dateCol2, functions.lit(commonPattern));
+        return functions.callUDF(UDFsNameEnum.DAYS_BETWEEN_UDF_NAME,
+                dateCol1,
+                dateCol2,
+                functions.lit(commonPattern));
     }
 
     public static Column getQuadJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
@@ -98,7 +154,7 @@ public class StepUtils {
             
             String columnName = pigSchemaEntry.getKey();
             DataType dataType = resolveDataType(pigSchemaEntry.getValue());
-            schema = schema.add(new StructField(columnName, DataTypes.StringType, true, Metadata.empty()));
+            schema = schema.add(new StructField(columnName, dataType, true, Metadata.empty()));
         }
 
         return schema;
@@ -106,7 +162,10 @@ public class StepUtils {
 
     public static Column leastDate(Column dateColumn1, Column dateColumn2, String commonDateFormat){
 
-        return functions.callUDF("leastDate", dateColumn1, dateColumn2, functions.lit(commonDateFormat));
+        return functions.callUDF(UDFsNameEnum.LEAST_DATE_UDF_NAME,
+                dateColumn1,
+                dateColumn2,
+                functions.lit(commonDateFormat));
     }
 
     // convert a string into a LocalDate object
@@ -166,7 +225,10 @@ public class StepUtils {
 
     public static Column subtractDuration(Column dateCol, String dateColFormat, int months){
 
-        return functions.callUDF("substractDuration", dateCol, functions.lit(dateColFormat), functions.lit(months));
+        return functions.callUDF(UDFsNameEnum.SUBTRACT_DURATION_UDF_NAME,
+                dateCol,
+                functions.lit(dateColFormat),
+                functions.lit(months));
     }
 
     public static Seq<String> toScalaStringSeq(List<String> list){

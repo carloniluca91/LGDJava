@@ -16,12 +16,12 @@ import static steps.abstractstep.StepUtils.*;
 
 public class Fpasperd extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(Fpasperd.class);
+
     public Fpasperd(){
 
-        logger = Logger.getLogger(Fpasperd.class);
-
-        stepInputDir = getLGDPropertyValue("fpasperd.input.dir");
-        stepOutputDir = getLGDPropertyValue("fpasperd.output.dir");
+        stepInputDir = getValue("fpasperd.input.dir");
+        stepOutputDir = getValue("fpasperd.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -30,10 +30,10 @@ public class Fpasperd extends AbstractStep {
     @Override
     public void run() {
 
-        String cicliNdgPathCsv = getLGDPropertyValue("fpasperd.cicli.ndg.path.csv");
-        String tlbpaspeCsv = getLGDPropertyValue("fpasperd.tlbpaspe.filter.csv");
-        String tlbpaspeossCsv = getLGDPropertyValue("fpasperd.tlbpaspeoss.csv");
-        String paspePaspeossGenDistCsv = getLGDPropertyValue("fpasperd.paspe.paspeoss.gen.dist.csv");
+        String cicliNdgPathCsv = getValue("fpasperd.cicli.ndg.path.csv");
+        String tlbpaspeCsv = getValue("fpasperd.tlbpaspe.filter.csv");
+        String tlbpaspeossCsv = getValue("fpasperd.tlbpaspeoss.csv");
+        String paspePaspeossGenDistCsv = getValue("fpasperd.paspe.paspeoss.gen.dist.csv");
 
         logger.debug("cicliNdgPathCsv: " + cicliNdgPathCsv);
         logger.debug("tlbpaspeCsv:" + tlbpaspeCsv);

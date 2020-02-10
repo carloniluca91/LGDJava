@@ -13,12 +13,12 @@ import static steps.abstractstep.StepUtils.*;
 
 public class QuadFcoll extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(QuadFcoll.class);
+
     public QuadFcoll(){
 
-        logger = Logger.getLogger(QuadFcoll.class);
-
-        stepInputDir = getLGDPropertyValue("quad.fcoll.input.dir");
-        stepOutputDir = getLGDPropertyValue("quad.fcoll.output.dir");
+        stepInputDir = getValue("quad.fcoll.input.dir");
+        stepOutputDir = getValue("quad.fcoll.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -27,9 +27,9 @@ public class QuadFcoll extends AbstractStep {
     @Override
     public void run() {
 
-        String fcollCsv = getLGDPropertyValue("quad.fcoll.fcoll.csv");
-        String oldFposiLoadCsv = getLGDPropertyValue("quad.fcoll.oldfposi.csv");
-        String fileoutdist = getLGDPropertyValue("quad.fcoll.fileoutdist");
+        String fcollCsv = getValue("quad.fcoll.fcoll.csv");
+        String oldFposiLoadCsv = getValue("quad.fcoll.oldfposi.csv");
+        String fileoutdist = getValue("quad.fcoll.fileoutdist");
 
         logger.debug("fcollCsv: " + fcollCsv);
         logger.debug("oldFposiLoadCsv: " + oldFposiLoadCsv);

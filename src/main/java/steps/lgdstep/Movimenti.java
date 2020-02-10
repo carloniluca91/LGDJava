@@ -14,16 +14,16 @@ import static steps.abstractstep.StepUtils.*;
 
 public class Movimenti extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(Movimenti.class);
+
     // required parameter
     private String dataOsservazione;
 
     public Movimenti(String dataOsservazione){
 
-        logger = Logger.getLogger(Movimenti.class);
-
         this.dataOsservazione = dataOsservazione;
-        stepInputDir = getLGDPropertyValue("movimenti.input.dir");
-        stepOutputDir = getLGDPropertyValue("movimenti.output.dir");
+        stepInputDir = getValue("movimenti.input.dir");
+        stepOutputDir = getValue("movimenti.output.dir");
 
         logger.debug("dataOsservazione: " + this.dataOsservazione);
         logger.debug("stepInputDir: " + stepInputDir);
@@ -33,9 +33,9 @@ public class Movimenti extends AbstractStep {
     @Override
     public void run() {
 
-        String dataOsservazionePattern = getLGDPropertyValue("params.dataosservazione.pattern");
-        String tlbmovcontaCsv = getLGDPropertyValue("movimenti.tlbmovconta.csv");
-        String movOutDistPath = getLGDPropertyValue("movimenti.mov.out.dist");
+        String dataOsservazionePattern = getValue("params.dataosservazione.pattern");
+        String tlbmovcontaCsv = getValue("movimenti.tlbmovconta.csv");
+        String movOutDistPath = getValue("movimenti.mov.out.dist");
 
         logger.debug("dataOsservazionePattern: " + dataOsservazionePattern);
         logger.debug("tlbmovcontaCsv: " + tlbmovcontaCsv);

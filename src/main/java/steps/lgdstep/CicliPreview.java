@@ -7,29 +7,28 @@ import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.DataTypes;
 import steps.abstractstep.AbstractStep;
+import steps.abstractstep.udfs.UDFsNameEnum;
 import steps.schemas.CicliPreviewSchema;
 
 import static steps.abstractstep.StepUtils.*;
 
 public class CicliPreview extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(CicliPreview.class);
+
     // required parameters
     private String dataA;
     private String ufficio;
-    private String dataSofferenzaUdfName;
 
     public CicliPreview(String dataA, String ufficio){
 
-        logger = Logger.getLogger(CicliPreview.class);
-
-        this.dataSofferenzaUdfName = "dataSofferenzaUdf";
-        registerDataSofferenzaUdf(dataSofferenzaUdfName);
+        registerDataSofferenzaUdf();
 
         this.dataA = dataA;
         this.ufficio = ufficio;
 
-        stepInputDir = getLGDPropertyValue("cicli.preview.input.dir");
-        stepOutputDir = getLGDPropertyValue("cicli.preview.output.dir");
+        stepInputDir = getValue("cicli.preview.input.dir");
+        stepOutputDir = getValue("cicli.preview.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -40,9 +39,9 @@ public class CicliPreview extends AbstractStep {
     @Override
     public void run(){
 
-        String fposiOutdirCsvPath = getLGDPropertyValue("cicli.preview.fposi.outdir.csv");
-        String fposiGen2OutCsv = getLGDPropertyValue("cicli.preview.fposi.gen2.csv");
-        String fposiSintGen2Csv = getLGDPropertyValue("cicli.preview.fposi.sint.gen2");
+        String fposiOutdirCsvPath = getValue("cicli.preview.fposi.outdir.csv");
+        String fposiGen2OutCsv = getValue("cicli.preview.fposi.gen2.csv");
+        String fposiSintGen2Csv = getValue("cicli.preview.fposi.sint.gen2");
 
         logger.debug("fposiOutdirCsvPath: " + fposiOutdirCsvPath);
         logger.debug("fposiGen2OutCsv: " + fposiGen2OutCsv);
@@ -164,7 +163,8 @@ public class CicliPreview extends AbstractStep {
         Column dataInizioPdCol = changeDateFormat(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
         Column dataInizioIncCol = changeDateFormat(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
         Column dataInizioRistruttCol = changeDateFormat(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
-        Column dataSofferenzaCol = functions.callUDF(dataSofferenzaUdfName, fposiBase.col("datasofferenza")).as("datasofferenza");
+        Column dataSofferenzaCol = functions.callUDF(UDFsNameEnum.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME,
+                fposiBase.col("datasofferenza")).as("datasofferenza");
 
         /*
         FLATTEN(fposi_base.ufficio)             as ufficio
@@ -250,7 +250,7 @@ public class CicliPreview extends AbstractStep {
         return functions.when(column.isNull(), "99999999").otherwise(column);
     }
 
-    private void registerDataSofferenzaUdf(String udfName){
+    private void registerDataSofferenzaUdf(){
 
         UDF1<String, String> dataSofferenzaUdf = (UDF1<String, String>) (dataSofferenza) ->
 
@@ -258,6 +258,6 @@ public class CicliPreview extends AbstractStep {
                         dataSofferenza.substring(0, 3).concat("-").concat(dataSofferenza.substring(4, 5))
                         .concat("-").concat(dataSofferenza.substring(6, 7)) : null;
 
-        sparkSession.udf().register(udfName, dataSofferenzaUdf, DataTypes.StringType);
+        sparkSession.udf().register(UDFsNameEnum.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME, dataSofferenzaUdf, DataTypes.StringType);
     }
 }

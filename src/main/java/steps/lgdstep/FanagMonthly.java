@@ -14,20 +14,20 @@ import static steps.abstractstep.StepUtils.*;
 
 public class FanagMonthly extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(FanagMonthly.class);
+
     private int numeroMesi1;
     private int numeroMesi2;
     private String dataA;
 
     public FanagMonthly(int numeroMesi1, int numeroMesi2, String dataA){
 
-        logger = Logger.getLogger(FanagMonthly.class);
-
         this.numeroMesi1 = numeroMesi1;
         this.numeroMesi2 = numeroMesi2;
         this.dataA = dataA;
 
-        stepInputDir = getLGDPropertyValue("fanag.monthly.input.dir");
-        stepOutputDir = getLGDPropertyValue("fanag.monthly.output.dir");
+        stepInputDir = getValue("fanag.monthly.input.dir");
+        stepOutputDir = getValue("fanag.monthly.output.dir");
 
         logger.debug("numeroMesi1: " + this.numeroMesi1);
         logger.debug("numeroMesi2: " + this.numeroMesi2);
@@ -40,10 +40,10 @@ public class FanagMonthly extends AbstractStep {
     @Override
     public void run() {
 
-        String cicliNdgPath = getLGDPropertyValue("fanag.monthly.cicli.ndg.path.csv");
-        String tlbuActPath = getLGDPropertyValue("fanag.monthly.tlbuact.csv");
-        String tlbudtcPath = getLGDPropertyValue("fanag.monthly.tlbduct.path.csv");
-        String fanagOutPath = getLGDPropertyValue("fanag.monthly.fanag.out");
+        String cicliNdgPath = getValue("fanag.monthly.cicli.ndg.path.csv");
+        String tlbuActPath = getValue("fanag.monthly.tlbuact.csv");
+        String tlbudtcPath = getValue("fanag.monthly.tlbduct.path.csv");
+        String fanagOutPath = getValue("fanag.monthly.fanag.out");
 
         logger.debug("cicliNdgPath: " + cicliNdgPath);
         logger.debug("tlbuActPath: " + tlbuActPath);
@@ -79,7 +79,7 @@ public class FanagMonthly extends AbstractStep {
         Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDuration(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd", 1);
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        String dataAPattern = getLGDPropertyValue("params.dataa.pattern");
+        String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(this.dataA, dataAPattern, "yyyyMMdd"));
         Column leastDatePrincCol = leastDate(cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, "yyyyMMdd");
 

@@ -12,15 +12,15 @@ import static steps.abstractstep.StepUtils.*;
 
 public class QuadFrapp extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(QuadFrapp.class);
+
     private String ufficio;
 
     public QuadFrapp(String ufficio){
 
-        logger = Logger.getLogger(QuadFrapp.class);
-
         this.ufficio = ufficio;
-        stepInputDir = getLGDPropertyValue("quad.frapp.input.dir");
-        stepOutputDir = getLGDPropertyValue("quad.frapp.output.dir");
+        stepInputDir = getValue("quad.frapp.input.dir");
+        stepOutputDir = getValue("quad.frapp.output.dir");
 
         logger.debug("ufficio: " + this.ufficio);
         logger.debug("stepInputDir: " + stepInputDir);
@@ -30,11 +30,11 @@ public class QuadFrapp extends AbstractStep {
     @Override
     public void run() {
 
-        String hadoopFrappCsv = getLGDPropertyValue("quad.frapp.hadoop.frapp.csv");
-        String oldFrappLoadCsv = getLGDPropertyValue("quad.frapp.old.frapp.load.csv");
-        String fcollCsv = getLGDPropertyValue("quad.frapp.fcoll.csv");
-        String hadoopFrappOutPath = getLGDPropertyValue("quad.frapp.hadoop.frapp.out");
-        String oldFrappOutPath = getLGDPropertyValue("quad.frapp.old.frapp.out");
+        String hadoopFrappCsv = getValue("quad.frapp.hadoop.frapp.csv");
+        String oldFrappLoadCsv = getValue("quad.frapp.old.frapp.load.csv");
+        String fcollCsv = getValue("quad.frapp.fcoll.csv");
+        String hadoopFrappOutPath = getValue("quad.frapp.hadoop.frapp.out");
+        String oldFrappOutPath = getValue("quad.frapp.old.frapp.out");
 
         logger.debug("hadoopFrappCsv: " + hadoopFrappCsv);
         logger.debug("oldFrappLoadCsv: " + oldFrappLoadCsv);

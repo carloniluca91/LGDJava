@@ -13,16 +13,16 @@ import static steps.abstractstep.StepUtils.toScalaColSeq;
 
 public class QuadFcollCicli extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(QuadFcollCicli.class);
+
     // required parameters
     private String ufficio;
 
     public QuadFcollCicli(String ufficio){
 
-        logger = Logger.getLogger(QuadFcollCicli.class);
-
         this.ufficio = ufficio;
-        stepInputDir = getLGDPropertyValue("quad.fcoll.cicli.input.dir");
-        stepOutputDir = getLGDPropertyValue("quad.fcoll.cicli.output.dir");
+        stepInputDir = getValue("quad.fcoll.cicli.input.dir");
+        stepOutputDir = getValue("quad.fcoll.cicli.output.dir");
 
         logger.debug("ufficio: " + this.ufficio);
         logger.debug("stepInputDir: " + stepInputDir);
@@ -32,9 +32,9 @@ public class QuadFcollCicli extends AbstractStep {
     @Override
     public void run() {
 
-        String fcollCsv = getLGDPropertyValue("quad.fcoll.cicli.fcoll.csv");
-        String cicliNdgLoadCsv = getLGDPropertyValue("quad.fcoll.cicli.cicli.ndg.load.csv");
-        String fileOutPath = getLGDPropertyValue("quad.fcoll.cicli.file.out");
+        String fcollCsv = getValue("quad.fcoll.cicli.fcoll.csv");
+        String cicliNdgLoadCsv = getValue("quad.fcoll.cicli.cicli.ndg.load.csv");
+        String fileOutPath = getValue("quad.fcoll.cicli.file.out");
 
         logger.debug("fcollCsv: " + fcollCsv);
         logger.debug("cicliNdgLoadCsv: " + cicliNdgLoadCsv);

@@ -14,16 +14,16 @@ import static steps.abstractstep.StepUtils.*;
 
 public class QuadFposi extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(QuadFposi.class);
+
     // required parameters
     private String ufficio;
 
     public QuadFposi(String ufficio){
 
-        logger = Logger.getLogger(QuadFposi.class);
-
         this.ufficio = ufficio;
-        stepInputDir = getLGDPropertyValue("quad.fposi.input.dir");
-        stepOutputDir = getLGDPropertyValue("quad.fposi.output.dir");
+        stepInputDir = getValue("quad.fposi.input.dir");
+        stepOutputDir = getValue("quad.fposi.output.dir");
 
         logger.debug("ufficio: " + this.ufficio);
         logger.debug("stepInputDir: " + stepInputDir);
@@ -34,11 +34,11 @@ public class QuadFposi extends AbstractStep {
     @Override
     public void run() {
 
-        String hadoopFposiCsv = getLGDPropertyValue("quad.fposi.hadoop.fposi.csv");
-        String oldfposiLoadCsv = getLGDPropertyValue("quad.fposi.old.fposi.load.csv");
-        String hadoopFposiOutDir = getLGDPropertyValue("quad.fposi.hadoop.fposi.out");
-        String oldFposiOutDir = getLGDPropertyValue("quad.fposi.old.fposi.out");
-        String abbinatiOutDir = getLGDPropertyValue("quad.fposi.abbinati.out");
+        String hadoopFposiCsv = getValue("quad.fposi.hadoop.fposi.csv");
+        String oldfposiLoadCsv = getValue("quad.fposi.old.fposi.load.csv");
+        String hadoopFposiOutDir = getValue("quad.fposi.hadoop.fposi.out");
+        String oldFposiOutDir = getValue("quad.fposi.old.fposi.out");
+        String abbinatiOutDir = getValue("quad.fposi.abbinati.out");
 
         logger.debug("hadoopFposiCsv: " + hadoopFposiCsv);
         logger.debug("oldfposiLoadCsv: " + oldfposiLoadCsv);

@@ -14,6 +14,8 @@ import static steps.abstractstep.StepUtils.*;
 
 public class FrappNdgMonthly extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(FrappNdgMonthly.class);
+
     // required parameters
     private String dataA;
     private int numeroMesi1;
@@ -21,14 +23,12 @@ public class FrappNdgMonthly extends AbstractStep {
 
     public FrappNdgMonthly(String dataA, int numeroMesi1, int numeroMesi2){
 
-        logger = Logger.getLogger(FanagMonthly.class);
-
         this.dataA = dataA;
         this.numeroMesi1 = numeroMesi1;
         this.numeroMesi2 = numeroMesi2;
 
-        stepInputDir = getLGDPropertyValue("frapp.ndg.monthly.input.dir");
-        stepOutputDir = getLGDPropertyValue("frapp.ndg.monthly.output.dir");
+        stepInputDir = getValue("frapp.ndg.monthly.input.dir");
+        stepOutputDir = getValue("frapp.ndg.monthly.output.dir");
 
         logger.debug("dataA: " + this.dataA);
         logger.debug("numeroMesi1: " + this.numeroMesi1);
@@ -40,9 +40,9 @@ public class FrappNdgMonthly extends AbstractStep {
     @Override
     public void run() {
 
-        String cicliNdgPathCsvPath = getLGDPropertyValue("frapp.ndg.monthly.cicli.ndg.path.csv");
-        String tlburttCsvPath = getLGDPropertyValue("frapp.ndg.monthly.tlburtt.csv");
-        String tlbcidefTlburttCsv = getLGDPropertyValue("frapp.ndg.monthly.tlbcidef.tlburtt");
+        String cicliNdgPathCsvPath = getValue("frapp.ndg.monthly.cicli.ndg.path.csv");
+        String tlburttCsvPath = getValue("frapp.ndg.monthly.tlburtt.csv");
+        String tlbcidefTlburttCsv = getValue("frapp.ndg.monthly.tlbcidef.tlburtt");
 
         logger.debug("cicliNdgPathCsvPath: " + cicliNdgPathCsvPath);
         logger.debug("tlburttCsvPath: " + tlburttCsvPath);
@@ -82,7 +82,7 @@ public class FrappNdgMonthly extends AbstractStep {
          */
 
         // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
-        String dataAPattern = getLGDPropertyValue("params.dataa.pattern");
+        String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(this.dataA, dataAPattern, "yyyyMMdd"));
         Column dataFineDefSubtractDurationPrincCol = subtractDuration(cicliNdgPrinc.col("datafinedef"), "yyyyMMdd", 1);
         Column leastDateDataFineDefDataAPrincCol = leastDate(dataFineDefSubtractDurationPrincCol, dataACol, "yyyyMMdd");

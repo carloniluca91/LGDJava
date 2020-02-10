@@ -15,19 +15,19 @@ import static steps.abstractstep.StepUtils.*;
 
 public class CiclilavStep1 extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(CiclilavStep1.class);
+
     // required parameters
     private String dataDa;
     private String dataA;
 
     public CiclilavStep1(String dataDa, String dataA) {
 
-        logger = Logger.getLogger(CiclilavStep1.class);
-
         this.dataDa = dataDa;
         this.dataA = dataA;
 
-        stepInputDir = getLGDPropertyValue("ciclilav.step1.input.dir");
-        stepOutputDir = getLGDPropertyValue("ciclilav.step1.output.dir");
+        stepInputDir = getValue("ciclilav.step1.input.dir");
+        stepOutputDir = getValue("ciclilav.step1.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -38,10 +38,10 @@ public class CiclilavStep1 extends AbstractStep {
     @Override
     public void run(){
 
-        String tlbcidefCsvPath = getLGDPropertyValue("ciclilav.step1.tlbcidef.csv");
-        String tlbcraccCsvPath = getLGDPropertyValue("ciclilav.step1.tlbcracc.csv");
-        String ciclilavStep1OutCsv = getLGDPropertyValue("ciclilav.step1.out.csv");
-        String ciclilavStep1FilecraccCsv = getLGDPropertyValue("ciclilav.step1.filecracc.csv");
+        String tlbcidefCsvPath = getValue("ciclilav.step1.tlbcidef.csv");
+        String tlbcraccCsvPath = getValue("ciclilav.step1.tlbcracc.csv");
+        String ciclilavStep1OutCsv = getValue("ciclilav.step1.out.csv");
+        String ciclilavStep1FilecraccCsv = getValue("ciclilav.step1.filecracc.csv");
 
         logger.debug("tlbcidefCsvPath: " +  tlbcidefCsvPath);
         logger.debug("tlbcraccCsvPath: " + tlbcraccCsvPath);

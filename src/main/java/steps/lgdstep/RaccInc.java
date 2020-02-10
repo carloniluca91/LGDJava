@@ -14,12 +14,12 @@ import static steps.abstractstep.StepUtils.*;
 
 public class RaccInc extends AbstractStep {
 
+    private final Logger logger = Logger.getLogger(RaccInc.class);
+
     public RaccInc(){
 
-        logger = Logger.getLogger(RaccInc.class);
-
-        stepInputDir = getLGDPropertyValue("racc.inc.input.dir");
-        stepOutputDir = getLGDPropertyValue("racc.inc.output.dir");
+        stepInputDir = getValue("racc.inc.input.dir");
+        stepOutputDir = getValue("racc.inc.output.dir");
 
         logger.debug("stepInputDir: " + stepInputDir);
         logger.debug("stepOutputDir: " + stepOutputDir);
@@ -28,8 +28,8 @@ public class RaccInc extends AbstractStep {
     @Override
     public void run() {
 
-        String tlbmignPathCsv = getLGDPropertyValue("racc.inc.tlbmign.path.csv");
-        String raccIncOutPath = getLGDPropertyValue("racc.inc.racc.inc.out");
+        String tlbmignPathCsv = getValue("racc.inc.tlbmign.path.csv");
+        String raccIncOutPath = getValue("racc.inc.racc.inc.out");
 
         logger.debug("tlbmignPathCsv: " + tlbmignPathCsv);
         logger.debug("raccIncOutPath: " + raccIncOutPath);
