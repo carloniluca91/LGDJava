@@ -3,14 +3,17 @@ package steps.abstractstep;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructType;
 import steps.abstractstep.udfs.UDFsFactory;
 import steps.abstractstep.udfs.UDFsNameEnum;
 
 public abstract class AbstractStep {
 
-    protected final Logger logger = Logger.getLogger(AbstractStep.class);
     private final PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
     protected SparkSession sparkSession;
 
@@ -21,18 +24,22 @@ public abstract class AbstractStep {
     protected String dataDaPattern;
     protected String dataAPattern;
     protected String csvFormat;
+    private String csvDelimiter;
 
     protected AbstractStep(){
 
+        Logger logger = Logger.getLogger(AbstractStep.class);
         try {
 
             propertiesConfiguration.load(AbstractStep.class.getClassLoader().getResourceAsStream("lgd.properties"));
 
             csvFormat = getValue("csv.format");
+            csvDelimiter = getValue("csv.delimiter");
             dataDaPattern = getValue("params.datada.pattern");
             dataAPattern = getValue("params.dataa.pattern");
 
             logger.debug("csvFormat: " + csvFormat);
+            logger.debug("csvDelimiter: " + csvDelimiter);
             logger.debug("dataDaPattern: " + dataDaPattern);
             logger.debug("dataAPattern: " + dataAPattern);
 
@@ -77,6 +84,16 @@ public abstract class AbstractStep {
         sparkSession.udf().register(UDFsNameEnum.GREATEST_DATE_UDF_NAME, UDFsFactory.greatestDateUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFsNameEnum.LEAST_DATE_UDF_NAME, UDFsFactory.leastDateUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFsNameEnum.DAYS_BETWEEN_UDF_NAME, UDFsFactory.daysBetweenUDF(), DataTypes.LongType);
+    }
+
+    protected Dataset<Row> readCsvAtPathUsingSchema(String csvFilePath, StructType csvSchema){
+
+        return sparkSession.read().format(csvFormat).option("sep", csvDelimiter).schema(csvSchema).csv(csvFilePath);
+    }
+
+    protected void writeDatasetAsCsvAtPath(Dataset<Row> dataset, String path){
+
+        dataset.write().format(csvFormat).option("sep", csvDelimiter).mode(SaveMode.Overwrite).csv(path);
     }
 
     abstract public void run();

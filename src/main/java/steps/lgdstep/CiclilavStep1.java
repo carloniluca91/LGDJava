@@ -49,16 +49,12 @@ public class CiclilavStep1 extends AbstractStep {
         logger.debug("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
         // 22
-        Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(CicliLavStep1Schema.getTlbcidefPigSchema()))
-                .csv(tlbcidefCsvPath);
-
-        // 37
+        Dataset<Row> tlbcidef = readCsvAtPathUsingSchema(tlbcidefCsvPath,
+                fromPigSchemaToStructType(CicliLavStep1Schema.getTlbcidefPigSchema()));
 
         // 40
         // FILTER tlbcidef BY dt_inizio_ciclo >= $data_da AND dt_inizio_ciclo <= $data_a;
-        Column dtInizioCicloFilterCol = isDateBetween(toStringType(tlbcidef.col("dt_inizio_ciclo")), "yyyyMMdd",
-                dataDa, dataDaPattern, dataA, dataAPattern);
+        Column dtInizioCicloFilterCol = tlbcidef.col("dt_inizio_ciclo").between(Integer.parseInt(dataDa), Integer.parseInt(dataA));
 
         Column statusIngressoTrimCol = functions.trim(functions.col("status_ingresso"));
 
@@ -95,22 +91,17 @@ public class CiclilavStep1 extends AbstractStep {
         // 71
 
         // 78
-        Dataset<Row> tlbcraccLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(CicliLavStep1Schema.getTlbcraccLoadPigSchema()))
-                .csv(tlbcraccCsvPath);
+        Dataset<Row> tlbcraccLoad = readCsvAtPathUsingSchema(tlbcraccCsvPath,
+                fromPigSchemaToStructType(CicliLavStep1Schema.getTlbcraccLoadPigSchema()));
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
         LocalDate defaultDataA = parseStringToLocalDate("20150731", "yyyyMMdd");
         LocalDate dataADate = parseStringToLocalDate(dataA, dataAPattern);
         String greatestDateString = dataADate.compareTo(defaultDataA) <= 0 ?
-                defaultDataA.format(DateTimeFormatter.ofPattern(dataAPattern)) : dataADate.format(DateTimeFormatter.ofPattern(dataDaPattern));
+                defaultDataA.format(DateTimeFormatter.ofPattern("yyyyMMdd")) : dataADate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
-        Column tlbraccFilterCol = isDateLeqOtherDate(
-                toStringType(tlbcraccLoad.col("data_rif")),"yyyy-MM-dd",
-                greatestDateString, "yyyy-MM-dd");
-
-        Dataset<Row> tlbcracc = tlbcraccLoad.filter(tlbraccFilterCol);
+        Dataset<Row> tlbcracc = tlbcraccLoad.filter(tlbcraccLoad.col("data_rif").leq(Integer.parseInt(greatestDateString)));
 
         // clone tlbcracc to avoid Analysis exception
         Dataset<Row> tlbcraccClone = tlbcracc.toDF().withColumnRenamed("cd_isti", "cd_isti_clone")
@@ -127,8 +118,6 @@ public class CiclilavStep1 extends AbstractStep {
         // 110
 
         // 119
-        // conversion to scala Seq
-        Seq<String> joinColsSeq = toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));
 
         // (tlbcracc::cd_isti is not null ? tlbcracc::cd_isti : cicli_racc_1::cd_isti) as cd_isti_ced
         Column cdIstiCedCol = functions.when(tlbcraccClone.col("cd_isti_clone").isNotNull(), tlbcraccClone.col("cd_isti_clone"))
@@ -138,6 +127,7 @@ public class CiclilavStep1 extends AbstractStep {
         Column ndgCedCol = functions.when(tlbcraccClone.col("ndg_clone").isNotNull(), tlbcraccClone.col("ndg_clone"))
                 .otherwise(cicliRacc1.col("ndg_principale")).as("ndg_ced");
 
+        Seq<String> joinColsSeq = toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));
         Dataset<Row> ciclilavStep1 = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left").select(
                 cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
                 cicliRacc1.col("dt_fine_ciclo"), cicliRacc1.col("datainiziopd"), cicliRacc1.col("datainizioristrutt"),
@@ -157,7 +147,7 @@ public class CiclilavStep1 extends AbstractStep {
 
         // 176
 
-        ciclilavStep1.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(ciclilavStep1OutCsv);
-        ciclilavStep1Filecracc.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(ciclilavStep1FilecraccCsv);
+        writeDatasetAsCsvAtPath(ciclilavStep1, ciclilavStep1OutCsv);
+        writeDatasetAsCsvAtPath(ciclilavStep1Filecracc, ciclilavStep1FilecraccCsv);
     }
 }

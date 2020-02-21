@@ -110,7 +110,7 @@ public class UDFsFactory {
                     LocalDate localDate1 = LocalDate.parse(date1, DateTimeFormatter.ofPattern(date1Pattern));
                     LocalDate localDate2 = LocalDate.parse(date2, DateTimeFormatter.ofPattern(date2Pattern));
                     return localDate1.compareTo(localDate2) <= 0;
-                };
+        };
     }
 
     // returns true if stringDate (with pattern datePattern) is between
