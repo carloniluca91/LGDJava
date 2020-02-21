@@ -48,9 +48,8 @@ public class CicliPreview extends AbstractStep {
         logger.debug("fposiSintGen2Csv: " + fposiSintGen2Csv);
 
         // 21
-        Dataset<Row> fposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(CicliPreviewSchema.getFposiOutDirPigSchema()))
-                .csv(fposiOutdirCsvPath);
+        Dataset<Row> fposiLoad = readCsvAtPathUsingSchema(fposiOutdirCsvPath,
+                fromPigSchemaToStructType(CicliPreviewSchema.getFposiOutDirPigSchema()));
 
         //36
 
@@ -115,7 +114,6 @@ public class CicliPreview extends AbstractStep {
           datainiziopd<(datainizioristrutt is null?'99999999':datainizioristrutt))? 'PASTDUE':
 
          */
-        // Column dataInizioPdTSCol = getUnixTimeStampCol(fposiLoad, "datainiziopd", "yyyyMMdd");
         Column dataInizioPdNotNullCaseWhenCol = functions.when(fposiLoad.col("datainiziopd").isNotNull()
                         .and(fposiLoad.col("datainiziopd").lt(dataSofferenzaFilterCol))
                         .and(fposiLoad.col("datainiziopd").lt(dataInizioIncFilterCol))
@@ -136,8 +134,8 @@ public class CicliPreview extends AbstractStep {
                 .as("stato_anagrafico");
 
         // ( (int)datafinedef > $data_a ? 'A' : 'C' ) as flag_aperto
-        Column flagApertoCol = functions.when(isDateGtOtherDate(fposiLoad.col("datafinedef"), "yyyyMMdd",
-                dataA, dataAPattern), "A").otherwise("C").as("flag_aperto");
+        Column flagApertoCol = functions.when(toIntegerType(fposiLoad.col("datafinedef")).gt(Integer.parseInt(dataA)), "A")
+                .otherwise("C").as("flag_aperto");
 
         Dataset<Row> fposiBase = fposiLoad.select(functions.lit(ufficio).as("ufficio"), functions.col("codicebanca"),
                 functions.lit(dataA).as("datarif"), functions.col("ndgprincipale"), functions.col("datainiziodef"),
@@ -163,8 +161,7 @@ public class CicliPreview extends AbstractStep {
         Column dataInizioPdCol = changeDateFormat(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
         Column dataInizioIncCol = changeDateFormat(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
         Column dataInizioRistruttCol = changeDateFormat(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
-        Column dataSofferenzaCol = functions.callUDF(UDFsNameEnum.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME,
-                fposiBase.col("datasofferenza")).as("datasofferenza");
+        Column dataSofferenzaCol = functions.callUDF(UDFsNameEnum.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME, fposiBase.col("datasofferenza")).as("datasofferenza");
 
         /*
         FLATTEN(fposi_base.ufficio)             as ufficio
@@ -186,12 +183,12 @@ public class CicliPreview extends AbstractStep {
          */
 
         // define WindowSpec in order to compute aggregates on fposiBase without grouping
-        WindowSpec w = Window.partitionBy("codicebanca", "ndgprincipale", "datainiziodef");
+        WindowSpec fposiGen2WindowSpec = Window.partitionBy("codicebanca", "ndgprincipale", "datainiziodef");
 
         // SUM(fposi_base.totaccordatodatdef)      as totaccordatodatdef
         // SUM(fposi_base.totutilizzdatdef)        as totutilizzdatdef
-        Column totAccordatoDatDefCol = functions.sum(fposiBase.col("totaccordatodatdef")).over(w).as("totaccordatodatdef");
-        Column totUtilizzDatDefCol = functions.sum(fposiBase.col("totutilizzdatdef")).over(w).as("totutilizzdatdef");
+        Column totAccordatoDatDefCol = functions.sum(fposiBase.col("totaccordatodatdef")).over(fposiGen2WindowSpec).as("totaccordatodatdef");
+        Column totUtilizzDatDefCol = functions.sum(fposiBase.col("totutilizzdatdef")).over(fposiGen2WindowSpec).as("totutilizzdatdef");
 
         Dataset<Row> fposiGen2 = fposiBase.select(fposiBase.col("ufficio"), fposiBase.col("codicebanca"),
                 fposiBase.col("datarif"), fposiBase.col("ndgprincipale"), dataInizioDefCol, dataFineDefCol,
@@ -202,7 +199,7 @@ public class CicliPreview extends AbstractStep {
 
         // 129
 
-        fposiGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(fposiGen2OutCsv);
+        writeDatasetAsCsvAtPath(fposiGen2, fposiGen2OutCsv);
 
         // 136
 
@@ -228,7 +225,7 @@ public class CicliPreview extends AbstractStep {
             ,SUM(fposi_base.totutilizzdatdef)   as totutilizzdatdef
          */
 
-        w = Window.partitionBy(fposiBase.col("ufficio"), fposiBase.col("datarif"), fposiBase.col("codicebanca"),
+        WindowSpec fposiSintGen2WindowSpec = Window.partitionBy(fposiBase.col("ufficio"), fposiBase.col("datarif"), fposiBase.col("codicebanca"),
                 fposiBase.col("segmento_calc"), subStringDataInizioDefCol, subStringDataFineDefCol, fposiBase.col("stato_anagrafico"),
                 fposiBase.col("ciclo_soff"), fposiBase.col("flag_aperto"));
 
@@ -236,12 +233,12 @@ public class CicliPreview extends AbstractStep {
                 fposiBase.col("flag_aperto"), fposiBase.col("codicebanca"), fposiBase.col("segmento_calc"),
                 subStringDataInizioDefCol, subStringDataFineDefCol,
                 fposiBase.col("stato_anagrafico"), fposiBase.col("ciclo_soff"),
-                functions.count("ufficio").over(w).as("row_count"),
+                functions.count("ufficio").over(fposiSintGen2WindowSpec).as("row_count"),
                 totAccordatoDatDefCol, totUtilizzDatDefCol);
 
         // 169
 
-        fposiSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(fposiSintGen2Csv);
+        writeDatasetAsCsvAtPath(fposiSintGen2, fposiSintGen2Csv);
     }
 
     // column is null?'99999999':column

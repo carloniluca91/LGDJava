@@ -27,14 +27,10 @@ public class UDFsFactory {
     public static UDF3<String, String, String, String> changeDateFormatUDF(){
 
         return (UDF3<String, String, String, String>)
-                (inputDate, oldPattern, newPattern) -> {
-
-                    if (inputDate != null){
-                        LocalDate localDate = LocalDate.parse(inputDate, DateTimeFormatter.ofPattern(oldPattern));
-                        return localDate.format(DateTimeFormatter.ofPattern(newPattern));
-                    }
-                    else { return null; }
-                };
+                (inputDate, oldPattern, newPattern) -> inputDate != null ?
+                        LocalDate.parse(inputDate, DateTimeFormatter.ofPattern(oldPattern))
+                                .format(DateTimeFormatter.ofPattern(newPattern)) :
+                        null;
     }
 
     // return the number of days between two dates with same pattern, in absolute value
