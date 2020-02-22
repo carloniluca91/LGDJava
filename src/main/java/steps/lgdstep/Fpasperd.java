@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
-import org.apache.spark.sql.types.DataTypes;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.FpasperdSchema;
@@ -41,23 +40,19 @@ public class Fpasperd extends AbstractStep {
         logger.debug("paspePaspeossGenDistCsv: " + paspePaspeossGenDistCsv);
 
         // 19
-        Dataset<Row> tlbcidefLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(FpasperdSchema.getTlbcidefLoadPigSchema()))
-                .csv(cicliNdgPathCsv);
+        Dataset<Row> tlbcidefLoad = readCsvAtPathUsingSchema(cicliNdgPathCsv,
+                fromPigSchemaToStructType(FpasperdSchema.getTlbcidefLoadPigSchema()));
 
-        // // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
-        // tlbcidef::datafinedef in format "yyyyMMdd"
-        Column dataFineDefCol = addDuration(tlbcidefLoad.col("datafinedef"), "yyyyMMdd", 2).as("datafinedef");
-
+        // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
+        Column dataFineDefCol = addDuration(toStringType(tlbcidefLoad.col("datafinedef")), "yyyyMMdd", 2).as("datafinedef");
         Dataset<Row> tlbcidef = tlbcidefLoad.select(functions.col("codicebanca"), functions.col("ndgprincipale"),
                 functions.col("datainiziodef"), dataFineDefCol, functions.col("codicebanca_collegato"),
                 functions.col("ndg_collegato"));
         // 56
 
         // 63
-        Dataset<Row> tlbpaspeFilter = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(FpasperdSchema.getTlbpaspeFilterPigSchema()))
-                .csv(tlbpaspeCsv);
+        Dataset<Row> tlbpaspeFilter = readCsvAtPathUsingSchema(tlbpaspeCsv,
+                fromPigSchemaToStructType(FpasperdSchema.getTlbpaspeFilterPigSchema()));
 
         // 71
 
@@ -68,15 +63,15 @@ public class Fpasperd extends AbstractStep {
                 .and(tlbpaspeFilter.col("ndg").equalTo(tlbcidef.col("ndg_collegato")));
 
         // BY (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
-        Column fpasperdBetweenGenDataContDataInizioDefFilterCol = substringAndCastToInt(tlbpaspeFilter.col("datacont"), 0, 6)
-                .geq(substringAndCastToInt(tlbcidef.col("datainiziodef"), 0, 6));
+        Column fpasperdBetweenGenDataContDataInizioDefFilterCol = substringAndCastToInt(toStringType(tlbpaspeFilter.col("datacont")), 0, 6)
+                .geq(substringAndCastToInt(toStringType(tlbcidef.col("datainiziodef")), 0, 6));
 
         // AND (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
-        Column fpasperdBetweenGenDataContDataFineDefFilterCol = substringAndCastToInt(tlbpaspeFilter.col("datacont"), 0, 6)
-                .lt(substringAndCastToInt(tlbcidef.col("datafinedef"), 0, 6));
+        Column fpasperdBetweenGenDataContDataFineDefFilterCol = substringAndCastToInt(toStringType(tlbpaspeFilter.col("datacont")), 0, 6)
+                .lt(substringAndCastToInt(toStringType(tlbcidef.col("datafinedef")), 0, 6));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
-        Column fpasperdBetweenGenDaysDiffColl = daysBetween(tlbcidef.col("datafinedef"), tlbpaspeFilter.col("datacont"), "yyyyMMdd");
+        Column fpasperdBetweenGenDaysDiffColl = daysBetween(toStringType(tlbcidef.col("datafinedef")), toStringType(tlbpaspeFilter.col("datacont")), "yyyyMMdd");
 
         // list of columns to be selected from dataframe tlbpaspeFilter
         List<String> tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -98,14 +93,14 @@ public class Fpasperd extends AbstractStep {
         // 109
         // GROUP fpasperd_between_gen BY ( cd_istituto, ndg, datacont, causale, codicebanca, ndgprincipale );
         // ... ORDER fpasperd_between_gen by days_diff ASC
-        WindowSpec w = Window.partitionBy("cd_istituto", "ndg", "datacont", "causale", "codicebanca", "ndgprincipale")
-                .orderBy("days_diff");
+        WindowSpec fpasperdBetweenOutWindowSpec = Window.partitionBy("cd_istituto", "ndg", "datacont", "causale",
+                "codicebanca", "ndgprincipale").orderBy("days_diff");
 
         Dataset<Row> fpasperdBetweenOut = fpasperdBetweenGen.select(functions.col("cd_istituto"),
                 functions.col("ndg"), functions.col("datacont"), functions.col("causale"),
-                functions.first("importo").over(w).as("importo"),
+                functions.first("importo").over(fpasperdBetweenOutWindowSpec).as("importo"),
                 functions.col("codicebanca"), functions.col("ndgprincipale"),
-                functions.first("datainiziodef").over(w).as("datainiziodef"));
+                functions.first("datainiziodef").over(fpasperdBetweenOutWindowSpec).as("datainiziodef"));
         // 127
 
         // 132
@@ -113,9 +108,9 @@ public class Fpasperd extends AbstractStep {
         List<String> fpasperdOtherGenSelectColsNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
         List<Column> fpasperdOtherGenSelectColList = selectDfColumns(tlbpaspeFilter, fpasperdOtherGenSelectColsNames);
 
-        fpasperdOtherGenSelectColList.add(functions.lit(null).cast(DataTypes.StringType).as("codicebanca"));
-        fpasperdOtherGenSelectColList.add(functions.lit(null).cast(DataTypes.StringType).as("ndgprincipale"));
-        fpasperdOtherGenSelectColList.add(functions.lit(null).cast(DataTypes.StringType).as("datainiziodef"));
+        fpasperdOtherGenSelectColList.add(toStringType(functions.lit(null)).as("codicebanca"));
+        fpasperdOtherGenSelectColList.add(toStringType(functions.lit(null)).as("ndgprincipale"));
+        fpasperdOtherGenSelectColList.add(toStringType(functions.lit(null)).as("datainiziodef"));
 
         Seq<Column> fpasperdOtherGenSelectColsSeq = toScalaColSeq(fpasperdOtherGenSelectColList);
         Dataset<Row> fpasperdOtherGen = tlbcidefTlbpaspeFilterJoin.filter(tlbcidef.col("codicebanca").isNotNull())
@@ -152,18 +147,18 @@ public class Fpasperd extends AbstractStep {
 
         //  BY (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
         Column principFpasperdBetweenGenDataContDataInizioDefFilterCol =
-                substringAndCastToInt(fpasperdNullOut.col("datacont"), 0, 6)
-                .geq(substringAndCastToInt(tlbcidef.col("datainiziodef"), 0, 6));
+                substringAndCastToInt(toStringType(fpasperdNullOut.col("datacont")), 0, 6)
+                .geq(substringAndCastToInt(toStringType(tlbcidef.col("datainiziodef")), 0, 6));
 
         // AND (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
         Column principFpasperdBetweenGenDataContDataFineDefFilterCol =
-                substringAndCastToInt(fpasperdNullOut.col("datacont"), 0, 6)
-                .lt(substringAndCastToInt(tlbcidef.col("datafinedef"), 0, 6));
+                substringAndCastToInt(toStringType(fpasperdNullOut.col("datacont")), 0, 6)
+                .lt(substringAndCastToInt(toStringType(tlbcidef.col("datafinedef")), 0, 6));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ),
         // ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
         Column principFpasperdBetweenGenDaysDiffColl =
-                daysBetween(tlbcidef.col("datafinedef"), fpasperdNullOut.col("datacont"), "yyyyMMdd");
+                daysBetween(toStringType(tlbcidef.col("datafinedef")), toStringType(fpasperdNullOut.col("datacont")), "yyyyMMdd");
 
         // columns to be selected from dataframe fpasperdNullOut
         List<String> fpasperdNullOutSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -182,9 +177,9 @@ public class Fpasperd extends AbstractStep {
         // 227
         Dataset<Row> principFpasperdBetweenOut = principFpasperdBetweenGen.select(functions.col("cd_istituto"),
                 functions.col("ndg"), functions.col("datacont"), functions.col("causale"),
-                functions.first("importo").over(w).as("importo"),
+                functions.first("importo").over(fpasperdBetweenOutWindowSpec).as("importo"),
                 functions.col("codicebanca"), functions.col("ndgprincipale"),
-                functions.first("datainiziodef").over(w).as("datainiziodef"));
+                functions.first("datainiziodef").over(fpasperdBetweenOutWindowSpec).as("datainiziodef"));
 
         // 245
 
@@ -195,9 +190,9 @@ public class Fpasperd extends AbstractStep {
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
         List<Column> principFpasperdOtherGenSelectColList = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
-        principFpasperdOtherGenSelectColList.add(functions.lit(null).cast(DataTypes.StringType).as("codicebanca"));
-        principFpasperdOtherGenSelectColList.add(functions.lit(null).cast(DataTypes.StringType).as("ndgprincipale"));
-        principFpasperdOtherGenSelectColList.add(functions.lit(null).cast(DataTypes.StringType).as("datainiziodef"));
+        principFpasperdOtherGenSelectColList.add(toStringType(functions.lit(null)).as("codicebanca"));
+        principFpasperdOtherGenSelectColList.add(toStringType(functions.lit(null)).as("ndgprincipale"));
+        principFpasperdOtherGenSelectColList.add(toStringType(functions.lit(null)).as("datainiziodef"));
 
         Seq<Column> principFpasperdOtherGenSelectColsSeq = toScalaColSeq(principFpasperdOtherGenSelectColList);
         Dataset<Row> principFpasperdOtherGen = fpasperdNullOut.join(tlbcidef, principFpasperdOtherGenJoinCondition, "left")
@@ -226,9 +221,9 @@ public class Fpasperd extends AbstractStep {
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
         List<Column> principFpasperdNullOutCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
-        principFpasperdNullOutCols.add(functions.lit(null).cast(DataTypes.StringType).as("codicebanca"));
-        principFpasperdNullOutCols.add(functions.lit(null).cast(DataTypes.StringType).as("ndgprincipale"));
-        principFpasperdNullOutCols.add(functions.lit(null).cast(DataTypes.StringType).as("datainiziodef"));
+        principFpasperdNullOutCols.add(toStringType(functions.lit(null)).as("codicebanca"));
+        principFpasperdNullOutCols.add(toStringType(functions.lit(null)).as("ndgprincipale"));
+        principFpasperdNullOutCols.add(toStringType(functions.lit(null)).as("datainiziodef"));
 
         Seq<Column> principFpasperdNullOutSelectColsSeq = toScalaColSeq(principFpasperdNullOutCols);
         Dataset<Row> principFpasperdNullOut = fpasperdNullOut.join(tlbcidef, principFpasperdNullOutJoinCondition, "left")
@@ -245,9 +240,8 @@ public class Fpasperd extends AbstractStep {
         // 331
 
         // 336
-        Dataset<Row> tlbpaspeoss = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(FpasperdSchema.getTlbpaspeossPigSchema()))
-                .csv(tlbpaspeossCsv);
+        Dataset<Row> tlbpaspeoss = readCsvAtPathUsingSchema(tlbpaspeossCsv,
+                fromPigSchemaToStructType(FpasperdSchema.getTlbpaspeossPigSchema()));
         // 344
 
         // 346
@@ -305,7 +299,7 @@ public class Fpasperd extends AbstractStep {
         Dataset<Row> paspePaspeossGenDist = fpasperdOutDistinct.join(tlbpaspeoss, paspePaspeossGenDistJoinCondition, "full_outer")
                 .select(cdIstitutoCol, ndgCol, dataContCol, causaleCol, importoCol, codiceBancaCol, ndgPrincipaleCol, dataInizioDefCol);
 
-        paspePaspeossGenDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(paspePaspeossGenDistCsv);
+        writeDatasetAsCsvAtPath(paspePaspeossGenDist, paspePaspeossGenDistCsv);
 
     }
 }
