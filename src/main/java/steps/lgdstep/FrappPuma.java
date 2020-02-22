@@ -44,9 +44,8 @@ public class FrappPuma extends AbstractStep {
 
         // 22
 
-        Dataset<Row> tlbcidef = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(FrappPumaSchema.getTlbcidefPigSchema()))
-                .csv(cicliNdgPath);
+        Dataset<Row> tlbcidef = readCsvAtPathUsingSchema(cicliNdgPath,
+                fromPigSchemaToStructType(FrappPumaSchema.getTlbcidefPigSchema()));
         // 49
 
         // cicli_ndg_princ = FILTER tlbcidef BY cd_collegamento IS NULL;
@@ -55,9 +54,8 @@ public class FrappPuma extends AbstractStep {
         Dataset<Row> cicliNdgColl = tlbcidef.filter(tlbcidef.col("cd_collegamento").isNotNull());
 
         // 59
-        Dataset<Row> tlbgaran = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(FrappPumaSchema.getTlbgaranPigSchema()))
-                .csv(tlbgaranPath);
+        Dataset<Row> tlbgaran = readCsvAtPathUsingSchema(tlbgaranPath,
+                fromPigSchemaToStructType(FrappPumaSchema.getTlbgaranPigSchema()));
 
         // 71
 
@@ -73,14 +71,14 @@ public class FrappPuma extends AbstractStep {
                         $data_a), 0,6 );
         */
 
-        // we need to format $data_a from yyyy-MM-dd to yyyyMMdd
+        // we need to format $data_a to yyyyMMdd
         String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, "yyyyMMdd"));
-        Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(tlbcidef.col("datafinedef"), "yyyyMMdd", 1),
+        Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(toStringType(tlbcidef.col("datafinedef")), "yyyyMMdd", 1),
                 dataACol, "yyyMMdd");
 
-        Column dtRiferimentoLeastDateFilterCol = substringAndCastToInt(tlbgaran.col("dt_riferimento"), 0, 6)
-                .leq(substringAndCastToInt(dataFineDefDataALeastDateCol, 0, 6));
+        Column dtRiferimentoLeastDateFilterCol = substringAndCastToInt(toStringType(tlbgaran.col("dt_riferimento")), 0, 6)
+                .leq(substringAndCastToInt(toStringType(dataFineDefDataALeastDateCol), 0, 6));
 
         /*
           tlbgaran::cd_istituto			 AS cd_isti
@@ -127,7 +125,6 @@ public class FrappPuma extends AbstractStep {
                 .select(tlbcidefTlbgaranCollSelectColsSeq);
 
         Dataset<Row> frappPumaOut = tlbcidefTlbgaranPrinc.union(tlbcidefTlbgaranColl).distinct();
-
-        frappPumaOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(frappPumaOutPath);
+        writeDatasetAsCsvAtPath(frappPumaOut, frappPumaOutPath);
     }
 }
