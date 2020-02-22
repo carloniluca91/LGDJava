@@ -4,13 +4,15 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
-import steps.abstractstep.StepUtils;
 import steps.schemas.MovimentiSchema;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static steps.abstractstep.StepUtils.*;
+import static steps.abstractstep.StepUtils.changeDateFormat;
+import static steps.abstractstep.StepUtils.fromPigSchemaToStructType;
+import static steps.abstractstep.StepUtils.selectDfColumns;
+import static steps.abstractstep.StepUtils.toScalaColSeq;
 
 public class Movimenti extends AbstractStep {
 
@@ -41,9 +43,8 @@ public class Movimenti extends AbstractStep {
         logger.debug("tlbmovcontaCsv: " + tlbmovcontaCsv);
         logger.debug("movOutDistPath: " + movOutDistPath);
 
-        Dataset<Row> tlbmovconta = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(StepUtils.fromPigSchemaToStructType(MovimentiSchema.getTlbmovcontaPigSchema()))
-                .csv(tlbmovcontaCsv);
+        Dataset<Row> tlbmovconta = readCsvAtPathUsingSchema(tlbmovcontaCsv,
+                fromPigSchemaToStructType(MovimentiSchema.getTlbmovcontaPigSchema()));
 
         // FILTER tlbmovconta BY mo_dt_contabile <= $data_osservazione;
         Column dataOsservazioneCol = functions.lit(changeDateFormat(dataOsservazione, dataOsservazionePattern, "yyyyMMdd"));
@@ -72,8 +73,7 @@ public class Movimenti extends AbstractStep {
 
         Seq<Column> selectColSeq = toScalaColSeq(selectDfColumns(tlbmovconta, selectColMap));
         Dataset<Row> movOutDist = tlbmovconta.filter(filterCondition).select(selectColSeq).distinct();
-
-        movOutDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(movOutDistPath);
+        writeDatasetAsCsvAtPath(movOutDist, movOutDistPath);
 
     }
 }
