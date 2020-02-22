@@ -61,18 +61,6 @@ public class UDFsFactory {
                 };
     }
 
-    // returns true if date1 (with pattern date1Pattern) > date 2 (with pattern date2Pattern)
-    public static UDF4<String, String, String, String, Boolean> isDateGtOtherDateUDF(){
-
-        return (UDF4<String, String, String, String, Boolean>)
-                (date1, date1Pattern, date2, date2Pattern) -> {
-
-                    LocalDate localDate1 = LocalDate.parse(date1, DateTimeFormatter.ofPattern(date1Pattern));
-                    LocalDate localDate2 = LocalDate.parse(date2, DateTimeFormatter.ofPattern(date2Pattern));
-                    return localDate1.compareTo(localDate2) > 0;
-                };
-    }
-
     // returns true if date1 (with pattern date1Pattern) >= date 2 (with pattern date2Pattern)
     public static UDF4<String, String, String, String, Boolean> isDateGeqOtherDateUDF(){
 
@@ -95,18 +83,6 @@ public class UDFsFactory {
                     LocalDate localDate2 = LocalDate.parse(date2, DateTimeFormatter.ofPattern(date2Pattern));
                     return localDate1.compareTo(localDate2) < 0;
                 };
-    }
-
-    // returns true if date1 (with pattern date1Pattern) <= date 2 (with pattern date2Pattern)
-    public static UDF4<String, String, String, String, Boolean> isDateLeqOtherDateUDF(){
-
-        return (UDF4<String, String, String, String, Boolean>)
-                (date1, date1Pattern, date2, date2Pattern) -> {
-
-                    LocalDate localDate1 = LocalDate.parse(date1, DateTimeFormatter.ofPattern(date1Pattern));
-                    LocalDate localDate2 = LocalDate.parse(date2, DateTimeFormatter.ofPattern(date2Pattern));
-                    return localDate1.compareTo(localDate2) <= 0;
-        };
     }
 
     // returns true if stringDate (with pattern datePattern) is between

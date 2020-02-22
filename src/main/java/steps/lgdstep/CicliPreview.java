@@ -7,7 +7,7 @@ import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.DataTypes;
 import steps.abstractstep.AbstractStep;
-import steps.abstractstep.udfs.UDFsNameEnum;
+import steps.abstractstep.udfs.UDFsNames;
 import steps.schemas.CicliPreviewSchema;
 
 import static steps.abstractstep.StepUtils.*;
@@ -161,7 +161,7 @@ public class CicliPreview extends AbstractStep {
         Column dataInizioPdCol = changeDateFormat(fposiBase.col("datainiziopd"), "yyyyMMdd", "yyyy-MM-dd").as("datainiziopd");
         Column dataInizioIncCol = changeDateFormat(fposiBase.col("datainizioinc"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioinc");
         Column dataInizioRistruttCol = changeDateFormat(fposiBase.col("datainizioristrutt"), "yyyyMMdd", "yyyy-MM-dd").as("datainizioristrutt");
-        Column dataSofferenzaCol = functions.callUDF(UDFsNameEnum.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME, fposiBase.col("datasofferenza")).as("datasofferenza");
+        Column dataSofferenzaCol = functions.callUDF(UDFsNames.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME, fposiBase.col("datasofferenza")).as("datasofferenza");
 
         /*
         FLATTEN(fposi_base.ufficio)             as ufficio
@@ -255,6 +255,6 @@ public class CicliPreview extends AbstractStep {
                         dataSofferenza.substring(0, 3).concat("-").concat(dataSofferenza.substring(4, 5))
                         .concat("-").concat(dataSofferenza.substring(6, 7)) : null;
 
-        sparkSession.udf().register(UDFsNameEnum.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME, dataSofferenzaUdf, DataTypes.StringType);
+        sparkSession.udf().register(UDFsNames.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME, dataSofferenzaUdf, DataTypes.StringType);
     }
 }
