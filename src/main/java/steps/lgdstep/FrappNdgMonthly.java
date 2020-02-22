@@ -108,7 +108,6 @@ public class FrappNdgMonthly extends AbstractStep {
                 tlburttFilter.col("cd_istituto")).and(cicliNdgPrinc.col("ndg_collegato").equalTo(tlburttFilter.col("ndg"))))
                 .filter(dtRiferimentoFilterPrincCol.and(dataFineDefFilterPrincCol))
                 .select(tlbcidefUrttPrincColSeq);
-
         // 158
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
