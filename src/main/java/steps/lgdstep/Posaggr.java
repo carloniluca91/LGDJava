@@ -8,7 +8,10 @@ import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.PosaggrSchema;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import static steps.abstractstep.StepUtils.*;
 
@@ -39,14 +42,12 @@ public class Posaggr extends AbstractStep {
         logger.debug("posaggrOutputPath: " + posaggrCsvPath);
 
         // 19
-        Dataset<Row> tblcomp = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(PosaggrSchema.getTblCompPigSchema()))
-                .csv(tblcompCsvPath);
+        Dataset<Row> tblcomp = readCsvAtPathUsingSchema(tblcompCsvPath,
+                fromPigSchemaToStructType(PosaggrSchema.getTblCompPigSchema()));
 
         // 32
-        Dataset<Row> tlbaggr = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(PosaggrSchema.getTlbaggrPigSchema()))
-                .csv(tlbaggrCsvPath);
+        Dataset<Row> tlbaggr = readCsvAtPathUsingSchema(tlbaggrCsvPath,
+                fromPigSchemaToStructType(PosaggrSchema.getTlbaggrPigSchema()));
 
         // 69
         // JOIN tlbaggr BY (dt_riferimento,c_key_aggr,tipo_segmne_aggr,cd_istituto), tblcomp BY ( dt_riferimento, c_key, tipo_segmne, cd_istituto);
@@ -62,11 +63,8 @@ public class Posaggr extends AbstractStep {
         // 79
 
         // 89
-        Dataset<Row> tlbposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(PosaggrSchema.getTlbposiLoadPigSchema()))
-                .csv(tlbposiLoadCsvPath);
-
-        // 114
+        Dataset<Row> tlbposiLoad = readCsvAtPathUsingSchema(tlbposiLoadCsvPath,
+                fromPigSchemaToStructType(PosaggrSchema.getTlbposiLoadPigSchema()));
 
         // 116
         Dataset<Row> tlbposi = tlbposiLoad.select(tlbposiLoad.col("dt_riferimento"), tlbposiLoad.col("cd_istituto"),
@@ -137,7 +135,7 @@ public class Posaggr extends AbstractStep {
         }};
 
         // GROUP tblcomp_tlbaggr_tlbposi BY (dt_riferimento, cd_istituto, c_key_aggr, tipo_segmne_aggr)
-        WindowSpec w = Window.partitionBy(tblcompTlbaggrTlbposi.col("dt_riferimento"),
+        WindowSpec windowsSpec = Window.partitionBy(tblcompTlbaggrTlbposi.col("dt_riferimento"),
                 tblcompTlbaggrTlbposi.col("cd_istituto"), tblcompTlbaggrTlbposi.col("c_key_aggr"),
                 tblcompTlbaggrTlbposi.col("tipo_segmne_aggr"));
 
@@ -155,12 +153,11 @@ public class Posaggr extends AbstractStep {
          */
         tblcompTlbaggrTlbposiSelectList.add(tblcompTlbaggrTlbposi.col("segmento"));
         tblcompTlbaggrTlbposiSelectList.add(functions.trim(tblcompTlbaggrTlbposi.col("tp_ndg")).as("tp_ndg"));
-        List<Column> windowSumCols = windowSum(tblcompTlbaggrTlbposi, sumWindowColumns, w);
+        List<Column> windowSumCols = windowSum(tblcompTlbaggrTlbposi, sumWindowColumns, windowsSpec);
         tblcompTlbaggrTlbposiSelectList.addAll(windowSumCols);
 
         Seq<Column> tblcompTlbaggrTlbposiSelectListselectColumnSeq = toScalaColSeq(tblcompTlbaggrTlbposiSelectList);
         Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(tblcompTlbaggrTlbposiSelectListselectColumnSeq);
-
-        posaggr.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(posaggrCsvPath);
+        writeDatasetAsCsvAtPath(posaggr, posaggrCsvPath);
     }
 }
