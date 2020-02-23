@@ -47,16 +47,12 @@ public class QuadFposi extends AbstractStep {
         logger.debug("abbinatiOutDir: " + abbinatiOutDir);
 
         // 17
-        Dataset<Row> hadoopFposi = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(QuadFposiSchema.getHadoopFposiPigSchema()))
-                .csv(hadoopFposiCsv);
+        Dataset<Row> hadoopFposi = readCsvAtPathUsingSchema(hadoopFposiCsv,
+                fromPigSchemaToStructType(QuadFposiSchema.getHadoopFposiPigSchema()));
 
         // 51
-        Dataset<Row> oldfposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(QuadFposiSchema.getOldFposiLoadPigSchema()))
-                .csv(oldfposiLoadCsv);
-
-        // 63
+        Dataset<Row> oldfposiLoad = readCsvAtPathUsingSchema(oldfposiLoadCsv,
+                fromPigSchemaToStructType(QuadFposiSchema.getOldFposiLoadPigSchema()));
 
         // 70
 
@@ -68,12 +64,13 @@ public class QuadFposi extends AbstractStep {
         ,ToString(ToDate( dataSOFFERENZA,'yy-MM-dd'),'yyyyMMdd')  as DATASOFFERENZA
          */
 
+        String oldDatePattern = "yy-MM-dd";
         String newDatePattern = "yyyyMMdd";
-        Column DATAINIZIODEFCol = changeDateFormat(oldfposiLoad.col("datainizioDEF"), "yy-MM-dd", newDatePattern).alias("DATAINIZIODEF");
-        Column DATAFINEDEFCol = changeDateFormat(oldfposiLoad.col("dataFINEDEF"), "yy-MM-dd", newDatePattern).alias("DATAFINEDEF");
-        Column DATAINIZIOPDCol = changeDateFormat(oldfposiLoad.col("dataINIZIOPD"), "yy-MM-dd", newDatePattern).alias("DATAINIZIOPD");
-        Column DATAINIZIOINCCol = changeDateFormat(oldfposiLoad.col("datainizioinc"), "yy-MM-dd", newDatePattern).alias("DATAINIZIOINC");
-        Column DATASOFFERENZACol = changeDateFormat(oldfposiLoad.col("dataSOFFERENZA"), "yy-MM-dd", newDatePattern).alias("DATASOFFERENZA");
+        Column DATAINIZIODEFCol = changeDateFormat(oldfposiLoad.col("datainizioDEF"), oldDatePattern, newDatePattern).alias("DATAINIZIODEF");
+        Column DATAFINEDEFCol = changeDateFormat(oldfposiLoad.col("dataFINEDEF"), oldDatePattern, newDatePattern).alias("DATAFINEDEF");
+        Column DATAINIZIOPDCol = changeDateFormat(oldfposiLoad.col("dataINIZIOPD"), oldDatePattern, newDatePattern).alias("DATAINIZIOPD");
+        Column DATAINIZIOINCCol = changeDateFormat(oldfposiLoad.col("datainizioinc"), oldDatePattern, newDatePattern).alias("DATAINIZIOINC");
+        Column DATASOFFERENZACol = changeDateFormat(oldfposiLoad.col("dataSOFFERENZA"), oldDatePattern, newDatePattern).alias("DATASOFFERENZA");
 
         Dataset<Row> oldFposiGen = oldfposiLoad.select(DATAINIZIODEFCol, DATAFINEDEFCol, DATAINIZIOPDCol, DATAINIZIOINCCol, DATASOFFERENZACol,
                 oldfposiLoad.col("codicebanca").alias("CODICEBANCA"), oldfposiLoad.col("ndgprincipale").alias("NDGPRINCIPALE"),
@@ -131,8 +128,8 @@ public class QuadFposi extends AbstractStep {
 
         Dataset<Row> abbinatiOut = hadoopFposiOldFposiJoin.filter(abbinatiOutFilterCol).select(toScalaColSeq(selectColList));
 
-        hadoopFposiOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(hadoopFposiOutDir);
-        oldFposiOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(oldFposiOutDir);
-        abbinatiOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(abbinatiOutDir);
+        writeDatasetAsCsvAtPath(hadoopFposiOut, hadoopFposiOutDir);
+        writeDatasetAsCsvAtPath(oldFposiOut, oldFposiOutDir);
+        writeDatasetAsCsvAtPath(abbinatiOut, abbinatiOutDir);
     }
 }

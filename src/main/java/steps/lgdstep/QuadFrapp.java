@@ -42,17 +42,9 @@ public class QuadFrapp extends AbstractStep {
         logger.debug("hadoopFrappOutPath: " + hadoopFrappOutPath);
         logger.debug("oldFrappOutPath: " + oldFrappOutPath);
 
-        Dataset<Row> hadoopFrapp = sparkSession.read().format(csvFormat).option("sep", ",")
-                .schema(fromPigSchemaToStructType(QuadFrappSchema.getHadoopFrappPigSchema()))
-                .csv(hadoopFrappCsv);
-
-        Dataset<Row> oldFrappLoad = sparkSession.read().format(csvFormat).option("sep", ",")
-                .schema(fromPigSchemaToStructType(QuadFrappSchema.getOldFrappLoadPigSchema()))
-                .csv(oldFrappLoadCsv);
-
-        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",")
-                .schema(fromPigSchemaToStructType(QuadFrappSchema.getFcollPigSchema()))
-                .csv(fcollCsv);
+        Dataset<Row> hadoopFrapp = readCsvAtPathUsingSchema(hadoopFrappCsv, fromPigSchemaToStructType(QuadFrappSchema.getHadoopFrappPigSchema()));
+        Dataset<Row> oldFrappLoad = readCsvAtPathUsingSchema(oldFrappLoadCsv, fromPigSchemaToStructType(QuadFrappSchema.getOldFrappLoadPigSchema()));
+        Dataset<Row> fcoll = readCsvAtPathUsingSchema(fcollCsv, fromPigSchemaToStructType(QuadFrappSchema.getFcollPigSchema()));
 
         // JOIN oldfrapp_load BY (CODICEBANCA, NDG), fcoll BY (ISTITUTO_COLLEGATO, NDG_COLLEGATO);
 
@@ -91,7 +83,8 @@ public class QuadFrapp extends AbstractStep {
                 .filter(hadoopFrapp.col("codicebanca").isNull())
                 .select(functions.lit(ufficio).alias("ufficio"), hadoopFrapp.col("*"), oldFrapp.col("*"));
 
-        hadoopFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(hadoopFrappOutPath);
-        oldFrappOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(oldFrappOutPath);
+        writeDatasetAsCsvAtPath(hadoopFrappOut, hadoopFrappOutPath);
+        writeDatasetAsCsvAtPath(oldFrappOut, oldFrappOutPath);
+
     }
 }

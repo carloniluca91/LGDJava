@@ -41,13 +41,11 @@ public class QuadFcollCicli extends AbstractStep {
         logger.debug("fileOutCsv: " + fileOutPath);
 
 
-        Dataset<Row> fcoll = sparkSession.read().format(csvFormat).option("sep", ",")
-                .schema(fromPigSchemaToStructType(QuadFcollCicliSchema.getFcollPigSchema()))
-                .csv(fcollCsv);
+        Dataset<Row> fcoll = readCsvAtPathUsingSchema(fcollCsv,
+                fromPigSchemaToStructType(QuadFcollCicliSchema.getFcollPigSchema()));
 
-        Dataset<Row> cicliNdgLoad = sparkSession.read().format(csvFormat).option("sep", ",")
-                .schema(fromPigSchemaToStructType(QuadFcollCicliSchema.getCicliNdgLoadPigSchema()))
-                .csv(cicliNdgLoadCsv);
+        Dataset<Row> cicliNdgLoad = readCsvAtPathUsingSchema(cicliNdgLoadCsv,
+                fromPigSchemaToStructType(QuadFcollCicliSchema.getCicliNdgLoadPigSchema()));
 
         // JOIN cicli_ndg_load BY (cd_isti_coll, ndg_coll) FULL OUTER,
         //      fcoll          BY (istituto_collegato, ndg_collegato);
@@ -70,8 +68,9 @@ public class QuadFcollCicli extends AbstractStep {
         fileOutSelectList.addAll(selectDfColumns(fcoll, fcollSelectMap));
 
         Dataset<Row> fileOut = cicliNdgLoad.join(fcoll, joinCondition, "full_outer")
-                .select(toScalaColSeq(fileOutSelectList)).distinct();
+                .select(toScalaColSeq(fileOutSelectList))
+                .distinct();
 
-        fileOut.write().format(csvFormat).option("sep", ",").mode(SaveMode.Overwrite).csv(fileOutPath);
+        writeDatasetAsCsvAtPath(fileOut, fileOutPath);
     }
 }

@@ -13,7 +13,7 @@ public class QuadFrappSchema {
             put("ndg", "chararray");
             put("sportello", "chararray");
             put("conto", "chararray");
-            put("datariferimento	", "chararray");
+            put("datariferimento", "chararray");
             put("contoesteso", "chararray");
             put("formatecnica", "chararray");
             put("dataaccensione", "chararray");
