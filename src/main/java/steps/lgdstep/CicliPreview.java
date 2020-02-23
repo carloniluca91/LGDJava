@@ -134,7 +134,7 @@ public class CicliPreview extends AbstractStep {
                 .as("stato_anagrafico");
 
         // ( (int)datafinedef > $data_a ? 'A' : 'C' ) as flag_aperto
-        Column flagApertoCol = functions.when(toIntegerType(fposiLoad.col("datafinedef")).gt(Integer.parseInt(dataA)), "A")
+        Column flagApertoCol = functions.when(toInt(fposiLoad.col("datafinedef")).gt(Integer.parseInt(dataA)), "A")
                 .otherwise("C").as("flag_aperto");
 
         Dataset<Row> fposiBase = fposiLoad.select(functions.lit(ufficio).as("ufficio"), functions.col("codicebanca"),

@@ -218,12 +218,12 @@ public class StepUtils {
 
     public static Seq<Column> toScalaColSeq(List<Column> list) { return JavaConversions.asScalaBuffer(list).toSeq();}
 
-    public static Column toIntegerType(Column column){
+    public static Column toInt(Column column){
 
         return column.cast(DataTypes.IntegerType);
     }
 
-    public static Column toStringType(Column column){
+    public static Column toString(Column column){
 
         return column.cast(DataTypes.StringType);
     }

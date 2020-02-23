@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
+import steps.abstractstep.StepUtils;
 import steps.schemas.FrappPumaSchema;
 
 import java.util.ArrayList;
@@ -74,11 +75,11 @@ public class FrappPuma extends AbstractStep {
         // we need to format $data_a to yyyyMMdd
         String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, "yyyyMMdd"));
-        Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(toStringType(tlbcidef.col("datafinedef")), "yyyyMMdd", 1),
+        Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(StepUtils.toString(tlbcidef.col("datafinedef")), "yyyyMMdd", 1),
                 dataACol, "yyyMMdd");
 
-        Column dtRiferimentoLeastDateFilterCol = substringAndCastToInt(toStringType(tlbgaran.col("dt_riferimento")), 0, 6)
-                .leq(substringAndCastToInt(toStringType(dataFineDefDataALeastDateCol), 0, 6));
+        Column dtRiferimentoLeastDateFilterCol = substringAndCastToInt(StepUtils.toString(tlbgaran.col("dt_riferimento")), 0, 6)
+                .leq(substringAndCastToInt(StepUtils.toString(dataFineDefDataALeastDateCol), 0, 6));
 
         /*
           tlbgaran::cd_istituto			 AS cd_isti

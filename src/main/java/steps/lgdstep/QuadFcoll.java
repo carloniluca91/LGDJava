@@ -36,9 +36,8 @@ public class QuadFcoll extends AbstractStep {
         logger.debug("fileoutdist: " + fileoutdist);
 
         // 17
-        Dataset<Row> fcollLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(QuadFcollSchema.getFcollLoadPigSchema()))
-                .csv(fcollCsv);
+        Dataset<Row> fcollLoad = readCsvAtPathUsingSchema(fcollCsv,
+                fromPigSchemaToStructType(QuadFcollSchema.getFcollLoadPigSchema()));
 
         // ToString(ToDate( data_inizio_DEF,'ddMMMyyyy'),'yyyyMMdd')    as data_inizio_DEF
         // ToString(ToDate( data_collegamento,'ddMMMyyyy'),'yyyyMMdd')  as data_collegamento
@@ -50,9 +49,8 @@ public class QuadFcoll extends AbstractStep {
         // 39
 
         // 44
-        Dataset<Row> oldFposiLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(QuadFcollSchema.getOldFposiLoadPigSchema()))
-                .csv(oldFposiLoadCsv);
+        Dataset<Row> oldFposiLoad = readCsvAtPathUsingSchema(oldFposiLoadCsv,
+                fromPigSchemaToStructType(QuadFcollSchema.getOldFposiLoadPigSchema()));
 
         // FILTER oldfposi_load BY dataINIZIOPD is not null OR datainizioinc is not null OR dataSOFFERENZA is not null
         Column filterConditionCol = oldFposiLoad.col("dataINIZIOPD").isNotNull()
@@ -96,8 +94,9 @@ public class QuadFcoll extends AbstractStep {
 
         // JOIN oldfposi BY (cumulo) LEFT, fcoll BY (cumulo);
         Dataset<Row> fileOutDist = oldFposi.join(fcoll, oldFposi.col("cumulo").equalTo(fcoll.col("cumulo")), "left")
-                .select(toScalaColSeq(fileOutDistSelectColList)).distinct();
+                .select(toScalaColSeq(fileOutDistSelectColList))
+                .distinct();
 
-        fileOutDist.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(fileoutdist);
+        writeDatasetAsCsvAtPath(fileOutDist, fileoutdist);
     }
 }
