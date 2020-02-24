@@ -1,4 +1,4 @@
-import steps.lgdstep.RaccSoff;
+import it.carloni.luca.lgd.steps.RaccSoff;
 
 public class RaccSoffMain {
 

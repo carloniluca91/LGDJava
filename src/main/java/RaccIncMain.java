@@ -1,4 +1,4 @@
-import steps.lgdstep.RaccInc;
+import it.carloni.luca.lgd.steps.RaccInc;
 
 public class RaccIncMain {
 

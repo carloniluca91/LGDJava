@@ -1,4 +1,4 @@
-import steps.lgdstep.Fpasperd;
+import it.carloni.luca.lgd.steps.Fpasperd;
 
 public class FpasperdMain {
 

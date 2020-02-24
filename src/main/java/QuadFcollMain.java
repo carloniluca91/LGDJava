@@ -1,4 +1,4 @@
-import steps.lgdstep.QuadFcoll;
+import it.carloni.luca.lgd.steps.QuadFcoll;
 
 public class QuadFcollMain {
 

@@ -1,4 +1,4 @@
-import steps.lgdstep.Posaggr;
+import it.carloni.luca.lgd.steps.Posaggr;
 
 public class PosaggrMain {
 

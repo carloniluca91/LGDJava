@@ -1,7 +1,7 @@
 import org.apache.commons.cli.Option;
-import steps.lgdstep.CiclilavStep1;
-import steps.params.OptionFactory;
-import steps.params.StepParams;
+import it.carloni.luca.lgd.steps.CiclilavStep1;
+import it.carloni.luca.lgd.params.OptionFactory;
+import it.carloni.luca.lgd.params.StepParams;
 
 import java.util.Arrays;
 import java.util.List;

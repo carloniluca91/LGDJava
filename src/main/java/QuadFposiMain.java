@@ -1,7 +1,7 @@
 import org.apache.commons.cli.Option;
-import steps.lgdstep.QuadFposi;
-import steps.params.OptionFactory;
-import steps.params.StepParams;
+import it.carloni.luca.lgd.steps.QuadFposi;
+import it.carloni.luca.lgd.params.OptionFactory;
+import it.carloni.luca.lgd.params.StepParams;
 
 import java.util.Collections;
 import java.util.List;
