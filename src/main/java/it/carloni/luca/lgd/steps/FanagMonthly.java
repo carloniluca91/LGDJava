@@ -2,15 +2,15 @@ package it.carloni.luca.lgd.steps;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
-import it.carloni.luca.lgd.commons.AbstractStep;
-import it.carloni.luca.lgd.commons.StepUtils;
+import it.carloni.luca.lgd.common.AbstractStep;
+import it.carloni.luca.lgd.common.StepUtils;
 import it.carloni.luca.lgd.schemas.FanagMonthlySchema;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static it.carloni.luca.lgd.commons.StepUtils.*;
+import static it.carloni.luca.lgd.common.StepUtils.*;
 
 public class FanagMonthly extends AbstractStep {
 

@@ -1,4 +1,4 @@
-package it.carloni.luca.lgd.commons.udfs;
+package it.carloni.luca.lgd.common.udfs;
 
 import org.apache.spark.sql.api.java.UDF3;
 import org.apache.spark.sql.api.java.UDF4;

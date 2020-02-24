@@ -6,11 +6,11 @@ import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.DataTypes;
-import it.carloni.luca.lgd.commons.AbstractStep;
-import it.carloni.luca.lgd.commons.udfs.UDFsNames;
+import it.carloni.luca.lgd.common.AbstractStep;
+import it.carloni.luca.lgd.common.udfs.UDFsNames;
 import it.carloni.luca.lgd.schemas.CicliPreviewSchema;
 
-import static it.carloni.luca.lgd.commons.StepUtils.*;
+import static it.carloni.luca.lgd.common.StepUtils.*;
 
 public class CicliPreview extends AbstractStep {
 

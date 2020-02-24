@@ -1,4 +1,4 @@
-package it.carloni.luca.lgd.commons;
+package it.carloni.luca.lgd.common;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -9,8 +9,8 @@ import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
-import it.carloni.luca.lgd.commons.udfs.UDFsFactory;
-import it.carloni.luca.lgd.commons.udfs.UDFsNames;
+import it.carloni.luca.lgd.common.udfs.UDFsFactory;
+import it.carloni.luca.lgd.common.udfs.UDFsNames;
 
 public abstract class AbstractStep {
 

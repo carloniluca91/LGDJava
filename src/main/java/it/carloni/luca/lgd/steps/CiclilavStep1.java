@@ -3,14 +3,14 @@ package it.carloni.luca.lgd.steps;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.commons.AbstractStep;
+import it.carloni.luca.lgd.common.AbstractStep;
 import it.carloni.luca.lgd.schemas.CicliLavStep1Schema;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
-import static it.carloni.luca.lgd.commons.StepUtils.*;
+import static it.carloni.luca.lgd.common.StepUtils.*;
 
 
 public class CiclilavStep1 extends AbstractStep {

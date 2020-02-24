@@ -4,10 +4,10 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
-import it.carloni.luca.lgd.commons.AbstractStep;
+import it.carloni.luca.lgd.common.AbstractStep;
 import it.carloni.luca.lgd.schemas.SofferenzePreviewSchema;
 
-import static it.carloni.luca.lgd.commons.StepUtils.*;
+import static it.carloni.luca.lgd.common.StepUtils.*;
 
 public class SofferenzePreview extends AbstractStep {
 

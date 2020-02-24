@@ -1,4 +1,4 @@
-package it.carloni.luca.lgd.commons;
+package it.carloni.luca.lgd.common;
 
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.*;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.commons.udfs.UDFsNames;
+import it.carloni.luca.lgd.common.udfs.UDFsNames;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

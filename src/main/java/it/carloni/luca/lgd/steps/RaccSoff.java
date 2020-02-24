@@ -5,13 +5,13 @@ import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.commons.AbstractStep;
+import it.carloni.luca.lgd.common.AbstractStep;
 import it.carloni.luca.lgd.schemas.RaccSoffSchema;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static it.carloni.luca.lgd.commons.StepUtils.*;
+import static it.carloni.luca.lgd.common.StepUtils.*;
 
 public class RaccSoff extends AbstractStep {
 

@@ -2,14 +2,14 @@ package it.carloni.luca.lgd.steps;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
-import it.carloni.luca.lgd.commons.AbstractStep;
+import it.carloni.luca.lgd.common.AbstractStep;
 import it.carloni.luca.lgd.schemas.QuadFcollCicliSchema;
 
 import java.util.*;
 
-import static it.carloni.luca.lgd.commons.StepUtils.fromPigSchemaToStructType;
-import static it.carloni.luca.lgd.commons.StepUtils.selectDfColumns;
-import static it.carloni.luca.lgd.commons.StepUtils.toScalaColSeq;
+import static it.carloni.luca.lgd.common.StepUtils.fromPigSchemaToStructType;
+import static it.carloni.luca.lgd.common.StepUtils.selectDfColumns;
+import static it.carloni.luca.lgd.common.StepUtils.toScalaColSeq;
 
 public class QuadFcollCicli extends AbstractStep {
 
