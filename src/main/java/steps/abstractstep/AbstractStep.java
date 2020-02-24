@@ -61,27 +61,18 @@ public abstract class AbstractStep {
     private void getSparkSessionWithUDFs(){
 
         sparkSession = SparkSession.builder().getOrCreate();
-        registerUDFsForDateComparison();
-        registerUDFsForDateManipulation();
+        registerUDFs(sparkSession);
     }
 
-    private void registerUDFsForDateComparison(){
+    private void registerUDFs(SparkSession sparkSession){
 
-        // UDFS FOR DATE COMPARISON (EACH RETURNS A BOOLEAN)
-        sparkSession.udf().register(UDFsNames.IS_DATE_GEQ_OTHERDATE_UDF_NAME, UDFsFactory.isDateGeqOtherDateUDF(), DataTypes.BooleanType);
-        sparkSession.udf().register(UDFsNames.IS_DATE_LT_OTHERDATE_UDF_NAME, UDFsFactory.isDateLtOtherDateUDF(), DataTypes.BooleanType);
-        sparkSession.udf().register(UDFsNames.IS_DATE_BETWEEN_UDF_NAME, UDFsFactory.isDateBetweenLowerDateAndUpperDateUDF(), DataTypes.BooleanType);
-    }
-
-    private void registerUDFsForDateManipulation(){
-
-        // UDFS FOR DATE MANIPULATION
         sparkSession.udf().register(UDFsNames.ADD_DURATION_UDF_NAME, UDFsFactory.addDurationUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFsNames.SUBTRACT_DURATION_UDF_NAME, UDFsFactory.substractDurationUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFsNames.CHANGE_DATE_FORMAT_UDF_NAME, UDFsFactory.changeDateFormatUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFsNames.GREATEST_DATE_UDF_NAME, UDFsFactory.greatestDateUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFsNames.LEAST_DATE_UDF_NAME, UDFsFactory.leastDateUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFsNames.DAYS_BETWEEN_UDF_NAME, UDFsFactory.daysBetweenUDF(), DataTypes.LongType);
+        sparkSession.udf().register(UDFsNames.GREATEST_DATE_UDF_NAME, UDFsFactory.greatestDateUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFsNames.IS_DATE_BETWEEN_UDF_NAME, UDFsFactory.isDateBetweenLowerDateAndUpperDateUDF(), DataTypes.BooleanType);
+        sparkSession.udf().register(UDFsNames.LEAST_DATE_UDF_NAME, UDFsFactory.leastDateUDF(), DataTypes.StringType);
     }
 
     protected Dataset<Row> readCsvAtPathUsingSchema(String csvFilePath, StructType csvSchema){

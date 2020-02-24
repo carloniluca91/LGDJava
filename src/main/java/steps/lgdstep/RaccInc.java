@@ -2,7 +2,6 @@ package steps.lgdstep;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
-import org.apache.spark.sql.types.DataTypes;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.RaccIncSchema;
@@ -34,9 +33,7 @@ public class RaccInc extends AbstractStep {
         logger.debug("tlbmignPathCsv: " + tlbmignPathCsv);
         logger.debug("raccIncOutPath: " + raccIncOutPath);
 
-        Dataset<Row> tlbmign = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(RaccIncSchema.getTlbmignPigSchema()))
-                .csv(tlbmignPathCsv);
+        Dataset<Row> tlbmign = readCsvAtPathUsingSchema(tlbmignPathCsv, fromPigSchemaToStructType(RaccIncSchema.getTlbmignPigSchema()));
 
         // AddDuration(ToDate(data_migraz,'yyyyMMdd'),'P1M') AS month_up
         Column monthUpCol = addDuration(tlbmign.col("data_migraz"), "yyyyMMdd", 1);
@@ -44,10 +41,10 @@ public class RaccInc extends AbstractStep {
         List<Column> tlbmignSelectList = new ArrayList<>();
         tlbmignSelectList.add(tlbmign.col("cd_isti_ric").as("ist_ric_inc"));
         tlbmignSelectList.add(tlbmign.col("ndg_ric").as("ndg_ric_inc"));
-        tlbmignSelectList.add(functions.lit(null).cast(DataTypes.StringType).as("num_ric_inc"));
+        tlbmignSelectList.add(toStringCol(functions.lit(null)).as("num_ric_inc"));
         tlbmignSelectList.add(tlbmign.col("cd_isti_ced").as("ist_ced_inc"));
         tlbmignSelectList.add(tlbmign.col("ndg_ced").as("ndg_ced_inc"));
-        tlbmignSelectList.add(functions.lit(null).cast(DataTypes.StringType).as("num_ced_inc"));
+        tlbmignSelectList.add(toStringCol(functions.lit(null)).as("num_ced_inc"));
         tlbmignSelectList.add(tlbmign.col("data_migraz"));
 
         Seq<Column> tlbmignSelectSeq = toScalaColSeq(tlbmignSelectList);
@@ -55,6 +52,6 @@ public class RaccInc extends AbstractStep {
                 .withColumn("month_up", monthUpCol)
                 .drop("data_migraz");
 
-        raccIncOut.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(raccIncOutPath);
+        writeDatasetAsCsvAtPath(raccIncOut, raccIncOutPath);
     }
 }

@@ -1,4 +1,3 @@
 .idea/*
 target/*
 src/main/test/*
-spark-warehouse

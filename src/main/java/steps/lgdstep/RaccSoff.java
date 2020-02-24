@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SaveMode;
 import scala.collection.Seq;
 import steps.abstractstep.AbstractStep;
 import steps.schemas.RaccSoffSchema;
@@ -36,10 +35,7 @@ public class RaccSoff extends AbstractStep {
         logger.debug("dblabCsvPath: " + dblabCsvPath);
         logger.debug("dllabOutPath: " + dllabOutPath);
 
-        Dataset<Row> dllab = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(RaccSoffSchema.getDblabtlbjxd9PigSchema()))
-                .csv(dblabCsvPath);
-
+        Dataset<Row> dllab = readCsvAtPathUsingSchema(dblabCsvPath, fromPigSchemaToStructType(RaccSoffSchema.getDblabtlbjxd9PigSchema()));
         Map<String, String> columnMap = new LinkedHashMap<String, String>(){{
 
             put("istricsof", "IST_RIC_SOF");
@@ -52,7 +48,6 @@ public class RaccSoff extends AbstractStep {
         }};
 
         Seq<Column> dllabSelectSeq = toScalaColSeq(selectDfColumns(dllab, columnMap));
-        dllab.select(dllabSelectSeq).write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(dllabOutPath);
-
+        writeDatasetAsCsvAtPath(dllab.select(dllabSelectSeq), dllabOutPath);
     }
 }

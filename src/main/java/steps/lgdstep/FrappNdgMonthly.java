@@ -67,8 +67,8 @@ public class FrappNdgMonthly extends AbstractStep {
         Dataset<Row> tlburttFilter = tlburtt.filter(tlburtt.col("progr_segmento").equalTo(0));
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-        Column dtRiferimentoFilterPrincCol = tlburttFilter.col("dt_riferimento").geq(toInt(
-                subtractDuration(StepUtils.toString(cicliNdgPrinc.col("datainiziodef")), "yyyyMMdd", numeroMesi1)));
+        Column dtRiferimentoFilterPrincCol = tlburttFilter.col("dt_riferimento").geq(toIntCol(
+                subtractDuration(StepUtils.toStringCol(cicliNdgPrinc.col("datainiziodef")), "yyyyMMdd", numeroMesi1)));
 
         /*
         AddDuration(ToDate((chararray)
@@ -82,12 +82,12 @@ public class FrappNdgMonthly extends AbstractStep {
         // we need to format $data_a to yyyyMMdd
         String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(this.dataA, dataAPattern, "yyyyMMdd"));
-        Column dataFineDefSubtractDurationPrincCol = subtractDuration(StepUtils.toString(cicliNdgPrinc.col("datafinedef")), "yyyyMMdd", 1);
+        Column dataFineDefSubtractDurationPrincCol = subtractDuration(StepUtils.toStringCol(cicliNdgPrinc.col("datafinedef")), "yyyyMMdd", 1);
         Column leastDateDataFineDefDataAPrincCol = leastDate(dataFineDefSubtractDurationPrincCol, dataACol, "yyyyMMdd");
         Column addDurationLeastDateDataFineDefDataAPrincCol = addDuration(leastDateDataFineDefDataAPrincCol, "yyyyMMdd", numeroMesi2);
 
         // AND SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(AddDuration(...), 0, 6)
-        Column dataFineDefFilterPrincCol = substringAndCastToInt(StepUtils.toString(tlburttFilter.col("dt_riferimento")), 0, 6)
+        Column dataFineDefFilterPrincCol = substringAndCastToInt(StepUtils.toStringCol(tlburttFilter.col("dt_riferimento")), 0, 6)
                 .leq(substringAndCastToInt(addDurationLeastDateDataFineDefDataAPrincCol, 0, 6));
 
         // list of columns to be selected on cicliNdgPrinc
@@ -113,7 +113,7 @@ public class FrappNdgMonthly extends AbstractStep {
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         Column dtRiferimentoFilterCollCol = tlburttFilter.col("dt_riferimento")
-                .geq(subtractDuration(StepUtils.toString(cicliNdgColl.col("datainiziodef")), "yyyyMMdd", numeroMesi1));
+                .geq(subtractDuration(StepUtils.toStringCol(cicliNdgColl.col("datainiziodef")), "yyyyMMdd", numeroMesi1));
 
         /*
         AddDuration(ToDate((chararray)
@@ -124,13 +124,13 @@ public class FrappNdgMonthly extends AbstractStep {
 ;
          */
 
-        Column dataFineDefSubtractDurationCollCol = subtractDuration(StepUtils.toString(cicliNdgColl.col("datafinedef")), "yyyyMMdd", 1);
+        Column dataFineDefSubtractDurationCollCol = subtractDuration(StepUtils.toStringCol(cicliNdgColl.col("datafinedef")), "yyyyMMdd", 1);
         Column leastDateDataFineDefDataACollCol = leastDate(dataFineDefSubtractDurationCollCol, dataACol, "yyyyMMdd");
         Column addDurationLeastDateDataFineDefDataACollCol = addDuration(leastDateDataFineDefDataACollCol, "yyyyMMdd", numeroMesi2);
 
         // AND SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(AddDuration(...), 0, 6)
-        Column dataFineDefFilterCollCol = substringAndCastToInt(StepUtils.toString(tlburttFilter.col("dt_riferimento")), 0, 6)
-                .leq(substringAndCastToInt(StepUtils.toString(addDurationLeastDateDataFineDefDataACollCol), 0, 6));
+        Column dataFineDefFilterCollCol = substringAndCastToInt(StepUtils.toStringCol(tlburttFilter.col("dt_riferimento")), 0, 6)
+                .leq(substringAndCastToInt(StepUtils.toStringCol(addDurationLeastDateDataFineDefDataACollCol), 0, 6));
 
         List<Column> tlbcidefUrttCollCols = selectDfColumns(cicliNdgColl, cicliNdgPrincSelectColNames);
         tlbcidefUrttCollCols.addAll(tlburttFilterSelectCols);

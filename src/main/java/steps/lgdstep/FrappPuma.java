@@ -75,11 +75,11 @@ public class FrappPuma extends AbstractStep {
         // we need to format $data_a to yyyyMMdd
         String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, "yyyyMMdd"));
-        Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(StepUtils.toString(tlbcidef.col("datafinedef")), "yyyyMMdd", 1),
+        Column dataFineDefDataALeastDateCol = leastDate(subtractDuration(StepUtils.toStringCol(tlbcidef.col("datafinedef")), "yyyyMMdd", 1),
                 dataACol, "yyyMMdd");
 
-        Column dtRiferimentoLeastDateFilterCol = substringAndCastToInt(StepUtils.toString(tlbgaran.col("dt_riferimento")), 0, 6)
-                .leq(substringAndCastToInt(StepUtils.toString(dataFineDefDataALeastDateCol), 0, 6));
+        Column dtRiferimentoLeastDateFilterCol = substringAndCastToInt(StepUtils.toStringCol(tlbgaran.col("dt_riferimento")), 0, 6)
+                .leq(substringAndCastToInt(StepUtils.toStringCol(dataFineDefDataALeastDateCol), 0, 6));
 
         /*
           tlbgaran::cd_istituto			 AS cd_isti

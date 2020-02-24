@@ -45,7 +45,7 @@ public class Fpasperd extends AbstractStep {
                 fromPigSchemaToStructType(FpasperdSchema.getTlbcidefLoadPigSchema()));
 
         // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
-        Column dataFineDefCol = addDuration(StepUtils.toString(tlbcidefLoad.col("datafinedef")), "yyyyMMdd", 2).as("datafinedef");
+        Column dataFineDefCol = addDuration(StepUtils.toStringCol(tlbcidefLoad.col("datafinedef")), "yyyyMMdd", 2).as("datafinedef");
         Dataset<Row> tlbcidef = tlbcidefLoad.select(functions.col("codicebanca"), functions.col("ndgprincipale"),
                 functions.col("datainiziodef"), dataFineDefCol, functions.col("codicebanca_collegato"),
                 functions.col("ndg_collegato"));
@@ -64,15 +64,15 @@ public class Fpasperd extends AbstractStep {
                 .and(tlbpaspeFilter.col("ndg").equalTo(tlbcidef.col("ndg_collegato")));
 
         // BY (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
-        Column fpasperdBetweenGenDataContDataInizioDefFilterCol = substringAndCastToInt(StepUtils.toString(tlbpaspeFilter.col("datacont")), 0, 6)
-                .geq(substringAndCastToInt(StepUtils.toString(tlbcidef.col("datainiziodef")), 0, 6));
+        Column fpasperdBetweenGenDataContDataInizioDefFilterCol = substringAndCastToInt(StepUtils.toStringCol(tlbpaspeFilter.col("datacont")), 0, 6)
+                .geq(substringAndCastToInt(StepUtils.toStringCol(tlbcidef.col("datainiziodef")), 0, 6));
 
         // AND (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
-        Column fpasperdBetweenGenDataContDataFineDefFilterCol = substringAndCastToInt(StepUtils.toString(tlbpaspeFilter.col("datacont")), 0, 6)
-                .lt(substringAndCastToInt(StepUtils.toString(tlbcidef.col("datafinedef")), 0, 6));
+        Column fpasperdBetweenGenDataContDataFineDefFilterCol = substringAndCastToInt(StepUtils.toStringCol(tlbpaspeFilter.col("datacont")), 0, 6)
+                .lt(substringAndCastToInt(StepUtils.toStringCol(tlbcidef.col("datafinedef")), 0, 6));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
-        Column fpasperdBetweenGenDaysDiffColl = daysBetween(StepUtils.toString(tlbcidef.col("datafinedef")), StepUtils.toString(tlbpaspeFilter.col("datacont")), "yyyyMMdd");
+        Column fpasperdBetweenGenDaysDiffColl = daysBetween(StepUtils.toStringCol(tlbcidef.col("datafinedef")), StepUtils.toStringCol(tlbpaspeFilter.col("datacont")), "yyyyMMdd");
 
         // list of columns to be selected from dataframe tlbpaspeFilter
         List<String> tlbpaspeFilterSelectCols = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -109,9 +109,9 @@ public class Fpasperd extends AbstractStep {
         List<String> fpasperdOtherGenSelectColsNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
         List<Column> fpasperdOtherGenSelectColList = selectDfColumns(tlbpaspeFilter, fpasperdOtherGenSelectColsNames);
 
-        fpasperdOtherGenSelectColList.add(StepUtils.toString(functions.lit(null)).as("codicebanca"));
-        fpasperdOtherGenSelectColList.add(StepUtils.toString(functions.lit(null)).as("ndgprincipale"));
-        fpasperdOtherGenSelectColList.add(StepUtils.toString(functions.lit(null)).as("datainiziodef"));
+        fpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("codicebanca"));
+        fpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("ndgprincipale"));
+        fpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("datainiziodef"));
 
         Seq<Column> fpasperdOtherGenSelectColsSeq = toScalaColSeq(fpasperdOtherGenSelectColList);
         Dataset<Row> fpasperdOtherGen = tlbcidefTlbpaspeFilterJoin.filter(tlbcidef.col("codicebanca").isNotNull())
@@ -148,18 +148,18 @@ public class Fpasperd extends AbstractStep {
 
         //  BY (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
         Column principFpasperdBetweenGenDataContDataInizioDefFilterCol =
-                substringAndCastToInt(StepUtils.toString(fpasperdNullOut.col("datacont")), 0, 6)
-                .geq(substringAndCastToInt(StepUtils.toString(tlbcidef.col("datainiziodef")), 0, 6));
+                substringAndCastToInt(StepUtils.toStringCol(fpasperdNullOut.col("datacont")), 0, 6)
+                .geq(substringAndCastToInt(StepUtils.toStringCol(tlbcidef.col("datainiziodef")), 0, 6));
 
         // AND (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
         Column principFpasperdBetweenGenDataContDataFineDefFilterCol =
-                substringAndCastToInt(StepUtils.toString(fpasperdNullOut.col("datacont")), 0, 6)
-                .lt(substringAndCastToInt(StepUtils.toString(tlbcidef.col("datafinedef")), 0, 6));
+                substringAndCastToInt(StepUtils.toStringCol(fpasperdNullOut.col("datacont")), 0, 6)
+                .lt(substringAndCastToInt(StepUtils.toStringCol(tlbcidef.col("datafinedef")), 0, 6));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ),
         // ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
         Column principFpasperdBetweenGenDaysDiffColl =
-                daysBetween(StepUtils.toString(tlbcidef.col("datafinedef")), StepUtils.toString(fpasperdNullOut.col("datacont")), "yyyyMMdd");
+                daysBetween(StepUtils.toStringCol(tlbcidef.col("datafinedef")), StepUtils.toStringCol(fpasperdNullOut.col("datacont")), "yyyyMMdd");
 
         // columns to be selected from dataframe fpasperdNullOut
         List<String> fpasperdNullOutSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale", "importo");
@@ -191,9 +191,9 @@ public class Fpasperd extends AbstractStep {
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
         List<Column> principFpasperdOtherGenSelectColList = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
-        principFpasperdOtherGenSelectColList.add(StepUtils.toString(functions.lit(null)).as("codicebanca"));
-        principFpasperdOtherGenSelectColList.add(StepUtils.toString(functions.lit(null)).as("ndgprincipale"));
-        principFpasperdOtherGenSelectColList.add(StepUtils.toString(functions.lit(null)).as("datainiziodef"));
+        principFpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("codicebanca"));
+        principFpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("ndgprincipale"));
+        principFpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("datainiziodef"));
 
         Seq<Column> principFpasperdOtherGenSelectColsSeq = toScalaColSeq(principFpasperdOtherGenSelectColList);
         Dataset<Row> principFpasperdOtherGen = fpasperdNullOut.join(tlbcidef, principFpasperdOtherGenJoinCondition, "left")
@@ -222,9 +222,9 @@ public class Fpasperd extends AbstractStep {
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
         List<Column> principFpasperdNullOutCols = selectDfColumns(fpasperdNullOut, fpasperdNullOutSelectColNames);
-        principFpasperdNullOutCols.add(StepUtils.toString(functions.lit(null)).as("codicebanca"));
-        principFpasperdNullOutCols.add(StepUtils.toString(functions.lit(null)).as("ndgprincipale"));
-        principFpasperdNullOutCols.add(StepUtils.toString(functions.lit(null)).as("datainiziodef"));
+        principFpasperdNullOutCols.add(StepUtils.toStringCol(functions.lit(null)).as("codicebanca"));
+        principFpasperdNullOutCols.add(StepUtils.toStringCol(functions.lit(null)).as("ndgprincipale"));
+        principFpasperdNullOutCols.add(StepUtils.toStringCol(functions.lit(null)).as("datainiziodef"));
 
         Seq<Column> principFpasperdNullOutSelectColsSeq = toScalaColSeq(principFpasperdNullOutCols);
         Dataset<Row> principFpasperdNullOut = fpasperdNullOut.join(tlbcidef, principFpasperdNullOutJoinCondition, "left")

@@ -70,11 +70,11 @@ public class FanagMonthly extends AbstractStep {
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         Column dtRiferimentoDataInizioDefPrincConditionCol = tlbuact.col("dt_riferimento").geq(
-                toInt(subtractDuration(StepUtils.toString(cicliNdgPrinc.col("datainiziodef")), "yyyyMMdd", numeroMesi1)));
+                toIntCol(subtractDuration(StepUtils.toStringCol(cicliNdgPrinc.col("datainiziodef")), "yyyyMMdd", numeroMesi1)));
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
         // [a] SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd')
-        Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDuration(StepUtils.toString(cicliNdgPrinc.col("datafinedef")), "yyyyMMdd", 1);
+        Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDuration(StepUtils.toStringCol(cicliNdgPrinc.col("datafinedef")), "yyyyMMdd", 1);
 
         // we need to format $data_a to pattern yyyyMMdd
         String dataAPattern = getValue("params.dataa.pattern");
@@ -86,7 +86,7 @@ public class FanagMonthly extends AbstractStep {
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationPrincCol, 0,6)
         Column dtRiferimentoLeastDateAddDurationPrincConditionCol =
-                substringAndCastToInt(StepUtils.toString(tlbuact.col("dt_riferimento")), 0, 6)
+                substringAndCastToInt(StepUtils.toStringCol(tlbuact.col("dt_riferimento")), 0, 6)
                         .leq(substringAndCastToInt(leastDateAddDurationPrincCol, 0, 6));
 
         // 132
@@ -143,10 +143,10 @@ public class FanagMonthly extends AbstractStep {
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         Column dtRiferimentoDataInizioDefCollConditionCol = tlbuact.col("dt_riferimento").geq(
-                toInt(subtractDuration(StepUtils.toString(cicliNdgColl.col("datainiziodef")),"yyyyMMdd", numeroMesi1)));
+                toIntCol(subtractDuration(StepUtils.toStringCol(cicliNdgColl.col("datainiziodef")),"yyyyMMdd", numeroMesi1)));
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
-        Column cicliNdgCollDataFineDefSubtractDurationCol = subtractDuration(StepUtils.toString(cicliNdgColl.col("datafinedef")), "yyyyMMdd", 1);
+        Column cicliNdgCollDataFineDefSubtractDurationCol = subtractDuration(StepUtils.toStringCol(cicliNdgColl.col("datafinedef")), "yyyyMMdd", 1);
         Column leastDateCollCol = leastDate(cicliNdgCollDataFineDefSubtractDurationCol, dataACol, "yyyyMMdd");
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )
@@ -154,7 +154,7 @@ public class FanagMonthly extends AbstractStep {
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationPrincCol, 0,6)
         Column dtRiferimentoLeastDateAddDurationCollConditionCol =
-                substringAndCastToInt(StepUtils.toString(tlbuact.col("dt_riferimento")), 0, 6)
+                substringAndCastToInt(StepUtils.toStringCol(tlbuact.col("dt_riferimento")), 0, 6)
                         .leq(substringAndCastToInt(leastDateAddDurationCollCol, 0, 6));
 
         // 132

@@ -41,9 +41,8 @@ public class SofferenzePreview extends AbstractStep {
         logger.debug("soffGen2Path: " + soffGen2Path);
         logger.debug("soffSintGen2Path: " + soffSintGen2Path);
 
-        Dataset<Row> soffLoad = sparkSession.read().format(csvFormat).option("delimiter", ",")
-                .schema(fromPigSchemaToStructType(SofferenzePreviewSchema.getSoffLoadPigSchema()))
-                .csv(soffOutDirCsv);
+        Dataset<Row> soffLoad = readCsvAtPathUsingSchema(soffOutDirCsv,
+                fromPigSchemaToStructType(SofferenzePreviewSchema.getSoffLoadPigSchema()));
 
         // 37
 
@@ -77,23 +76,25 @@ public class SofferenzePreview extends AbstractStep {
         Column dataFineCol = changeDateFormat(soffBase.col("datafine"), "yyyyMMdd", "yyyy-MM-dd").alias("datafine");
 
         // GROUP soff_base BY ( istituto, ndg, numerosofferenza );
-        WindowSpec soffGen2Window = Window
-                .partitionBy(soffBase.col("istituto"), soffBase.col("ndg"), soffBase.col("numerosofferenza"));
+        WindowSpec soffGen2WindowSpec = Window.partitionBy(
+                soffBase.col("istituto"),
+                soffBase.col("ndg"),
+                soffBase.col("numerosofferenza"));
 
         /*
         SUM(soff_base.saldoposizione)        as saldoposizione,
         SUM(soff_base.saldoposizionecontab)  as saldoposizionecontab
          */
 
-        Column saldoPosizioneSumCol = functions.sum(soffBase.col("saldoposizione")).over(soffGen2Window).as("saldoposizione");
-        Column saldoPosizioneContabSumCol = functions.sum(soffBase.col("saldoposizionecontab")).over(soffGen2Window).as("saldoposizionecontab");
+        Column saldoPosizioneSumCol = functions.sum(soffBase.col("saldoposizione")).over(soffGen2WindowSpec).as("saldoposizione");
+        Column saldoPosizioneContabSumCol = functions.sum(soffBase.col("saldoposizionecontab")).over(soffGen2WindowSpec).as("saldoposizionecontab");
 
         Dataset<Row> soffGen2 = soffBase.select(soffBase.col("ufficio"), soffBase.col("datarif"),
                 soffBase.col("istituto"), soffBase.col("ndg"), soffBase.col("numerosofferenza"),
                 dataInizioCol, dataFineCol, soffBase.col("statopratica"),
                 saldoPosizioneSumCol, saldoPosizioneContabSumCol);
 
-        soffGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(soffGen2Path);
+        writeDatasetAsCsvAtPath(soffGen2, soffGen2Path);
 
         // 87
 
@@ -109,6 +110,6 @@ public class SofferenzePreview extends AbstractStep {
                         functions.sum(soffBase.col("saldoposizione")).as("saldoposizione"),
                         functions.sum(soffBase.col("saldoposizionecontab")).as("saldoposizionecontab"));
 
-        soffSintGen2.write().format(csvFormat).option("delimiter", ",").mode(SaveMode.Overwrite).csv(soffSintGen2Path);
+        writeDatasetAsCsvAtPath(soffSintGen2, soffSintGen2Path);
     }
 }
