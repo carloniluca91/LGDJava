@@ -20,7 +20,7 @@ import java.util.Set;
 public class StepUtils {
 
     /***
-     * calls a registered UDF in order to add numberOfMonths to a String expressing a date
+     * calls a previously registered UDF in order to add numberOfMonths to a String expressing a date
      * @param dateCol: String column expressing a date
      * @param dateColFormat: format of String column
      * @param numberOfMonths: number of months to add
@@ -34,7 +34,7 @@ public class StepUtils {
     }
 
     /***
-     * calls a registered UDF in order to changethe format of a String expressing a date
+     * calls a previously registered UDF in order to change the format of a String expressing a date
      * @param dateColumn: String column expressing a date
      * @param oldPattern: old format of String column
      * @param newPattern: new format of String column
@@ -63,7 +63,7 @@ public class StepUtils {
     }
 
     /***
-     * calls a registered UDF in order to check if a date with pattern dateColumnPattern is within defined by
+     * calls a previously registered UDF in order to check if a date with pattern dateColumnPattern is within defined by
      * lowerDate (with pattern lowerDatePattern) and upperDate (with pattern upperDatePattern)
      * @param dateColumn: String column expressing a date
      * @param dateColumnPattern: format of String column
@@ -85,7 +85,7 @@ public class StepUtils {
     }
 
     /***
-     * calls a registered UDF in order to check if a date with pattern dateColumnPattern is within defined by
+     * calls a previously registered UDF in order to check if a date with pattern dateColumnPattern is within defined by
      * lowerDate (with pattern lowerDatePattern) and upperDate (with pattern upperDatePattern)
      * @param dateColumn: String column expressing a date
      * @param dateColumnPattern: format of String column
@@ -106,6 +106,15 @@ public class StepUtils {
                 lowerDate, functions.lit(lowerDatePattern),
                 upperDate, functions.lit(upperDatePattern));
     }
+
+    /***
+     * calls a previously registered UDF that computes the number of days between
+     * two dates (both with pattern "commonPattern")
+     * @param dateCol1: first date (Column)
+     * @param dateCol2: second date (Column)
+     * @param commonPattern: first and second date pattern
+     * @return: Integer column
+     */
 
     public static Column daysBetween(Column dateCol1, Column dateCol2, String commonPattern){
 
@@ -141,6 +150,14 @@ public class StepUtils {
         return schema;
     }
 
+    // TODO: add documentation
+    /***
+     *
+     * @param dateColumn1
+     * @param dateColumn2
+     * @param commonDateFormat
+     * @return
+     */
     public static Column leastDate(Column dateColumn1, Column dateColumn2, String commonDateFormat){
 
         return functions.callUDF(UDFsNames.LEAST_DATE_UDF_NAME,
@@ -203,6 +220,16 @@ public class StepUtils {
 
         return functions.substring(column, startIndex, length).cast(DataTypes.IntegerType);
     }
+
+    // TODO: add documentation
+
+    /***
+     *
+     * @param dateCol
+     * @param dateColFormat
+     * @param months
+     * @return
+     */
 
     public static Column subtractDuration(Column dateCol, String dateColFormat, int months){
 

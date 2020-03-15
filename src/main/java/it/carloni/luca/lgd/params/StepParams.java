@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd.params;
 
-import it.carloni.luca.lgd.option.OptionFactory;
+import it.carloni.luca.lgd.options.OptionFactory;
 import lombok.Getter;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;

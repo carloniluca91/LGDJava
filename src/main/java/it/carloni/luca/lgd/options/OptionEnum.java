@@ -1,4 +1,4 @@
-package it.carloni.luca.lgd.option;
+package it.carloni.luca.lgd.options;
 
 public final class OptionEnum {
 
