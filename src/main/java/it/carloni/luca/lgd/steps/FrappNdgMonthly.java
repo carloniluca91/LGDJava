@@ -104,7 +104,7 @@ public class FrappNdgMonthly extends AbstractStep {
         tlbcidefUrttPrincCols.addAll(tlburttFilterSelectCols);
 
         // conversion to scala Seq
-        Seq<Column> tlbcidefUrttPrincColSeq = toScalaColSeq(tlbcidefUrttPrincCols);
+        Seq<Column> tlbcidefUrttPrincColSeq = StepUtils.toScalaSeq(tlbcidefUrttPrincCols);
         Dataset<Row> tlbcidefUrttPrinc = cicliNdgPrinc.join(tlburttFilter, cicliNdgPrinc.col("codicebanca_collegato").equalTo(
                 tlburttFilter.col("cd_istituto")).and(cicliNdgPrinc.col("ndg_collegato").equalTo(tlburttFilter.col("ndg"))))
                 .filter(dtRiferimentoFilterPrincCol.and(dataFineDefFilterPrincCol))
@@ -138,7 +138,7 @@ public class FrappNdgMonthly extends AbstractStep {
         Dataset<Row> tlbcidefUrttColl = cicliNdgColl.join(tlburttFilter, cicliNdgColl.col("codicebanca_collegato").equalTo(
                 tlburttFilter.col("cd_istituto")).and(cicliNdgColl.col("ndg_collegato").equalTo(tlburttFilter.col("ndg"))))
                 .filter(dtRiferimentoFilterCollCol.and(dataFineDefFilterCollCol))
-                .select(toScalaColSeq(tlbcidefUrttCollCols));
+                .select(StepUtils.toScalaSeq(tlbcidefUrttCollCols));
 
         Dataset<Row> tlbcidefTlburtt = tlbcidefUrttPrinc.union(tlbcidefUrttColl).distinct();
         writeDatasetAsCsvAtPath(tlbcidefTlburtt, tlbcidefTlburttCsv);

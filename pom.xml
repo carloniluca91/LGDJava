@@ -11,7 +11,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <data.dir.path>${env.PROJECT_DATA_DATA_DIR}</data.dir.path>
-        <logging.dir.path>${env.PROJECT_DATA_LOG_DIR}</logging.dir.path>
+        <spark.version>2.2.3</spark.version>
+        <lombok.version>1.18.10</lombok.version>
     </properties>
 
     <build>
@@ -24,6 +25,16 @@
                 <configuration>
                     <source>8</source>
                     <target>8</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+                <configuration>
+                    <excludes>
+                        <exclude>src/main/test/*</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
         </plugins>
@@ -42,20 +53,20 @@
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-core_2.11</artifactId>
-            <version>2.2.3</version>
+            <version>${spark.version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.apache.spark/spark-sql -->
         <dependency>
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql_2.11</artifactId>
-            <version>2.2.3</version>
+            <version>${spark.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.10</version>
+            <version>${lombok.version}</version>
             <scope>provided</scope>
         </dependency>
 

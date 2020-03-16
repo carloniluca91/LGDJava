@@ -9,7 +9,7 @@ import java.util.*;
 
 import static it.carloni.luca.lgd.common.StepUtils.fromPigSchemaToStructType;
 import static it.carloni.luca.lgd.common.StepUtils.selectDfColumns;
-import static it.carloni.luca.lgd.common.StepUtils.toScalaColSeq;
+import static it.carloni.luca.lgd.common.StepUtils.toScalaSeq;
 
 public class QuadFcollCicli extends AbstractStep {
 
@@ -68,7 +68,7 @@ public class QuadFcollCicli extends AbstractStep {
         fileOutSelectList.addAll(selectDfColumns(fcoll, fcollSelectMap));
 
         Dataset<Row> fileOut = cicliNdgLoad.join(fcoll, joinCondition, "full_outer")
-                .select(toScalaColSeq(fileOutSelectList))
+                .select(toScalaSeq(fileOutSelectList))
                 .distinct();
 
         writeDatasetAsCsvAtPath(fileOut, fileOutPath);

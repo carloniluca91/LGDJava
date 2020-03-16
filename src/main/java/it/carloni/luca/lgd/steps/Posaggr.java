@@ -1,5 +1,6 @@
 package it.carloni.luca.lgd.steps;
 
+import it.carloni.luca.lgd.common.StepUtils;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
@@ -87,7 +88,7 @@ public class Posaggr extends AbstractStep {
 
         // 147
         // JOIN tblcomp_tlbaggr BY (dt_riferimento,cd_istituto,ndg), tlbposi BY (dt_riferimento,cd_istituto,ndg);
-        Seq<String> joinColumnSeq = toScalaStringSeq((Arrays.asList("dt_riferimento", "cd_istituto", "ndg")));
+        Seq<String> joinColumnSeq = toScalaSeq((Arrays.asList("dt_riferimento", "cd_istituto", "ndg")));
 
         List<String> tblcompTlbaggrSelectColumnNames = Arrays.asList(
                 "dt_riferimento", "cd_istituto", "ndg", "c_key_aggr",
@@ -101,7 +102,7 @@ public class Posaggr extends AbstractStep {
                 "bo_acco", "bo_util", "tot_add_sosp", "tot_val_intr", "ca_acco", "ca_util",
                 "util_cassa", "fido_op_cassa", "utilizzo_titoli", "esposizione_titoli");
         tblcompTlbaggrTlbposiSelectColumnList.addAll(selectDfColumns(tlbposi, tlbposiSelectColumnNames));
-        Seq<Column> selectColumnSeq = toScalaColSeq(tblcompTlbaggrTlbposiSelectColumnList);
+        Seq<Column> selectColumnSeq = StepUtils.toScalaSeq(tblcompTlbaggrTlbposiSelectColumnList);
 
         Dataset<Row> tblcompTlbaggrTlbposi = tlbcompTlbaggr.join(tlbposi, joinColumnSeq, "inner")
                 .select(selectColumnSeq);
@@ -156,7 +157,7 @@ public class Posaggr extends AbstractStep {
         List<Column> windowSumCols = windowSum(tblcompTlbaggrTlbposi, sumWindowColumns, windowsSpec);
         tblcompTlbaggrTlbposiSelectList.addAll(windowSumCols);
 
-        Seq<Column> tblcompTlbaggrTlbposiSelectListselectColumnSeq = toScalaColSeq(tblcompTlbaggrTlbposiSelectList);
+        Seq<Column> tblcompTlbaggrTlbposiSelectListselectColumnSeq = StepUtils.toScalaSeq(tblcompTlbaggrTlbposiSelectList);
         Dataset<Row> posaggr = tblcompTlbaggrTlbposi.select(tblcompTlbaggrTlbposiSelectListselectColumnSeq);
         writeDatasetAsCsvAtPath(posaggr, posaggrCsvPath);
     }

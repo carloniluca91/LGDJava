@@ -105,7 +105,7 @@ public class FrappPuma extends AbstractStep {
         tlbcidefTlbgaranPrincSelectColsList.addAll(selectDfColumns(tlbgaran, tlbgaranSelectColNames));
         tlbcidefTlbgaranPrincSelectColsList.addAll(selectDfColumns(cicliNdgPrinc, cicliNdgSelectColNames));
 
-        Seq<Column> tlbcidefTlbgaranPrincSelectColsSeq = toScalaColSeq(tlbcidefTlbgaranPrincSelectColsList);
+        Seq<Column> tlbcidefTlbgaranPrincSelectColsSeq = StepUtils.toScalaSeq(tlbcidefTlbgaranPrincSelectColsList);
 
         Dataset<Row> tlbcidefTlbgaranPrinc = tlbgaran.join(cicliNdgPrinc, tlbcidefTlbgaranPrincJoinCondition, "inner")
                 .filter(dtRiferimentoDataInizioDefFilterCol.and(dtRiferimentoLeastDateFilterCol))
@@ -120,7 +120,7 @@ public class FrappPuma extends AbstractStep {
                 Collections.singletonList(tlbgaran.col("cd_istituto").alias("cd_isti")));
         tlbcidefTlbgaranCollSelectColsList.addAll(selectDfColumns(tlbgaran, tlbgaranSelectColNames));
         tlbcidefTlbgaranCollSelectColsList.addAll(selectDfColumns(cicliNdgColl, cicliNdgSelectColNames));
-        Seq<Column> tlbcidefTlbgaranCollSelectColsSeq = toScalaColSeq(tlbcidefTlbgaranCollSelectColsList);
+        Seq<Column> tlbcidefTlbgaranCollSelectColsSeq = StepUtils.toScalaSeq(tlbcidefTlbgaranCollSelectColsList);
 
         Dataset<Row> tlbcidefTlbgaranColl = tlbgaran.join(cicliNdgColl, tlbcidefTlbgaranCollJoinCondition, "inner")
                 .select(tlbcidefTlbgaranCollSelectColsSeq);

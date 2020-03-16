@@ -122,20 +122,6 @@ public class StepUtils {
                 dateCol1, dateCol2, functions.lit(commonPattern));
     }
 
-    public static Column getQuadJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
-
-        Column joinCondition = datasetLeft.col(joinColumnNames.get(0))
-                .equalTo(datasetRight.col(joinColumnNames.get(0).toUpperCase()));
-
-        for (String joinColumnName: joinColumnNames.subList(1, joinColumnNames.toArray().length - 1)){
-
-            joinCondition = joinCondition.and(datasetLeft.col(joinColumnName)
-                    .equalTo(datasetRight.col(joinColumnName.toUpperCase())));
-        }
-
-        return joinCondition;
-    }
-
     // create a schema with one String column for each name provided
     public static StructType fromPigSchemaToStructType(Map<String, String> pigSchema){
 
@@ -150,14 +136,15 @@ public class StepUtils {
         return schema;
     }
 
-    // TODO: add documentation
     /***
-     *
-     * @param dateColumn1
-     * @param dateColumn2
-     * @param commonDateFormat
-     * @return
+     * calls a previously registered UDF that computes the least date between two dates
+     * expressed by two strings with same format (commonDateFormat)
+     * @param dateColumn1: first date (String Column)
+     * @param dateColumn2: second date (String Column)
+     * @param commonDateFormat: common date format
+     * @return: String Column
      */
+
     public static Column leastDate(Column dateColumn1, Column dateColumn2, String commonDateFormat){
 
         return functions.callUDF(UDFsNames.LEAST_DATE_UDF_NAME,
@@ -221,29 +208,27 @@ public class StepUtils {
         return functions.substring(column, startIndex, length).cast(DataTypes.IntegerType);
     }
 
-    // TODO: add documentation
-
     /***
-     *
-     * @param dateCol
-     * @param dateColFormat
-     * @param months
-     * @return
+     * calls a previously registered UDF that subtracts numberOfMonths to a date
+     * expressed as String with format dateColFormat
+     * @param dateCol: date (String Column)
+     * @param dateColFormat: date format
+     * @param numberOfMonths: number of months to subtract
+     * @return: String Column
      */
 
-    public static Column subtractDuration(Column dateCol, String dateColFormat, int months){
+    public static Column subtractDuration(Column dateCol, String dateColFormat, int numberOfMonths) {
 
         return functions.callUDF(UDFsNames.SUBTRACT_DURATION_UDF_NAME,
                 dateCol,
                 functions.lit(dateColFormat),
-                functions.lit(months));
+                functions.lit(numberOfMonths));
     }
 
-    public static Seq<String> toScalaStringSeq(List<String> list){
-        return JavaConversions.asScalaBuffer(list).toSeq();
-    }
+    public static <T> Seq<T> toScalaSeq(List<T> javaList) {
 
-    public static Seq<Column> toScalaColSeq(List<Column> list) { return JavaConversions.asScalaBuffer(list).toSeq();}
+        return JavaConversions.asScalaBuffer(javaList).toSeq();
+    }
 
     public static Column toIntCol(Column column){
 

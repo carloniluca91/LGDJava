@@ -1,5 +1,6 @@
 package it.carloni.luca.lgd.steps;
 
+import it.carloni.luca.lgd.common.StepUtils;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import scala.collection.Seq;
@@ -47,7 +48,7 @@ public class RaccInc extends AbstractStep {
         tlbmignSelectList.add(toStringCol(functions.lit(null)).as("num_ced_inc"));
         tlbmignSelectList.add(tlbmign.col("data_migraz"));
 
-        Seq<Column> tlbmignSelectSeq = toScalaColSeq(tlbmignSelectList);
+        Seq<Column> tlbmignSelectSeq = StepUtils.toScalaSeq(tlbmignSelectList);
         Dataset<Row> raccIncOut = tlbmign.select(tlbmignSelectSeq)
                 .withColumn("month_up", monthUpCol)
                 .drop("data_migraz");

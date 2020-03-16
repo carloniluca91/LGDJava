@@ -12,7 +12,7 @@ import java.util.Map;
 import static it.carloni.luca.lgd.common.StepUtils.changeDateFormat;
 import static it.carloni.luca.lgd.common.StepUtils.fromPigSchemaToStructType;
 import static it.carloni.luca.lgd.common.StepUtils.selectDfColumns;
-import static it.carloni.luca.lgd.common.StepUtils.toScalaColSeq;
+import static it.carloni.luca.lgd.common.StepUtils.toScalaSeq;
 
 public class Movimenti extends AbstractStep {
 
@@ -71,7 +71,7 @@ public class Movimenti extends AbstractStep {
             put("mo_flag_storno", "flagstorno");
         }};
 
-        Seq<Column> selectColSeq = toScalaColSeq(selectDfColumns(tlbmovconta, selectColMap));
+        Seq<Column> selectColSeq = toScalaSeq(selectDfColumns(tlbmovconta, selectColMap));
         Dataset<Row> movOutDist = tlbmovconta.filter(filterCondition).select(selectColSeq).distinct();
         writeDatasetAsCsvAtPath(movOutDist, movOutDistPath);
 

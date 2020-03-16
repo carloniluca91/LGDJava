@@ -1,5 +1,6 @@
 package it.carloni.luca.lgd.steps;
 
+import it.carloni.luca.lgd.common.StepUtils;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import it.carloni.luca.lgd.common.AbstractStep;
@@ -106,8 +107,8 @@ public class QuadFposi extends AbstractStep {
         selectColList.addAll(hadoopFposiSelectList);
         selectColList.addAll(oldFposiSelectList);
 
-        Dataset<Row> hadoopFposiOut = hadoopFposiOldFposiJoin.filter(oldFposi.col("CODICEBANCA").isNull()).select(toScalaColSeq(selectColList));
-        Dataset<Row> oldFposiOut = hadoopFposiOldFposiJoin.filter(hadoopFposi.col("codicebanca").isNull()).select(toScalaColSeq(selectColList));
+        Dataset<Row> hadoopFposiOut = hadoopFposiOldFposiJoin.filter(oldFposi.col("CODICEBANCA").isNull()).select(StepUtils.toScalaSeq(selectColList));
+        Dataset<Row> oldFposiOut = hadoopFposiOldFposiJoin.filter(hadoopFposi.col("codicebanca").isNull()).select(StepUtils.toScalaSeq(selectColList));
 
         /*
         FILTER hadoop_fposi_oldfposi_join
@@ -126,7 +127,7 @@ public class QuadFposi extends AbstractStep {
                 .and(hadoopFposi.col("datainizioinc").notEqual(oldFposi.col("DATAINIZIOINC")))
                 .and(hadoopFposi.col("datainiziosoff").notEqual(oldFposi.col("DATASOFFERENZA")));
 
-        Dataset<Row> abbinatiOut = hadoopFposiOldFposiJoin.filter(abbinatiOutFilterCol).select(toScalaColSeq(selectColList));
+        Dataset<Row> abbinatiOut = hadoopFposiOldFposiJoin.filter(abbinatiOutFilterCol).select(StepUtils.toScalaSeq(selectColList));
 
         writeDatasetAsCsvAtPath(hadoopFposiOut, hadoopFposiOutDir);
         writeDatasetAsCsvAtPath(oldFposiOut, oldFposiOutDir);

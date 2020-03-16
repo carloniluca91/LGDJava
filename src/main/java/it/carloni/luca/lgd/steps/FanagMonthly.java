@@ -229,7 +229,7 @@ public class FanagMonthly extends AbstractStep {
 
         fanagOutSelectColList.addAll(selectDfColumns(tlbcidefTlbuact, Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef")));
 
-        Dataset<Row> fanagOut = tlbudtc.join(tlbcidefTlbuact, tlbudtcJoinCondition, "inner").select(toScalaColSeq(fanagOutSelectColList));
+        Dataset<Row> fanagOut = tlbudtc.join(tlbcidefTlbuact, tlbudtcJoinCondition, "inner").select(StepUtils.toScalaSeq(fanagOutSelectColList));
         writeDatasetAsCsvAtPath(fanagOut, fanagOutPath);
     }
 }

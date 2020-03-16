@@ -1,5 +1,6 @@
 package it.carloni.luca.lgd.steps;
 
+import it.carloni.luca.lgd.common.StepUtils;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -47,7 +48,7 @@ public class RaccSoff extends AbstractStep {
             put("data_primo_fine_me", "DATA_FINE_PRIMO_MESE_RIC");
         }};
 
-        Seq<Column> dllabSelectSeq = toScalaColSeq(selectDfColumns(dllab, columnMap));
+        Seq<Column> dllabSelectSeq = StepUtils.toScalaSeq(selectDfColumns(dllab, columnMap));
         writeDatasetAsCsvAtPath(dllab.select(dllabSelectSeq), dllabOutPath);
     }
 }

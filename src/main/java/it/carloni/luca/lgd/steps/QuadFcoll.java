@@ -1,5 +1,6 @@
 package it.carloni.luca.lgd.steps;
 
+import it.carloni.luca.lgd.common.StepUtils;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import it.carloni.luca.lgd.common.AbstractStep;
@@ -94,7 +95,7 @@ public class QuadFcoll extends AbstractStep {
 
         // JOIN oldfposi BY (cumulo) LEFT, fcoll BY (cumulo);
         Dataset<Row> fileOutDist = oldFposi.join(fcoll, oldFposi.col("cumulo").equalTo(fcoll.col("cumulo")), "left")
-                .select(toScalaColSeq(fileOutDistSelectColList))
+                .select(StepUtils.toScalaSeq(fileOutDistSelectColList))
                 .distinct();
 
         writeDatasetAsCsvAtPath(fileOutDist, fileoutdist);

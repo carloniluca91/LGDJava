@@ -82,7 +82,7 @@ public class Fpasperd extends AbstractStep {
         List<String> tlbcidefSelectCols = Arrays.asList("codicebanca", "ndgprincipale", "datainiziodef", "datafinedef");
         fpasperdBetweenGenSelectColList.addAll(selectDfColumns(tlbcidef, tlbcidefSelectCols));
 
-        Seq<Column> fpasperdBetweenGenSelectColsSeq = toScalaColSeq(fpasperdBetweenGenSelectColList);
+        Seq<Column> fpasperdBetweenGenSelectColsSeq = StepUtils.toScalaSeq(fpasperdBetweenGenSelectColList);
 
         Dataset<Row> tlbcidefTlbpaspeFilterJoin = tlbpaspeFilter.join(tlbcidef, fpasperdBetweenGenJoinCondition, "left");
         Dataset<Row> fpasperdBetweenGen = tlbpaspeFilter.join(tlbcidef, fpasperdBetweenGenJoinCondition, "left")
@@ -113,7 +113,7 @@ public class Fpasperd extends AbstractStep {
         fpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("ndgprincipale"));
         fpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("datainiziodef"));
 
-        Seq<Column> fpasperdOtherGenSelectColsSeq = toScalaColSeq(fpasperdOtherGenSelectColList);
+        Seq<Column> fpasperdOtherGenSelectColsSeq = StepUtils.toScalaSeq(fpasperdOtherGenSelectColList);
         Dataset<Row> fpasperdOtherGen = tlbcidefTlbpaspeFilterJoin.filter(tlbcidef.col("codicebanca").isNotNull())
                 .select(fpasperdOtherGenSelectColsSeq);
 
@@ -121,11 +121,11 @@ public class Fpasperd extends AbstractStep {
 
         // 152
 
-        Seq<String> joinColumnsSeq = toScalaStringSeq(Arrays.asList("cd_istituto", "ndg", "datacont"));
+        Seq<String> joinColumnsSeq = toScalaSeq(Arrays.asList("cd_istituto", "ndg", "datacont"));
         List<String> fpasperdOtherGenSelectColNames = Arrays.asList("cd_istituto", "ndg", "datacont", "causale",
                 "importo", "codicebanca", "ndgprincipale", "datainiziodef");
         List<Column> fpasperdOtherOutSelectColList = selectDfColumns(fpasperdOtherGen, fpasperdOtherGenSelectColNames);
-        Seq<Column> fpasperdOtherOutSelectColsSeq = toScalaColSeq(fpasperdOtherOutSelectColList);
+        Seq<Column> fpasperdOtherOutSelectColsSeq = StepUtils.toScalaSeq(fpasperdOtherOutSelectColList);
 
         Dataset<Row> fpasperdOtherOut = fpasperdOtherGen.join(fpasperdBetweenOut, joinColumnsSeq, "left")
                 .filter(fpasperdBetweenOut.col("cd_istituto").isNull()).select(fpasperdOtherOutSelectColsSeq);
@@ -167,7 +167,7 @@ public class Fpasperd extends AbstractStep {
 
         // add columns to be selected from tlbcidef
         principFpasperdBetweenGenCols.addAll(selectDfColumns(tlbcidef, tlbcidefSelectCols));
-        Seq<Column> principFpasperdBetweenGenColsSeq = toScalaColSeq(principFpasperdBetweenGenCols);
+        Seq<Column> principFpasperdBetweenGenColsSeq = StepUtils.toScalaSeq(principFpasperdBetweenGenCols);
 
         Dataset<Row> principFpasperdBetweenGen = fpasperdNullOut.join(tlbcidef, principFpasperdBetweenGenJoinCondition, "left")
                 .filter(principFpasperdBetweenGenDataContDataInizioDefFilterCol.and(principFpasperdBetweenGenDataContDataFineDefFilterCol))
@@ -195,7 +195,7 @@ public class Fpasperd extends AbstractStep {
         principFpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("ndgprincipale"));
         principFpasperdOtherGenSelectColList.add(StepUtils.toStringCol(functions.lit(null)).as("datainiziodef"));
 
-        Seq<Column> principFpasperdOtherGenSelectColsSeq = toScalaColSeq(principFpasperdOtherGenSelectColList);
+        Seq<Column> principFpasperdOtherGenSelectColsSeq = StepUtils.toScalaSeq(principFpasperdOtherGenSelectColList);
         Dataset<Row> principFpasperdOtherGen = fpasperdNullOut.join(tlbcidef, principFpasperdOtherGenJoinCondition, "left")
                 .filter(tlbcidef.col("codicebanca").isNotNull())
                 .select(principFpasperdOtherGenSelectColsSeq);
@@ -210,7 +210,7 @@ public class Fpasperd extends AbstractStep {
         List<Column> principFpasperdOtherGenSelectCols = selectDfColumns(principFpasperdOtherGen,
                 principFpasperdOtherOutColNames);
 
-        Seq<Column> principFpasperdOtherOutSelectColsSeq = toScalaColSeq(principFpasperdOtherGenSelectCols);
+        Seq<Column> principFpasperdOtherOutSelectColsSeq = StepUtils.toScalaSeq(principFpasperdOtherGenSelectCols);
         Dataset<Row> principFpasperdOtherOut = principFpasperdOtherGen.join(principFpasperdBetweenOut, joinColumnsSeq, "left")
                 .filter(principFpasperdBetweenOut.col("cd_istituto").isNull())
                 .select(principFpasperdOtherOutSelectColsSeq);
@@ -226,7 +226,7 @@ public class Fpasperd extends AbstractStep {
         principFpasperdNullOutCols.add(StepUtils.toStringCol(functions.lit(null)).as("ndgprincipale"));
         principFpasperdNullOutCols.add(StepUtils.toStringCol(functions.lit(null)).as("datainiziodef"));
 
-        Seq<Column> principFpasperdNullOutSelectColsSeq = toScalaColSeq(principFpasperdNullOutCols);
+        Seq<Column> principFpasperdNullOutSelectColsSeq = StepUtils.toScalaSeq(principFpasperdNullOutCols);
         Dataset<Row> principFpasperdNullOut = fpasperdNullOut.join(tlbcidef, principFpasperdNullOutJoinCondition, "left")
                 .filter(tlbcidef.col("codicebanca").isNull())
                 .select(principFpasperdNullOutSelectColsSeq);

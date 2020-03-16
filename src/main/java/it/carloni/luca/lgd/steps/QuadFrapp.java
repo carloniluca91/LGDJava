@@ -87,4 +87,18 @@ public class QuadFrapp extends AbstractStep {
         writeDatasetAsCsvAtPath(oldFrappOut, oldFrappOutPath);
 
     }
+
+    private Column getQuadJoinCondition(Dataset<Row> datasetLeft, Dataset<Row> datasetRight, List<String> joinColumnNames){
+
+        Column joinCondition = datasetLeft.col(joinColumnNames.get(0))
+                .equalTo(datasetRight.col(joinColumnNames.get(0).toUpperCase()));
+
+        for (String joinColumnName: joinColumnNames.subList(1, joinColumnNames.toArray().length - 1)){
+
+            joinCondition = joinCondition.and(datasetLeft.col(joinColumnName)
+                    .equalTo(datasetRight.col(joinColumnName.toUpperCase())));
+        }
+
+        return joinCondition;
+    }
 }

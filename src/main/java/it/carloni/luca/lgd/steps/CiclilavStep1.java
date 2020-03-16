@@ -127,7 +127,7 @@ public class CiclilavStep1 extends AbstractStep {
         Column ndgCedCol = functions.when(tlbcraccClone.col("ndg_clone").isNotNull(), tlbcraccClone.col("ndg_clone"))
                 .otherwise(cicliRacc1.col("ndg_principale")).as("ndg_ced");
 
-        Seq<String> joinColsSeq = toScalaStringSeq(Arrays.asList("cod_raccordo", "data_rif"));
+        Seq<String> joinColsSeq = toScalaSeq(Arrays.asList("cod_raccordo", "data_rif"));
         Dataset<Row> ciclilavStep1 = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left").select(
                 cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
                 cicliRacc1.col("dt_fine_ciclo"), cicliRacc1.col("datainiziopd"), cicliRacc1.col("datainizioristrutt"),
