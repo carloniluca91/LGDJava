@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <data.dir.path>${env.PROJECT_DATA_DATA_DIR}</data.dir.path>
+        <data.dir.path>${env.PROJECT_DATA_HOME}</data.dir.path>
         <spark.version>2.2.3</spark.version>
         <lombok.version>1.18.10</lombok.version>
     </properties>

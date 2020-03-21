@@ -18,8 +18,7 @@ public class FrappNdgMonthlyMain {
         List<Option> frappNdgMonthlyOptionList = Arrays.asList(dataAOpton, numeroMesi1Option, numeroMesi2Option);
         StepParams stepParams = new StepParams(args, frappNdgMonthlyOptionList);
 
-        FrappNdgMonthly frappNdgMonthly = new FrappNdgMonthly(stepParams.getDataA(),
-                stepParams.getNumeroMesi1(), stepParams.getNumeroMesi2());
+        FrappNdgMonthly frappNdgMonthly = new FrappNdgMonthly(stepParams.getDataA(), stepParams.getNumeroMesi1(), stepParams.getNumeroMesi2());
         frappNdgMonthly.run();
     }
 }

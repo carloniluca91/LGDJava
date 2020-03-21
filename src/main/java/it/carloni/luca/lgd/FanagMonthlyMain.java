@@ -18,8 +18,7 @@ public class FanagMonthlyMain {
         List<Option> fanagMonthlyOptionList = Arrays.asList(numeroMesi1Option, numeroMesi2Option, dataAOpton);
         StepParams stepParams = new StepParams(args, fanagMonthlyOptionList);
 
-        FanagMonthly fanagMonthly = new FanagMonthly(
-                stepParams.getNumeroMesi1(), stepParams.getNumeroMesi2(), stepParams.getDataA());
+        FanagMonthly fanagMonthly = new FanagMonthly(stepParams.getNumeroMesi1(), stepParams.getNumeroMesi2(), stepParams.getDataA());
         fanagMonthly.run();
     }
 }

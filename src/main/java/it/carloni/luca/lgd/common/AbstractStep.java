@@ -82,7 +82,7 @@ public abstract class AbstractStep {
 
     protected void writeDatasetAsCsvAtPath(Dataset<Row> dataset, String path){
 
-        dataset.write().format(csvFormat).option("sep", csvDelimiter).mode(SaveMode.Overwrite).csv(path);
+        dataset.coalesce(1).write().format(csvFormat).option("sep", csvDelimiter).mode(SaveMode.Overwrite).csv(path);
     }
 
     abstract public void run();
