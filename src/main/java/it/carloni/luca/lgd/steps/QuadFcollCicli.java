@@ -21,12 +21,7 @@ public class QuadFcollCicli extends AbstractStep {
     public QuadFcollCicli(String ufficio){
 
         this.ufficio = ufficio;
-        stepInputDir = getValue("quad.fcoll.cicli.input.dir");
-        stepOutputDir = getValue("quad.fcoll.cicli.output.dir");
-
         logger.debug("ufficio: " + this.ufficio);
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override

@@ -24,12 +24,8 @@ public class Movimenti extends AbstractStep {
     public Movimenti(String dataOsservazione){
 
         this.dataOsservazione = dataOsservazione;
-        stepInputDir = getValue("movimenti.input.dir");
-        stepOutputDir = getValue("movimenti.output.dir");
-
         logger.debug("dataOsservazione: " + this.dataOsservazione);
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
+
     }
 
     @Override

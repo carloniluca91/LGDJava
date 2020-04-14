@@ -24,11 +24,6 @@ public class FrappPuma extends AbstractStep {
     public FrappPuma(String dataA){
 
         this.dataA = dataA;
-        stepInputDir = getValue("frapp.puma.input.dir");
-        stepOutputDir = getValue("frapp.puma.output.dir");
-
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
         logger.debug("dataA: " + this.dataA);
     }
 

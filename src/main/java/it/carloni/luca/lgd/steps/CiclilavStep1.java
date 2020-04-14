@@ -26,11 +26,6 @@ public class CiclilavStep1 extends AbstractStep {
         this.dataDa = dataDa;
         this.dataA = dataA;
 
-        stepInputDir = getValue("ciclilav.step1.input.dir");
-        stepOutputDir = getValue("ciclilav.step1.output.dir");
-
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
         logger.debug("dataDa: " + this.dataDa);
         logger.debug("dataA: " + this.dataA);
     }

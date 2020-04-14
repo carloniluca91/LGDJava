@@ -18,15 +18,6 @@ public class Fpasperd extends AbstractStep {
 
     private final Logger logger = Logger.getLogger(Fpasperd.class);
 
-    public Fpasperd(){
-
-        stepInputDir = getValue("fpasperd.input.dir");
-        stepOutputDir = getValue("fpasperd.output.dir");
-
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
-    }
-
     @Override
     public void run() {
 

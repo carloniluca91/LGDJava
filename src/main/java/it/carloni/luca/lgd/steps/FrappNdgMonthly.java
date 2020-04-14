@@ -27,14 +27,9 @@ public class FrappNdgMonthly extends AbstractStep {
         this.numeroMesi1 = numeroMesi1;
         this.numeroMesi2 = numeroMesi2;
 
-        stepInputDir = getValue("frapp.ndg.monthly.input.dir");
-        stepOutputDir = getValue("frapp.ndg.monthly.output.dir");
-
         logger.debug("dataA: " + this.dataA);
         logger.debug("numeroMesi1: " + this.numeroMesi1);
         logger.debug("numeroMesi2: " + this.numeroMesi2);
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override

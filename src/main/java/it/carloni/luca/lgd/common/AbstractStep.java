@@ -7,6 +7,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.api.java.UDF1;
+import org.apache.spark.sql.types.DataType;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 import it.carloni.luca.lgd.common.udfs.UDFsFactory;
@@ -14,17 +16,13 @@ import it.carloni.luca.lgd.common.udfs.UDFsNames;
 
 public abstract class AbstractStep {
 
-    private final PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
-    protected SparkSession sparkSession;
+    private final SparkSession sparkSession = getSparkSessionWithUDFs();
+    private final PropertiesConfiguration properties = new PropertiesConfiguration();
 
-    // input and output dirs for a step
-    protected String stepInputDir;
-    protected String stepOutputDir;
-
+    private String csvDelimiter;
     protected String dataDaPattern;
     protected String dataAPattern;
     protected String csvFormat;
-    private String csvDelimiter;
 
     protected AbstractStep(){
 
@@ -32,7 +30,7 @@ public abstract class AbstractStep {
 
         try {
 
-            propertiesConfiguration.load(AbstractStep.class.getClassLoader().getResourceAsStream("lgd.properties"));
+            properties.load(AbstractStep.class.getClassLoader().getResourceAsStream("lgd.properties"));
 
             csvFormat = getValue("csv.format");
             csvDelimiter = getValue("csv.delimiter");
@@ -43,28 +41,25 @@ public abstract class AbstractStep {
             logger.debug("csvDelimiter: " + csvDelimiter);
             logger.debug("dataDaPattern: " + dataDaPattern);
             logger.debug("dataAPattern: " + dataAPattern);
-
-            getSparkSessionWithUDFs();
         }
-        catch (ConfigurationException ex){
+        catch (ConfigurationException e){
 
             logger.error("ConfigurationException occurred");
-            logger.error("ex.getMessage(): " + ex.getMessage());
-            logger.error(ex);
+            logger.error(e);
         }
     }
 
     public String getValue(String key) {
-        return propertiesConfiguration.getString(key);
+        return properties.getString(key);
     }
 
-    private void getSparkSessionWithUDFs(){
+    private SparkSession getSparkSessionWithUDFs(){
 
-        sparkSession = SparkSession.builder().getOrCreate();
-        registerUDFs(sparkSession);
+        SparkSession sparkSession = SparkSession.builder().getOrCreate();
+        return registerUDFs(sparkSession);
     }
 
-    private void registerUDFs(SparkSession sparkSession){
+    private SparkSession registerUDFs(SparkSession sparkSession){
 
         sparkSession.udf().register(UDFsNames.ADD_DURATION_UDF_NAME, UDFsFactory.addDurationUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFsNames.SUBTRACT_DURATION_UDF_NAME, UDFsFactory.substractDurationUDF(), DataTypes.StringType);
@@ -73,7 +68,15 @@ public abstract class AbstractStep {
         sparkSession.udf().register(UDFsNames.GREATEST_DATE_UDF_NAME, UDFsFactory.greatestDateUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFsNames.IS_DATE_BETWEEN_UDF_NAME, UDFsFactory.isDateBetweenLowerDateAndUpperDateUDF(), DataTypes.BooleanType);
         sparkSession.udf().register(UDFsNames.LEAST_DATE_UDF_NAME, UDFsFactory.leastDateUDF(), DataTypes.StringType);
+
+        return sparkSession;
     }
+
+    protected void registerStepUDF(UDF1<String, String> udf, String udfName, DataType udfReturnType) {
+
+        sparkSession.udf().register(udfName, udf, udfReturnType);
+    }
+
 
     protected Dataset<Row> readCsvAtPathUsingSchema(String csvFilePath, StructType csvSchema){
 

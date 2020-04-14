@@ -19,12 +19,8 @@ public class QuadFrapp extends AbstractStep {
     public QuadFrapp(String ufficio){
 
         this.ufficio = ufficio;
-        stepInputDir = getValue("quad.frapp.input.dir");
-        stepOutputDir = getValue("quad.frapp.output.dir");
 
         logger.debug("ufficio: " + this.ufficio);
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override

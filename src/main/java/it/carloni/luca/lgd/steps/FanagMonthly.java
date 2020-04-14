@@ -26,15 +26,9 @@ public class FanagMonthly extends AbstractStep {
         this.numeroMesi2 = numeroMesi2;
         this.dataA = dataA;
 
-        stepInputDir = getValue("fanag.monthly.input.dir");
-        stepOutputDir = getValue("fanag.monthly.output.dir");
-
         logger.debug("numeroMesi1: " + this.numeroMesi1);
         logger.debug("numeroMesi2: " + this.numeroMesi2);
         logger.debug("dataA: " + this.dataA);
-
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override

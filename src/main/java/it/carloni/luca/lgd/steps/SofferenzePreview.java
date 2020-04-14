@@ -21,13 +21,9 @@ public class SofferenzePreview extends AbstractStep {
 
         this.ufficio = ufficio;
         this.dataA = dataA;
-        stepInputDir = getValue("sofferenze.preview.input.dir");
-        stepOutputDir = getValue("sofferenze.preview.output.dir");
 
         logger.debug("ufficio: " + this.ufficio);
         logger.debug("dataA: " + this.dataA);
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
     }
 
     @Override

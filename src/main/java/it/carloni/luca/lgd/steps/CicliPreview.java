@@ -27,11 +27,6 @@ public class CicliPreview extends AbstractStep {
         this.dataA = dataA;
         this.ufficio = ufficio;
 
-        stepInputDir = getValue("cicli.preview.input.dir");
-        stepOutputDir = getValue("cicli.preview.output.dir");
-
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
         logger.debug("dataA: " + this.dataA);
         logger.debug("ufficio: " + this.ufficio);
     }
@@ -255,6 +250,6 @@ public class CicliPreview extends AbstractStep {
                         dataSofferenza.substring(0, 3).concat("-").concat(dataSofferenza.substring(4, 5))
                         .concat("-").concat(dataSofferenza.substring(6, 7)) : null;
 
-        sparkSession.udf().register(UDFsNames.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME, dataSofferenzaUdf, DataTypes.StringType);
+        this.registerStepUDF(dataSofferenzaUdf, UDFsNames.CICLI_PREVIEW_DATA_SOFFERENZA_UDF_NAME, DataTypes.StringType);
     }
 }

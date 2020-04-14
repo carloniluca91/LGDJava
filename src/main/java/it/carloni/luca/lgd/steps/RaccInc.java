@@ -16,15 +16,6 @@ public class RaccInc extends AbstractStep {
 
     private final Logger logger = Logger.getLogger(RaccInc.class);
 
-    public RaccInc(){
-
-        stepInputDir = getValue("racc.inc.input.dir");
-        stepOutputDir = getValue("racc.inc.output.dir");
-
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
-    }
-
     @Override
     public void run() {
 

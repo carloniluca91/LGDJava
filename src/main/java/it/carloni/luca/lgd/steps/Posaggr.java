@@ -20,15 +20,6 @@ public class Posaggr extends AbstractStep {
 
     private final Logger logger = Logger.getLogger(Posaggr.class);
 
-    public Posaggr(){
-
-        stepInputDir = getValue("posaggr.input.dir");
-        stepOutputDir =  getValue("posaggr.output.dir");
-
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
-    }
-
     @Override
     public void run() {
 

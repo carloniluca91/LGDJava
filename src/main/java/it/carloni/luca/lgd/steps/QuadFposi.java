@@ -23,12 +23,8 @@ public class QuadFposi extends AbstractStep {
     public QuadFposi(String ufficio){
 
         this.ufficio = ufficio;
-        stepInputDir = getValue("quad.fposi.input.dir");
-        stepOutputDir = getValue("quad.fposi.output.dir");
 
         logger.debug("ufficio: " + this.ufficio);
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
 
     }
 

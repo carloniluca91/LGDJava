@@ -18,15 +18,6 @@ public class RaccSoff extends AbstractStep {
 
     private final Logger logger = Logger.getLogger(RaccSoff.class);
 
-    public RaccSoff(){
-
-        stepInputDir = getValue("racc.soff.input.dir");
-        stepOutputDir = getValue("racc.soff.output.dir");
-
-        logger.debug("stepInputDir: " + stepInputDir);
-        logger.debug("stepOutputDir: " + stepOutputDir);
-    }
-
     @Override
     public void run() {
 
