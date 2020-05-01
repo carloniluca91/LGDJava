@@ -34,7 +34,7 @@ public class Main {
         } catch (ParseException e) {
 
             // IF NO STEP NAME HAS BEEN PROVIDED
-            logger.error("ParseException related to step name occurred");
+            logger.error("ParseException (related to step name option ) occurred");
             logger.error(e);
 
             HelpFormatter helpFormatter = new HelpFormatter();

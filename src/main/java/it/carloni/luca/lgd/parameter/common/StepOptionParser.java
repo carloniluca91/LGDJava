@@ -1,8 +1,7 @@
 package it.carloni.luca.lgd.parameter.common;
 
 import it.carloni.luca.lgd.option.OptionFactory;
-import it.carloni.luca.lgd.parameter.step.DataDaDataAValues;
-import it.carloni.luca.lgd.parameter.step.StepNameValue;
+import it.carloni.luca.lgd.parameter.step.*;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
@@ -58,5 +57,14 @@ public class StepOptionParser {
         String dataAOptionValue = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
         logger.info("Step options parsed correctly");
         return new DataDaDataAValues(dataDaOptionValue, dataAOptionValue);
+    }
+
+    public DataAUfficioValues getDataAUfficioValues(String[] args, Options stepOptions) throws ParseException {
+
+        CommandLine commandLine = getCommandLine(args, stepOptions);
+        String dataAOptionValue = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
+        String ufficioOptionValue = parseOptionOfTypeString(commandLine, OptionFactory.getUfficioOption());
+        logger.info("Step options parsed correctly");
+        return new DataAUfficioValues(dataAOptionValue, ufficioOptionValue);
     }
 }

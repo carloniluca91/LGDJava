@@ -28,10 +28,9 @@ public class StepRunner {
 
             switch (stepName.toUpperCase()) {
 
-                // CICLILAV_STEP_1
-                case StepNameEnum.CICLILAV_STEP_1_STEP_NAME:
+                case StepNameEnum.CICLILAV_STEP_1_STEP_NAME: {
 
-                    logger.info("Matched step name: " + StepNameEnum.CICLILAV_STEP_1_STEP_NAME);
+                    logger.info("Matched step name " + StepNameEnum.CICLILAV_STEP_1_STEP_NAME);
 
                     Option dataDaOption = OptionFactory.getDataDaOption();
                     Option dataAOption = OptionFactory.getDataAOpton();
@@ -42,6 +41,22 @@ public class StepRunner {
                     DataDaDataAValues dataDaDataAValues = stepOptionParser.getDataDaDataAValues(args, stepParameterOptions);
                     new CiclilavStep1().run(dataDaDataAValues);
                     break;
+                }
+
+                case StepNameEnum.CICLI_PREVIEW_STEP_NAME: {
+
+                    logger.info("Matched step name " + StepNameEnum.CICLI_PREVIEW_STEP_NAME);
+
+                    Option dataAOption = OptionFactory.getDataAOpton();
+                    Option ufficioOption = OptionFactory.getUfficioOption();
+
+                    stepParameterOptions.addOption(dataAOption);
+                    stepParameterOptions.addOption(ufficioOption);
+
+                    DataAUfficioValues dataAUfficioValues = stepOptionParser.getDataAUfficioValues(args, stepParameterOptions);
+                    new CicliPreview().run(dataAUfficioValues);
+                    break;
+                }
 
                 default:
 

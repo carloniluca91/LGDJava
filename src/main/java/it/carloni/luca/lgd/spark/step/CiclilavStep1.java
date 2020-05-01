@@ -27,6 +27,7 @@ public class CiclilavStep1 extends AbstractStep<DataDaDataAValues> {
         // REQUIRED PARAMETERS
         String dataDa = dataDaDataAValues.getDataDa();
         String dataA = dataDaDataAValues.getDataA();
+
         logger.info(dataDaDataAValues.toString());
 
         String tlbcidefCsvPath = getValue("ciclilav.step1.tlbcidef.csv");
