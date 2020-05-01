@@ -1,5 +1,6 @@
 package it.carloni.luca.lgd.spark.common;
 
+import it.carloni.luca.lgd.parameter.common.AbstractStepValues;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
@@ -13,19 +14,18 @@ import it.carloni.luca.lgd.spark.udf.UDFsNames;
 
 import java.util.Map;
 
-public abstract class AbstractStep<T> implements StepInterface<T> {
+public abstract class AbstractStep<T extends AbstractStepValues> implements StepInterface<T> {
 
+    private final Logger logger = Logger.getLogger(getClass());
     private final SparkSession sparkSession = getSparkSessionWithUDFs();
     private final PropertiesConfiguration properties = new PropertiesConfiguration();
 
     private String csvDelimiter;
+    private String csvFormat;
     protected String dataDaPattern;
     protected String dataAPattern;
-    protected String csvFormat;
 
     protected AbstractStep(){
-
-        Logger logger = Logger.getLogger(AbstractStep.class);
 
         try {
 
@@ -36,10 +36,10 @@ public abstract class AbstractStep<T> implements StepInterface<T> {
             dataDaPattern = getValue("params.datada.pattern");
             dataAPattern = getValue("params.dataa.pattern");
 
-            logger.info("csv format: " + csvFormat);
-            logger.info("csv delimiter: " + csvDelimiter);
-            logger.info("$data_da pattern: " + dataDaPattern);
-            logger.info("$data_a pattern: " + dataAPattern);
+            logger.info("csv.format: " + csvFormat);
+            logger.info("csv.delimiter: " + csvDelimiter);
+            logger.info("params.datada.pattern: " + dataDaPattern);
+            logger.info("params.dataa.pattern: " + dataAPattern);
         }
         catch (ConfigurationException e){
 
@@ -54,7 +54,11 @@ public abstract class AbstractStep<T> implements StepInterface<T> {
 
     private SparkSession getSparkSessionWithUDFs(){
 
-        SparkSession sparkSession = SparkSession.builder().getOrCreate();
+        SparkSession sparkSession = SparkSession.builder()
+                //.master("local")
+                .getOrCreate();
+
+        logger.info("Spark application UI url @ " + sparkSession.sparkContext().uiWebUrl().get());
         return registerUDFs(sparkSession);
     }
 
@@ -73,15 +77,22 @@ public abstract class AbstractStep<T> implements StepInterface<T> {
 
     protected Dataset<Row> readCsvAtPathUsingSchema(String csvFilePath, Map<String, String> pigSchema){
 
+        logger.info("Starting to read data from path " + csvFilePath);
+
         StructType csvStructType = fromPigSchemaToStructType(pigSchema);
-        return sparkSession.read()
+        Dataset<Row> csvDataframe = sparkSession.read()
                 .format(csvFormat)
                 .option("sep", csvDelimiter)
                 .schema(csvStructType)
                 .csv(csvFilePath);
+
+        logger.info("Successfully loaded data from path " + csvFilePath);
+        return csvDataframe;
     }
 
     protected void writeDatasetAsCsvAtPath(Dataset<Row> dataset, String path){
+
+        logger.info("Starting to write data at path " + path);
 
         dataset.coalesce(1)
                 .write().
@@ -90,6 +101,8 @@ public abstract class AbstractStep<T> implements StepInterface<T> {
                 .option("header", true)
                 .mode(SaveMode.Overwrite)
                 .csv(path);
+
+        logger.info("Successfully written data at path " + path);
     }
 
     private StructType fromPigSchemaToStructType(Map<String, String> pigSchema){
@@ -107,14 +120,11 @@ public abstract class AbstractStep<T> implements StepInterface<T> {
 
     private DataType resolveDataType(String pigColumnType){
 
-        DataType dataType;
         switch (pigColumnType){
 
-            case "int": dataType = DataTypes.IntegerType; break;
-            case "double": dataType = DataTypes.DoubleType; break;
-            default: dataType = DataTypes.StringType; break;
+            case "int": return DataTypes.IntegerType;
+            case "double": return DataTypes.DoubleType;
+            default: return DataTypes.StringType;
         }
-
-        return dataType;
     }
 }

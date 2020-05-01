@@ -19,7 +19,7 @@ import static it.carloni.luca.lgd.spark.utils.StepUtils.toScalaSeq;
 
 public class CiclilavStep1 extends AbstractStep<DataDaDataAValues> {
 
-    private final Logger logger = Logger.getLogger(CiclilavStep1.class);
+    private final Logger logger = Logger.getLogger(getClass());
 
     @Override
     public void run(DataDaDataAValues dataDaDataAValues) {
@@ -43,8 +43,12 @@ public class CiclilavStep1 extends AbstractStep<DataDaDataAValues> {
         Dataset<Row> tlbcidef = readCsvAtPathUsingSchema(tlbcidefCsvPath, CicliLavStep1Schema.getTlbcidefPigSchema());
 
         // 40
+
+        int dataDaAsInt = Integer.parseInt(dataDa);
+        int dataAAsInt = Integer.parseInt(dataA);
+
         // FILTER tlbcidef BY dt_inizio_ciclo >= $data_da AND dt_inizio_ciclo <= $data_a;
-        Column dtInizioCicloFilterCol = tlbcidef.col("dt_inizio_ciclo").between(Integer.parseInt(dataDa), Integer.parseInt(dataA));
+        Column dtInizioCicloFilterCol = tlbcidef.col("dt_inizio_ciclo").between(dataDaAsInt, dataAAsInt);
 
         Column statusIngressoTrimCol = functions.trim(functions.col("status_ingresso"));
 
@@ -87,13 +91,15 @@ public class CiclilavStep1 extends AbstractStep<DataDaDataAValues> {
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
         LocalDate defaultDataA = parseStringToLocalDate("20150731", "yyyyMMdd");
         LocalDate dataADate = parseStringToLocalDate(dataA, dataAPattern);
-        String greatestDateString = dataADate.compareTo(defaultDataA) <= 0 ?
+        String greatestDateString = dataADate.isBefore(defaultDataA) ?
                 defaultDataA.format(DateTimeFormatter.ofPattern("yyyyMMdd")) : dataADate.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
 
-        // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
-        Dataset<Row> tlbcracc = tlbcraccLoad.filter(tlbcraccLoad.col("data_rif").leq(Integer.parseInt(greatestDateString)));
+        int greatestDateAsInt = Integer.parseInt(greatestDateString);
 
-        // clone tlbcracc to avoid Analysis exception
+        // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
+        Dataset<Row> tlbcracc = tlbcraccLoad.filter(tlbcraccLoad.col("data_rif").leq(greatestDateAsInt));
+
+        // CLONE TLBCRACC TO AVOID ANALYSIS EXCEPTION
         Dataset<Row> tlbcraccClone = tlbcracc.toDF()
                 .withColumnRenamed("cd_isti", "cd_isti_clone")
                 .withColumnRenamed("ndg", "ndg_clone");
@@ -106,6 +112,7 @@ public class CiclilavStep1 extends AbstractStep<DataDaDataAValues> {
                         tlbcidefMax.col("dt_inizio_ciclo"), tlbcidefMax.col("dt_fine_ciclo"), tlbcidefMax.col("datainiziopd"),
                         tlbcidefMax.col("datainizioristrutt"), tlbcidefMax.col("datainizioinc"),
                         tlbcidefMax.col("datainiziosoff"), tlbcracc.col("cod_raccordo"), tlbcracc.col("data_rif"));
+
         // 110
 
         // 119
@@ -133,9 +140,10 @@ public class CiclilavStep1 extends AbstractStep<DataDaDataAValues> {
         Column dtRifCraccCol = functions.when(tlbcraccClone.col("data_rif").isNotNull(), tlbcraccClone.col("data_rif"))
                 .otherwise(cicliRacc1.col("dt_inizio_ciclo")).as("dt_rif_cracc");
 
-        Dataset<Row> ciclilavStep1Filecracc = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left").select(
-                cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
-                cicliRacc1.col("dt_fine_ciclo"), cdIstiCedCol, ndgCedCol, dtRifCraccCol);
+        Dataset<Row> ciclilavStep1Filecracc = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left")
+                .select(cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"),
+                        cicliRacc1.col("dt_inizio_ciclo"), cicliRacc1.col("dt_fine_ciclo"),
+                        cdIstiCedCol, ndgCedCol, dtRifCraccCol);
 
         // 176
 

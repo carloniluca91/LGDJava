@@ -32,6 +32,7 @@ public class StepRunner {
                 case StepNameEnum.CICLILAV_STEP_1_STEP_NAME:
 
                     logger.info("Matched step name: " + StepNameEnum.CICLILAV_STEP_1_STEP_NAME);
+
                     Option dataDaOption = OptionFactory.getDataDaOption();
                     Option dataAOption = OptionFactory.getDataAOpton();
 
@@ -39,7 +40,6 @@ public class StepRunner {
                     stepParameterOptions.addOption(dataAOption);
 
                     DataDaDataAValues dataDaDataAValues = stepOptionParser.getDataDaDataAValues(args, stepParameterOptions);
-                    logger.info(dataDaDataAValues.toString());
                     new CiclilavStep1().run(dataDaDataAValues);
                     break;
 
@@ -57,9 +57,9 @@ public class StepRunner {
             logger.error(e);
 
             HelpFormatter helpFormatter = new HelpFormatter();
-            String helpUsageString = HelpFormatterEnum.HELP_USAGE_STRING + " -" + OptionEnum.STEP_NAME_SHORT_OPTION + " " + stepName;
-            String helpHeaderString = HelpFormatterEnum.HELP_HEADER_STRING + ": step " + stepName + "\n\n";
-            String helpFooterString = HelpFormatterEnum.HELP_FOOTER_STRING;
+            String helpUsageString = OptionEnum.HELP_USAGE_STRING + " -" + OptionEnum.STEP_NAME_SHORT_OPTION + " " + stepName;
+            String helpHeaderString = OptionEnum.HELP_HEADER_STRING + ": step " + stepName + "\n\n";
+            String helpFooterString = OptionEnum.HELP_FOOTER_STRING;
             helpFormatter.setWidth(getHelpFormatterWidth(helpUsageString, helpHeaderString, helpFooterString));
             helpFormatter.printHelp(helpUsageString, helpHeaderString, stepParameterOptions, helpFooterString, true);
         }

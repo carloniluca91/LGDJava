@@ -30,4 +30,8 @@ public final class OptionEnum {
     public final static String NUMERO_MESI_2_LONG_OPTION = "numero-mesi-2";
     public final static String NUMERO_MESI_2_OPTION_DESCRIPTION = "parametro $numero_mesi_2";
 
+    public final static String HELP_USAGE_STRING = "spark2-submit ... --class it.carloni.luca.lgd.Main <jar-path>";
+    public final static String HELP_HEADER_STRING =  "LGD main application";
+    public final static String HELP_FOOTER_STRING = "\nCreated by Carloni Luca";
+
 }

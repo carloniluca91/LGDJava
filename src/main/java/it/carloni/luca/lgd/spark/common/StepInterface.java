@@ -1,6 +1,8 @@
 package it.carloni.luca.lgd.spark.common;
 
-public interface StepInterface<T> {
+import it.carloni.luca.lgd.parameter.common.AbstractStepValues;
+
+public interface StepInterface<T extends AbstractStepValues> {
 
     void run(T t);
 }
