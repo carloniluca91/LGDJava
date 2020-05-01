@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.*;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.spark.udfs.UDFsNames;
+import it.carloni.luca.lgd.spark.udf.UDFsNames;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;

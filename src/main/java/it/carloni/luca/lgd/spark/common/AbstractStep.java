@@ -7,14 +7,13 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.types.*;
-import it.carloni.luca.lgd.spark.udfs.UDFsFactory;
-import it.carloni.luca.lgd.spark.udfs.UDFsNames;
+import it.carloni.luca.lgd.spark.udf.UDFsFactory;
+import it.carloni.luca.lgd.spark.udf.UDFsNames;
 
 import java.util.Map;
 
-public abstract class AbstractStep {
+public abstract class AbstractStep<T> implements StepInterface<T> {
 
     private final SparkSession sparkSession = getSparkSessionWithUDFs();
     private final PropertiesConfiguration properties = new PropertiesConfiguration();
@@ -72,12 +71,6 @@ public abstract class AbstractStep {
         return sparkSession;
     }
 
-    protected void registerStepUDF(UDF1<String, String> udf, String udfName, DataType udfReturnType) {
-
-        sparkSession.udf().register(udfName, udf, udfReturnType);
-    }
-
-
     protected Dataset<Row> readCsvAtPathUsingSchema(String csvFilePath, Map<String, String> pigSchema){
 
         StructType csvStructType = fromPigSchemaToStructType(pigSchema);
@@ -124,6 +117,4 @@ public abstract class AbstractStep {
 
         return dataType;
     }
-
-    abstract public void run();
 }
