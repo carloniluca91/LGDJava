@@ -1,18 +1,18 @@
-package it.carloni.luca.lgd.steps;
+package it.carloni.luca.lgd.spark.steps;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.common.AbstractStep;
+import it.carloni.luca.lgd.spark.common.AbstractStep;
 import it.carloni.luca.lgd.schemas.MovimentiSchema;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static it.carloni.luca.lgd.common.StepUtils.changeDateFormat;
-import static it.carloni.luca.lgd.common.StepUtils.fromPigSchemaToStructType;
-import static it.carloni.luca.lgd.common.StepUtils.selectDfColumns;
-import static it.carloni.luca.lgd.common.StepUtils.toScalaSeq;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormat;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.fromPigSchemaToStructType;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.selectDfColumns;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.toScalaSeq;
 
 public class Movimenti extends AbstractStep {
 

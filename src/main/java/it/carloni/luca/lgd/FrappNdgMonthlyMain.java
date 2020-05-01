@@ -1,7 +1,7 @@
 package it.carloni.luca.lgd;
 
 import org.apache.commons.cli.Option;
-import it.carloni.luca.lgd.steps.FrappNdgMonthly;
+import it.carloni.luca.lgd.spark.steps.FrappNdgMonthly;
 import it.carloni.luca.lgd.options.OptionFactory;
 import it.carloni.luca.lgd.params.StepParams;
 

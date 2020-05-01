@@ -15,17 +15,14 @@ public class StepParams {
     @Getter private String dataDa;
     @Getter private String dataA;
     @Getter private String ufficio;
-    @Getter private int numeroMesi1;
-    @Getter private int numeroMesi2;
+    @Getter private Integer numeroMesi1;
+    @Getter private Integer numeroMesi2;
     @Getter private String dataOsservazione;
-
-    private CommandLine commandLine;
 
     public StepParams(String[] args, List<Option> stepOptionList){
 
         for (Option option: stepOptionList){
 
-            option.setRequired(true);
             stepOptions.addOption(option);
         }
 
@@ -37,82 +34,45 @@ public class StepParams {
         try {
 
             CommandLineParser commandLineParser = new BasicParser();
-            commandLine = commandLineParser.parse(stepOptions, args);
+            CommandLine commandLine = commandLineParser.parse(stepOptions, args);
 
-            parseDataDa();
-            parseDataA();
-            parseUfficio();
-            parseNumeroMesi1();
-            parseNumeroMesi2();
-            parseDataOsservazione();
+            dataDa = parseOptionOfTypeString(commandLine, OptionFactory.getDataDaOption());
+            dataA = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
+            ufficio = parseOptionOfTypeString(commandLine, OptionFactory.getUfficioOption());
+            numeroMesi1 = parseOptionOfTypeInt(commandLine, OptionFactory.getNumeroMesi1Option());
+            numeroMesi2 = parseOptionOfTypeInt(commandLine, OptionFactory.getNumeroMesi2Option());
+            dataOsservazione = parseOptionOfTypeString(commandLine, OptionFactory.getDataOsservazioneOption());
 
             logger.info("Arguments parsed correctly");
 
         } catch (ParseException e) {
 
             logger.error("ParseException occurred");
-            logger.error("e.getMessage(): " + e.getMessage());
             logger.error(e);
         }
     }
 
-    private void parseDataA(){
+    private Integer parseOptionOfTypeInt(CommandLine commandLine, Option optionToParse) {
 
-        Option option = OptionFactory.getDataAOpton();
-        if (stepOptions.hasOption(option.getLongOpt())){
+        if (stepOptions.hasOption(optionToParse.getLongOpt())) {
 
-            dataA = commandLine.getOptionValue(option.getLongOpt());
-            logger.debug(String.format("%s: %s", option.getDescription(), dataA));
+            int optionValue = Integer.parseInt(commandLine.getOptionValue(optionToParse.getLongOpt()));
+            logger.info(String.format("%s: %s", optionToParse.getDescription(), optionValue));
+            return optionValue;
         }
+
+        else return null;
     }
 
-    private void parseDataDa(){
+    private String parseOptionOfTypeString(CommandLine commandLine, Option optionToParse) {
 
-        Option option = OptionFactory.getDataDaOption();
-        if (stepOptions.hasOption(option.getLongOpt())){
+        if (stepOptions.hasOption(optionToParse.getLongOpt())){
 
-            dataDa = commandLine.getOptionValue(option.getLongOpt());
-            logger.debug(String.format("%s: %s", option.getDescription(), dataDa));
+            String optionValue = commandLine.getOptionValue(optionToParse.getLongOpt());
+            logger.info(String.format("%s: %s", optionToParse.getDescription(), optionValue));
+            return optionValue;
         }
-    }
 
-    private void parseDataOsservazione(){
-
-        Option option = OptionFactory.getDataOsservazioneOption();
-        if (stepOptions.hasOption(option.getLongOpt())){
-
-            dataOsservazione = commandLine.getOptionValue(option.getLongOpt());
-            logger.debug(String.format("%s: %s", option.getDescription(), dataOsservazione));
-        }
-    }
-
-    private void parseNumeroMesi1(){
-
-        Option option = OptionFactory.getNumeroMesi1Option();
-        if (stepOptions.hasOption(option.getLongOpt())){
-
-            numeroMesi1 = Integer.parseInt(commandLine.getOptionValue(option.getLongOpt()));
-            logger.debug(String.format("%s: %s", option.getDescription(), numeroMesi1));
-        }
-    }
-
-    private void parseNumeroMesi2(){
-
-        Option option = OptionFactory.getNumeroMesi2Option();
-        if (stepOptions.hasOption(option.getLongOpt())){
-
-            numeroMesi2 = Integer.parseInt(commandLine.getOptionValue(option.getLongOpt()));
-            logger.debug(String.format("%s: %s", option.getDescription(), numeroMesi2));
-        }
-    }
-
-    private void parseUfficio(){
-
-        Option option = OptionFactory.getUfficioOption();
-        if (stepOptions.hasOption(option.getLongOpt())){
-
-            ufficio = commandLine.getOptionValue(option.getLongOpt());
-            logger.debug(String.format("%s: %s", option.getDescription(), ufficio));
-        }
+        else return null;
     }
 }

@@ -1,12 +1,12 @@
-package it.carloni.luca.lgd.steps;
+package it.carloni.luca.lgd.spark.steps;
 
-import it.carloni.luca.lgd.common.StepUtils;
+import it.carloni.luca.lgd.spark.utils.StepUtils;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.common.AbstractStep;
+import it.carloni.luca.lgd.spark.common.AbstractStep;
 import it.carloni.luca.lgd.schemas.PosaggrSchema;
 
 import java.util.Arrays;
@@ -14,7 +14,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static it.carloni.luca.lgd.common.StepUtils.*;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
 
 public class Posaggr extends AbstractStep {
 

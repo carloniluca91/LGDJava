@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd;
 
-import it.carloni.luca.lgd.steps.RaccSoff;
+import it.carloni.luca.lgd.spark.steps.RaccSoff;
 
 public class RaccSoffMain {
 

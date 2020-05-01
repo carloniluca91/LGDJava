@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd;
 
-import it.carloni.luca.lgd.steps.Posaggr;
+import it.carloni.luca.lgd.spark.steps.Posaggr;
 
 public class PosaggrMain {
 

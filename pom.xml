@@ -10,10 +10,24 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <data.dir.path>${env.PROJECT_DATA_HOME}</data.dir.path>
         <spark.version>2.2.3</spark.version>
         <lombok.version>1.18.10</lombok.version>
     </properties>
+
+    <profiles>
+        <profile>
+            <id>home</id>
+            <properties>
+                <data.dir.path>C:/Users/luca/ProjectFileSystem/data</data.dir.path>
+            </properties>
+        </profile>
+        <profile>
+            <id>work</id>
+            <properties>
+                <data.dir.path>C:/Users/Consulente/ProjectFileSystem/data</data.dir.path>
+            </properties>
+        </profile>
+    </profiles>
 
     <build>
 

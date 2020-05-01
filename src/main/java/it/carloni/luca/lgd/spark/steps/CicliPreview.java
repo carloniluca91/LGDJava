@@ -1,4 +1,4 @@
-package it.carloni.luca.lgd.steps;
+package it.carloni.luca.lgd.spark.steps;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
@@ -6,11 +6,11 @@ import org.apache.spark.sql.api.java.UDF1;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.types.DataTypes;
-import it.carloni.luca.lgd.common.AbstractStep;
-import it.carloni.luca.lgd.common.udfs.UDFsNames;
+import it.carloni.luca.lgd.spark.common.AbstractStep;
+import it.carloni.luca.lgd.spark.udfs.UDFsNames;
 import it.carloni.luca.lgd.schemas.CicliPreviewSchema;
 
-import static it.carloni.luca.lgd.common.StepUtils.*;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
 
 public class CicliPreview extends AbstractStep {
 
@@ -43,8 +43,7 @@ public class CicliPreview extends AbstractStep {
         logger.debug("fposiSintGen2Csv: " + fposiSintGen2Csv);
 
         // 21
-        Dataset<Row> fposiLoad = readCsvAtPathUsingSchema(fposiOutdirCsvPath,
-                fromPigSchemaToStructType(CicliPreviewSchema.getFposiOutDirPigSchema()));
+        Dataset<Row> fposiLoad = readCsvAtPathUsingSchema(fposiOutdirCsvPath, CicliPreviewSchema.getFposiOutDirPigSchema());
 
         //36
 

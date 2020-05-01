@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd;
 
-import it.carloni.luca.lgd.steps.Fpasperd;
+import it.carloni.luca.lgd.spark.steps.Fpasperd;
 
 public class FpasperdMain {
 

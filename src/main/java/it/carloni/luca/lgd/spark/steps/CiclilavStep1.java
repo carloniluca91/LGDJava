@@ -1,23 +1,23 @@
-package it.carloni.luca.lgd.steps;
+package it.carloni.luca.lgd.spark.steps;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.common.AbstractStep;
+import it.carloni.luca.lgd.spark.common.AbstractStep;
 import it.carloni.luca.lgd.schemas.CicliLavStep1Schema;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
-import static it.carloni.luca.lgd.common.StepUtils.*;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
 
 
 public class CiclilavStep1 extends AbstractStep {
 
     private final Logger logger = Logger.getLogger(CiclilavStep1.class);
 
-    // required parameters
+    // REQUIRED PARAMETERS
     private String dataDa;
     private String dataA;
 
@@ -26,8 +26,8 @@ public class CiclilavStep1 extends AbstractStep {
         this.dataDa = dataDa;
         this.dataA = dataA;
 
-        logger.debug("dataDa: " + this.dataDa);
-        logger.debug("dataA: " + this.dataA);
+        logger.info("dataDa: " + this.dataDa);
+        logger.info("dataA: " + this.dataA);
     }
 
     @Override
@@ -38,14 +38,13 @@ public class CiclilavStep1 extends AbstractStep {
         String ciclilavStep1OutCsv = getValue("ciclilav.step1.out.csv");
         String ciclilavStep1FilecraccCsv = getValue("ciclilav.step1.filecracc.csv");
 
-        logger.debug("tlbcidefCsvPath: " +  tlbcidefCsvPath);
-        logger.debug("tlbcraccCsvPath: " + tlbcraccCsvPath);
-        logger.debug("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
-        logger.debug("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
+        logger.info("tlbcidefCsvPath: " +  tlbcidefCsvPath);
+        logger.info("tlbcraccCsvPath: " + tlbcraccCsvPath);
+        logger.info("ciclilavStep1OutCsv: " + ciclilavStep1OutCsv);
+        logger.info("ciclilavStep1FilecraccCsv: " + ciclilavStep1FilecraccCsv);
 
         // 22
-        Dataset<Row> tlbcidef = readCsvAtPathUsingSchema(tlbcidefCsvPath,
-                fromPigSchemaToStructType(CicliLavStep1Schema.getTlbcidefPigSchema()));
+        Dataset<Row> tlbcidef = readCsvAtPathUsingSchema(tlbcidefCsvPath, CicliLavStep1Schema.getTlbcidefPigSchema());
 
         // 40
         // FILTER tlbcidef BY dt_inizio_ciclo >= $data_da AND dt_inizio_ciclo <= $data_a;
@@ -86,8 +85,7 @@ public class CiclilavStep1 extends AbstractStep {
         // 71
 
         // 78
-        Dataset<Row> tlbcraccLoad = readCsvAtPathUsingSchema(tlbcraccCsvPath,
-                fromPigSchemaToStructType(CicliLavStep1Schema.getTlbcraccLoadPigSchema()));
+        Dataset<Row> tlbcraccLoad = readCsvAtPathUsingSchema(tlbcraccCsvPath, CicliLavStep1Schema.getTlbcraccLoadPigSchema());
 
         // FILTER tlbcracc_load BY data_rif <= ( (int)$data_a <= 20150731 ? 20150731 : (int)$data_a );
         LocalDate defaultDataA = parseStringToLocalDate("20150731", "yyyyMMdd");
@@ -123,11 +121,12 @@ public class CiclilavStep1 extends AbstractStep {
                 .otherwise(cicliRacc1.col("ndg_principale")).as("ndg_ced");
 
         Seq<String> joinColsSeq = toScalaSeq(Arrays.asList("cod_raccordo", "data_rif"));
-        Dataset<Row> ciclilavStep1 = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left").select(
-                cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
+        Dataset<Row> ciclilavStep1 = cicliRacc1.join(tlbcraccClone, joinColsSeq, "left")
+                .select(cicliRacc1.col("cd_isti"), cicliRacc1.col("ndg_principale"), cicliRacc1.col("dt_inizio_ciclo"),
                 cicliRacc1.col("dt_fine_ciclo"), cicliRacc1.col("datainiziopd"), cicliRacc1.col("datainizioristrutt"),
                 cicliRacc1.col("datainizioinc"), cicliRacc1.col("datainiziosoff"),
-                functions.lit(0).as("progr"), cdIstiCedCol, ndgCedCol).distinct();
+                functions.lit(0).as("progr"), cdIstiCedCol, ndgCedCol)
+                .distinct();
 
         // 149
 

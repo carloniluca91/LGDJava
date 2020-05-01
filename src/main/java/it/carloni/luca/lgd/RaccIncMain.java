@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd;
 
-import it.carloni.luca.lgd.steps.RaccInc;
+import it.carloni.luca.lgd.spark.steps.RaccInc;
 
 public class RaccIncMain {
 

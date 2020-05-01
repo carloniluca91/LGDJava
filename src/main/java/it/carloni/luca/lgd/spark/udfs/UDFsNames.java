@@ -1,4 +1,4 @@
-package it.carloni.luca.lgd.common.udfs;
+package it.carloni.luca.lgd.spark.udfs;
 
 public final class UDFsNames {
 

@@ -1,14 +1,14 @@
-package it.carloni.luca.lgd.steps;
+package it.carloni.luca.lgd.spark.steps;
 
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
-import it.carloni.luca.lgd.common.AbstractStep;
+import it.carloni.luca.lgd.spark.common.AbstractStep;
 import it.carloni.luca.lgd.schemas.QuadFrappSchema;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static it.carloni.luca.lgd.common.StepUtils.*;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
 
 public class QuadFrapp extends AbstractStep {
 

@@ -1,4 +1,4 @@
-package it.carloni.luca.lgd.common;
+package it.carloni.luca.lgd.spark.utils;
 
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.*;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.common.udfs.UDFsNames;
+import it.carloni.luca.lgd.spark.udfs.UDFsNames;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -122,20 +122,6 @@ public class StepUtils {
                 dateCol1, dateCol2, functions.lit(commonPattern));
     }
 
-    // create a schema with one String column for each name provided
-    public static StructType fromPigSchemaToStructType(Map<String, String> pigSchema){
-
-        StructType schema = new StructType();
-        for (Map.Entry<String, String> pigSchemaEntry : pigSchema.entrySet()){
-            
-            String columnName = pigSchemaEntry.getKey();
-            DataType dataType = resolveDataType(pigSchemaEntry.getValue());
-            schema = schema.add(new StructField(columnName, dataType, true, Metadata.empty()));
-        }
-
-        return schema;
-    }
-
     /***
      * calls a previously registered UDF that computes the least date between two dates
      * expressed by two strings with same format (commonDateFormat)
@@ -164,19 +150,6 @@ public class StepUtils {
 
         return functions.regexp_replace(df.col(columnName), oldString, newString)
                 .cast(DataTypes.DoubleType).as(columnName);
-    }
-    
-    private static DataType resolveDataType(String pigColumnType){
-        
-        DataType dataType;
-        switch (pigColumnType){
-
-            case "int": dataType = DataTypes.IntegerType; break;
-            case "double": dataType = DataTypes.DoubleType; break;
-            default: dataType = DataTypes.StringType; break;
-        }
-        
-        return dataType;
     }
 
     // create a list of columns to be selected from the given dataset

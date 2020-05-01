@@ -1,4 +1,4 @@
-package it.carloni.luca.lgd.common;
+package it.carloni.luca.lgd.spark.common;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -8,11 +8,11 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.api.java.UDF1;
-import org.apache.spark.sql.types.DataType;
-import org.apache.spark.sql.types.DataTypes;
-import org.apache.spark.sql.types.StructType;
-import it.carloni.luca.lgd.common.udfs.UDFsFactory;
-import it.carloni.luca.lgd.common.udfs.UDFsNames;
+import org.apache.spark.sql.types.*;
+import it.carloni.luca.lgd.spark.udfs.UDFsFactory;
+import it.carloni.luca.lgd.spark.udfs.UDFsNames;
+
+import java.util.Map;
 
 public abstract class AbstractStep {
 
@@ -37,10 +37,10 @@ public abstract class AbstractStep {
             dataDaPattern = getValue("params.datada.pattern");
             dataAPattern = getValue("params.dataa.pattern");
 
-            logger.debug("csvFormat: " + csvFormat);
-            logger.debug("csvDelimiter: " + csvDelimiter);
-            logger.debug("dataDaPattern: " + dataDaPattern);
-            logger.debug("dataAPattern: " + dataAPattern);
+            logger.info("csv format: " + csvFormat);
+            logger.info("csv delimiter: " + csvDelimiter);
+            logger.info("$data_da pattern: " + dataDaPattern);
+            logger.info("$data_a pattern: " + dataAPattern);
         }
         catch (ConfigurationException e){
 
@@ -78,14 +78,51 @@ public abstract class AbstractStep {
     }
 
 
-    protected Dataset<Row> readCsvAtPathUsingSchema(String csvFilePath, StructType csvSchema){
+    protected Dataset<Row> readCsvAtPathUsingSchema(String csvFilePath, Map<String, String> pigSchema){
 
-        return sparkSession.read().format(csvFormat).option("sep", csvDelimiter).schema(csvSchema).csv(csvFilePath);
+        StructType csvStructType = fromPigSchemaToStructType(pigSchema);
+        return sparkSession.read()
+                .format(csvFormat)
+                .option("sep", csvDelimiter)
+                .schema(csvStructType)
+                .csv(csvFilePath);
     }
 
     protected void writeDatasetAsCsvAtPath(Dataset<Row> dataset, String path){
 
-        dataset.coalesce(1).write().format(csvFormat).option("sep", csvDelimiter).mode(SaveMode.Overwrite).csv(path);
+        dataset.coalesce(1)
+                .write().
+                format(csvFormat)
+                .option("sep", csvDelimiter)
+                .option("header", true)
+                .mode(SaveMode.Overwrite)
+                .csv(path);
+    }
+
+    private StructType fromPigSchemaToStructType(Map<String, String> pigSchema){
+
+        StructType schema = new StructType();
+        for (Map.Entry<String, String> pigSchemaEntry : pigSchema.entrySet()){
+
+            String columnName = pigSchemaEntry.getKey();
+            DataType dataType = resolveDataType(pigSchemaEntry.getValue());
+            schema = schema.add(new StructField(columnName, dataType, true, Metadata.empty()));
+        }
+
+        return schema;
+    }
+
+    private DataType resolveDataType(String pigColumnType){
+
+        DataType dataType;
+        switch (pigColumnType){
+
+            case "int": dataType = DataTypes.IntegerType; break;
+            case "double": dataType = DataTypes.DoubleType; break;
+            default: dataType = DataTypes.StringType; break;
+        }
+
+        return dataType;
     }
 
     abstract public void run();
