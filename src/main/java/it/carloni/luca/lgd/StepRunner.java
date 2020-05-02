@@ -26,11 +26,13 @@ public class StepRunner {
 
         try {
 
-            switch (stepName.toUpperCase()) {
+            String stepnameUC = stepName.toUpperCase();
+            StepName stepNameElem = StepName.valueOf(stepnameUC);
+            switch (stepNameElem) {
 
-                case StepNameEnum.CICLILAV_STEP_1_STEP_NAME: {
+                case CICLILAV_STEP_1: {
 
-                    logger.info("Matched step name " + StepNameEnum.CICLILAV_STEP_1_STEP_NAME);
+                    logger.info("Matched step name " + stepnameUC);
 
                     Option dataDaOption = OptionFactory.getDataDaOption();
                     Option dataAOption = OptionFactory.getDataAOpton();
@@ -43,9 +45,9 @@ public class StepRunner {
                     break;
                 }
 
-                case StepNameEnum.CICLI_PREVIEW_STEP_NAME: {
+                case CICLI_PREVIEW: {
 
-                    logger.info("Matched step name " + StepNameEnum.CICLI_PREVIEW_STEP_NAME);
+                    logger.info("Matched step name " + stepnameUC);
 
                     Option dataAOption = OptionFactory.getDataAOpton();
                     Option ufficioOption = OptionFactory.getUfficioOption();
@@ -63,6 +65,12 @@ public class StepRunner {
                     logger.error(String.format("Undefined step name (%s)", stepName));
                     break;
             }
+        }
+
+        catch (IllegalArgumentException e) {
+
+            logger.error("IllegalArgumentException occurred");
+            logger.error(String.format("Unable to match provided step name %s", stepName));
         }
 
         catch (ParseException e) {
