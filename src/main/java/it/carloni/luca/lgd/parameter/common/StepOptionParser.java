@@ -46,25 +46,44 @@ public class StepOptionParser {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
         String stepName = parseOptionOfTypeString(commandLine, OptionFactory.getStepNameOption());
+
         logger.info("Step name parsed correctly");
+
         return new StepNameValue(stepName);
     }
 
     public DataDaDataAValues getDataDaDataAValues(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
-        String dataDaOptionValue = parseOptionOfTypeString(commandLine, OptionFactory.getDataDaOption());
-        String dataAOptionValue = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
+        String dataDa = parseOptionOfTypeString(commandLine, OptionFactory.getDataDaOption());
+        String dataA = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
+
         logger.info("Step options parsed correctly");
-        return new DataDaDataAValues(dataDaOptionValue, dataAOptionValue);
+
+        return new DataDaDataAValues(dataDa, dataA);
     }
 
     public DataAUfficioValues getDataAUfficioValues(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
-        String dataAOptionValue = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
-        String ufficioOptionValue = parseOptionOfTypeString(commandLine, OptionFactory.getUfficioOption());
+        String dataA = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
+        String ufficio = parseOptionOfTypeString(commandLine, OptionFactory.getUfficioOption());
+
         logger.info("Step options parsed correctly");
-        return new DataAUfficioValues(dataAOptionValue, ufficioOptionValue);
+
+        return new DataAUfficioValues(dataA, ufficio);
+    }
+
+    public DataANumeroMesi12Values getDataANumeroMesi12Values(String[] args, Options stepOptions) throws ParseException {
+
+        CommandLine commandLine = getCommandLine(args, stepOptions);
+        String dataA = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
+        Integer numeroMesi1 = parseOptionOfTypeInt(commandLine, OptionFactory.getNumeroMesi1Option());
+        Integer numeroMesi2 = parseOptionOfTypeInt(commandLine, OptionFactory.getNumeroMesi2Option());
+
+        logger.info("Step options parsed correctly");
+
+        return new DataANumeroMesi12Values(dataA, numeroMesi1, numeroMesi2);
+
     }
 }

@@ -60,6 +60,23 @@ public class StepRunner {
                     break;
                 }
 
+                case FANAG_MONTHLY: {
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    Option dataAOption = OptionFactory.getDataAOpton();
+                    Option numeroMesi1Option = OptionFactory.getNumeroMesi1Option();
+                    Option numeroMesi2Option = OptionFactory.getNumeroMesi2Option();
+
+                    stepParameterOptions.addOption(dataAOption);
+                    stepParameterOptions.addOption(numeroMesi1Option);
+                    stepParameterOptions.addOption(numeroMesi2Option);
+
+                    DataANumeroMesi12Values dataANumeroMesi12Values = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
+                    new FanagMonthly().run(dataANumeroMesi12Values);
+                    break;
+                }
+
                 default:
 
                     logger.error(String.format("Undefined step name (%s)", stepName));
