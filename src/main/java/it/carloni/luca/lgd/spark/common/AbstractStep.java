@@ -55,7 +55,7 @@ public abstract class AbstractStep<T extends AbstractStepValues> implements Step
     private SparkSession getSparkSessionWithUDFs(){
 
         SparkSession sparkSession = SparkSession.builder()
-                //.master("local")
+                .master("local")
                 .getOrCreate();
 
         logger.info("Spark application UI url @ " + sparkSession.sparkContext().uiWebUrl().get());
