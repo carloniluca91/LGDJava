@@ -1,17 +1,21 @@
 package it.carloni.luca.lgd.spark.step;
 
 import it.carloni.luca.lgd.parameter.step.EmptyValues;
+import it.carloni.luca.lgd.spark.common.AbstractStep;
+import it.carloni.luca.lgd.schema.FpasperdSchema;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.spark.common.AbstractStep;
-import it.carloni.luca.lgd.schema.FpasperdSchema;
 
 import java.util.Arrays;
 
-import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.addDurationUDF;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.daysBetweenUDF;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.substringAndToInt;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.toScalaSeq;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.toStringCol;
 
 public class Fpasperd extends AbstractStep<EmptyValues> {
 
@@ -36,9 +40,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
         Column dataFineDefCol = addDurationUDF(toStringCol(tlbcidefLoad.col("datafinedef")), "yyyyMMdd", 2).as("datafinedef");
         Dataset<Row> tlbcidef = tlbcidefLoad
-                .select(functions.col("codicebanca"), functions.col("ndgprincipale"),
-                        functions.col("datainiziodef"), dataFineDefCol,
-                        functions.col("codicebanca_collegato"), functions.col("ndg_collegato"));
+                .select(functions.col("codicebanca"), functions.col("ndgprincipale"), functions.col("datainiziodef"),
+                        dataFineDefCol, functions.col("codicebanca_collegato"), functions.col("ndg_collegato"));
         // 56
 
         // 63
@@ -206,6 +209,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
                 .union(principFpasperdOtherOut)
                 .union(principFpasperdNullOut)
                 .distinct();
+
+        logger.info("Successfully performed DataFrames union");
 
         // 331
 

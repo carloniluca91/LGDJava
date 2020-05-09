@@ -40,8 +40,8 @@ public class StepRunner {
                     stepParameterOptions.addOption(dataDaOption);
                     stepParameterOptions.addOption(dataAOption);
 
-                    DataDaDataAValues dataDaDataAValues = stepOptionParser.getDataDaDataAValues(args, stepParameterOptions);
-                    new CiclilavStep1().run(dataDaDataAValues);
+                    DataDaDataAValues stepValues = stepOptionParser.getDataDaDataAValues(args, stepParameterOptions);
+                    new CiclilavStep1().run(stepValues);
                     break;
                 }
 
@@ -55,8 +55,8 @@ public class StepRunner {
                     stepParameterOptions.addOption(dataAOption);
                     stepParameterOptions.addOption(ufficioOption);
 
-                    DataAUfficioValues dataAUfficioValues = stepOptionParser.getDataAUfficioValues(args, stepParameterOptions);
-                    new CicliPreview().run(dataAUfficioValues);
+                    DataAUfficioValues stepValues = stepOptionParser.getDataAUfficioValues(args, stepParameterOptions);
+                    new CicliPreview().run(stepValues);
                     break;
                 }
 
@@ -72,8 +72,8 @@ public class StepRunner {
                     stepParameterOptions.addOption(numeroMesi1Option);
                     stepParameterOptions.addOption(numeroMesi2Option);
 
-                    DataANumeroMesi12Values dataANumeroMesi12Values = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
-                    new FanagMonthly().run(dataANumeroMesi12Values);
+                    DataANumeroMesi12Values stepValues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
+                    new FanagMonthly().run(stepValues);
                     break;
                 }
 
@@ -82,6 +82,21 @@ public class StepRunner {
                     logger.info("Matched step name " + stepnameUC);
 
                     new Fpasperd().run(new EmptyValues());
+
+                case FRAPP_NDG_MONTHLY:
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    Option dataAOption = OptionFactory.getDataAOpton();
+                    Option numeroMesi1Option = OptionFactory.getNumeroMesi1Option();
+                    Option numeroMesi2Option = OptionFactory.getNumeroMesi2Option();
+
+                    stepParameterOptions.addOption(dataAOption);
+                    stepParameterOptions.addOption(numeroMesi1Option);
+                    stepParameterOptions.addOption(numeroMesi2Option);
+
+                    DataANumeroMesi12Values stepvalues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
+                    new FrappNdgMonthly().run(stepvalues);
 
                 default:
 
