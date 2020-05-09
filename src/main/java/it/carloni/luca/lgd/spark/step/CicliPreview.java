@@ -181,12 +181,14 @@ public class CicliPreview extends AbstractStep<DataAUfficioValues> {
 
         // SUM(fposi_base.totaccordatodatdef)      as totaccordatodatdef
         // SUM(fposi_base.totutilizzdatdef)        as totutilizzdatdef
-        Column totAccordatoDatDefCol = functions.sum(fposiBase.col("totaccordatodatdef")).over(fposiGen2WindowSpec).as("totaccordatodatdef");
-        Column totUtilizzDatDefCol = functions.sum(fposiBase.col("totutilizzdatdef")).over(fposiGen2WindowSpec).as("totutilizzdatdef");
+        Column totAccordatoDatDefCol = functions.sum(fposiBase.col("totaccordatodatdef"));
+        Column totUtilizzDatDefCol = functions.sum(fposiBase.col("totutilizzdatdef"));
 
         Dataset<Row> fposiGen2 = fposiBase.select(fposiBase.col("ufficio"), fposiBase.col("codicebanca"),
                 fposiBase.col("datarif"), fposiBase.col("ndgprincipale"), dataInizioDefCol, dataFineDefCol,
-                dataInizioPdCol, dataInizioIncCol, dataInizioRistruttCol, dataSofferenzaCol, totAccordatoDatDefCol, totUtilizzDatDefCol,
+                dataInizioPdCol, dataInizioIncCol, dataInizioRistruttCol, dataSofferenzaCol,
+                totAccordatoDatDefCol.over(fposiGen2WindowSpec).as("totaccordatodatdef"),
+                totUtilizzDatDefCol.over(fposiGen2WindowSpec).as("totutilizzdatdef"),
                 fposiBase.col("segmento_calc"), fposiBase.col("ciclo_soff"), fposiBase.col("stato_anagrafico"));
 
         // 127
@@ -197,10 +199,9 @@ public class CicliPreview extends AbstractStep<DataAUfficioValues> {
 
         // 136
 
-        Column subStringDataInizioDefCol = functions.substring(fposiBase.col("datainiziodef"), 0, 6);
-        Column subStringDataFineDefCol = functions.substring(fposiBase.col("datafinedef"), 0, 6);
+        Column subStringDataInizioDefCol = functions.substring(fposiBase.col("datainiziodef"), 0, 6).as("mese_apertura");
+        Column subStringDataFineDefCol = functions.substring(fposiBase.col("datafinedef"), 0, 6).as("mese_chiusura");
 
-        // redefine the WindowSpec
         /*
             GROUP fposi_base BY ( ufficio, datarif, codicebanca, segmento_calc, SUBSTRING(datainiziodef,0,6), SUBSTRING(datafinedef,0,6),
             stato_anagrafico, ciclo_soff, flag_aperto );
@@ -219,17 +220,13 @@ public class CicliPreview extends AbstractStep<DataAUfficioValues> {
             ,SUM(fposi_base.totutilizzdatdef)   as totutilizzdatdef
          */
 
-        WindowSpec fposiSintGen2WindowSpec = Window.partitionBy(fposiBase.col("ufficio"), fposiBase.col("datarif"),
-                fposiBase.col("codicebanca"), fposiBase.col("segmento_calc"),
-                subStringDataInizioDefCol, subStringDataFineDefCol, fposiBase.col("stato_anagrafico"),
-                fposiBase.col("ciclo_soff"), fposiBase.col("flag_aperto"));
-
-        Dataset<Row> fposiSintGen2 = fposiBase.select(fposiBase.col("ufficio"), fposiBase.col("datarif"),
+        Dataset<Row> fposiSintGen2 = fposiBase.groupBy(fposiBase.col("ufficio"), fposiBase.col("datarif"),
                 fposiBase.col("flag_aperto"), fposiBase.col("codicebanca"), fposiBase.col("segmento_calc"),
                 subStringDataInizioDefCol, subStringDataFineDefCol,
-                fposiBase.col("stato_anagrafico"), fposiBase.col("ciclo_soff"),
-                functions.count("ufficio").over(fposiSintGen2WindowSpec).as("row_count"),
-                totAccordatoDatDefCol, totUtilizzDatDefCol);
+                fposiBase.col("stato_anagrafico"), fposiBase.col("ciclo_soff"))
+                .agg(functions.count("*").as("row_count"),
+                        totAccordatoDatDefCol.as("totaccordatodatdef"),
+                        totUtilizzDatDefCol.as("totutilizzdatdef"));
 
         // 169
 
