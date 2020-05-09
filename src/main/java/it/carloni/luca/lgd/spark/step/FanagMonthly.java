@@ -198,7 +198,7 @@ public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
                 .and(tlbudtc.col("dt_riferimento").equalTo(tlbcidefTlbuact.col("datariferimento")));
 
         // (tlbudtc::tp_ristrutt != '0' ? 'S' : 'N') as flag_ristrutt
-        Column flagRistruttCol = functions.when(tlbudtc.col("tp_ristrutt").notEqual(0), "S").otherwise("N");
+        Column flagRistruttCol = functions.when(tlbudtc.col("tp_ristrutt").notEqual("0"), "S").otherwise("N").as("flag_ristrutt");
 
         Dataset<Row> fanagOut = tlbudtc.join(tlbcidefTlbuact, tlbudtcJoinCondition, "inner")
                 .select(tlbcidefTlbuact.col("codicebanca_collegato").as("codicebanca"),
