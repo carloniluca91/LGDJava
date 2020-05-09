@@ -8,7 +8,7 @@ import org.apache.spark.sql.functions;
 import org.apache.spark.sql.types.*;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.spark.udf.UDFsNames;
+import it.carloni.luca.lgd.spark.udf.UDFName;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -27,9 +27,9 @@ public class StepUtils {
      * @return: dateCol.plusMonths(numberOfMonths)
      */
 
-    public static Column addDuration(Column dateCol, String dateColFormat, int numberOfMonths){
+    public static Column addDurationUDF(Column dateCol, String dateColFormat, int numberOfMonths){
 
-        return functions.callUDF(UDFsNames.ADD_DURATION_UDF_NAME,
+        return functions.callUDF(UDFName.ADD_DURATION.getUdfName(),
                 dateCol, functions.lit(dateColFormat), functions.lit(numberOfMonths));
     }
 
@@ -41,9 +41,9 @@ public class StepUtils {
      * @return: dateColumn with format updated to newPattern
      */
 
-    public static Column changeDateFormat(Column dateColumn, String oldPattern, String newPattern){
+    public static Column changeDateFormatUDF(Column dateColumn, String oldPattern, String newPattern){
 
-        return functions.callUDF(UDFsNames.CHANGE_DATE_FORMAT_UDF_NAME,
+        return functions.callUDF(UDFName.CHANGE_DATE_FORMAT.getUdfName(),
                 dateColumn, functions.lit(oldPattern),
                 functions.lit(newPattern));
     }
@@ -74,11 +74,11 @@ public class StepUtils {
      * @return: boolean column
      */
 
-    public static Column isDateBetween(Column dateColumn, String dateColumnPattern,
-                                       String lowerDate, String lowerDatePattern,
-                                       String upperDate, String upperDatePattern){
+    public static Column isDateBetweenUDF(Column dateColumn, String dateColumnPattern,
+                                          String lowerDate, String lowerDatePattern,
+                                          String upperDate, String upperDatePattern){
 
-        return functions.callUDF(UDFsNames.IS_DATE_BETWEEN_UDF_NAME,
+        return functions.callUDF(UDFName.IS_DATE_BETWEEN.getUdfName(),
                 dateColumn, functions.lit(dateColumnPattern),
                 functions.lit(lowerDate), functions.lit(lowerDatePattern),
                 functions.lit(upperDate), functions.lit(upperDatePattern));
@@ -97,11 +97,11 @@ public class StepUtils {
      */
 
     // check if a date is within a given interval
-    public static Column isDateBetween(Column dateColumn, String dateColumnPattern,
-                                       Column lowerDate, String lowerDatePattern,
-                                       Column upperDate, String upperDatePattern){
+    public static Column isDateBetweenUDF(Column dateColumn, String dateColumnPattern,
+                                          Column lowerDate, String lowerDatePattern,
+                                          Column upperDate, String upperDatePattern){
 
-        return functions.callUDF(UDFsNames.IS_DATE_BETWEEN_UDF_NAME,
+        return functions.callUDF(UDFName.IS_DATE_BETWEEN.getUdfName(),
                 dateColumn, functions.lit(dateColumnPattern),
                 lowerDate, functions.lit(lowerDatePattern),
                 upperDate, functions.lit(upperDatePattern));
@@ -116,9 +116,9 @@ public class StepUtils {
      * @return: Integer column
      */
 
-    public static Column daysBetween(Column dateCol1, Column dateCol2, String commonPattern){
+    public static Column daysBetweenUDF(Column dateCol1, Column dateCol2, String commonPattern){
 
-        return functions.callUDF(UDFsNames.DAYS_BETWEEN_UDF_NAME,
+        return functions.callUDF(UDFName.DAYS_BETWEEN.getUdfName(),
                 dateCol1, dateCol2, functions.lit(commonPattern));
     }
 
@@ -131,9 +131,9 @@ public class StepUtils {
      * @return: String Column
      */
 
-    public static Column leastDate(Column dateColumn1, Column dateColumn2, String commonDateFormat){
+    public static Column leastDateUDF(Column dateColumn1, Column dateColumn2, String commonDateFormat){
 
-        return functions.callUDF(UDFsNames.LEAST_DATE_UDF_NAME,
+        return functions.callUDF(UDFName.LEAST_DATE.getUdfName(),
                 dateColumn1,
                 dateColumn2,
                 functions.lit(commonDateFormat));
@@ -190,9 +190,9 @@ public class StepUtils {
      * @return: String Column
      */
 
-    public static Column subtractDuration(Column dateCol, String dateColFormat, int numberOfMonths) {
+    public static Column subtractDurationUDF(Column dateCol, String dateColFormat, int numberOfMonths) {
 
-        return functions.callUDF(UDFsNames.SUBTRACT_DURATION_UDF_NAME,
+        return functions.callUDF(UDFName.SUBTRACT_DURATION.getUdfName(),
                 dateCol,
                 functions.lit(dateColFormat),
                 functions.lit(numberOfMonths));

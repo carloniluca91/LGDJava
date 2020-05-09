@@ -53,19 +53,19 @@ public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         Column dtRiferimentoDataInizioDefPrincConditionCol = toStringCol(tlbuact.col("dt_riferimento"))
-                .geq(subtractDuration(toStringCol(cicliNdgPrinc.col("datainiziodef")), Y4M2D2Format, numeroMesi1));
+                .geq(subtractDurationUDF(toStringCol(cicliNdgPrinc.col("datainiziodef")), Y4M2D2Format, numeroMesi1));
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
         // [a] SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd')
-        Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDuration(toStringCol(cicliNdgPrinc.col("datafinedef")), Y4M2D2Format, 1);
+        Column cicliNdgPrincDataFineDefSubtractDurationCol = subtractDurationUDF(toStringCol(cicliNdgPrinc.col("datafinedef")), Y4M2D2Format, 1);
 
         // we need to format $data_a to pattern yyyyMMdd
         String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, Y4M2D2Format));
-        Column leastDatePrincCol = leastDate(cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, Y4M2D2Format);
+        Column leastDatePrincCol = leastDateUDF(cicliNdgPrincDataFineDefSubtractDurationCol, dataACol, Y4M2D2Format);
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )
-        Column leastDateAddDurationPrincCol = addDuration(leastDatePrincCol, Y4M2D2Format, numeroMesi2);
+        Column leastDateAddDurationPrincCol = addDurationUDF(leastDatePrincCol, Y4M2D2Format, numeroMesi2);
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationPrincCol, 0,6)
         Column dtRiferimentoLeastDateAddDurationPrincConditionCol =
@@ -126,14 +126,14 @@ public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
 
         //  FILTER BY ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
         Column dtRiferimentoDataInizioDefCollConditionCol = toStringCol(tlbuact.col("dt_riferimento"))
-                .geq(subtractDuration(toStringCol(cicliNdgColl.col("datainiziodef")),Y4M2D2Format, numeroMesi1));
+                .geq(subtractDurationUDF(toStringCol(cicliNdgColl.col("datainiziodef")),Y4M2D2Format, numeroMesi1));
 
         // LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd'), $data_a )
-        Column cicliNdgCollDataFineDefSubtractDurationCol = subtractDuration(toStringCol(cicliNdgColl.col("datafinedef")), Y4M2D2Format, 1);
-        Column leastDateCollCol = leastDate(cicliNdgCollDataFineDefSubtractDurationCol, dataACol, Y4M2D2Format);
+        Column cicliNdgCollDataFineDefSubtractDurationCol = subtractDurationUDF(toStringCol(cicliNdgColl.col("datafinedef")), Y4M2D2Format, 1);
+        Column leastDateCollCol = leastDateUDF(cicliNdgCollDataFineDefSubtractDurationCol, dataACol, Y4M2D2Format);
 
         // AddDuration( ToDate( (chararray) leastDate(...),'yyyyMMdd'), $data_a ),'yyyyMMdd' ),'$numero_mesi_2' )
-        Column leastDateAddDurationCollCol = addDuration(leastDateCollCol, Y4M2D2Format, numeroMesi2);
+        Column leastDateAddDurationCollCol = addDurationUDF(leastDateCollCol, Y4M2D2Format, numeroMesi2);
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationPrincCol, 0,6)
         Column dtRiferimentoLeastDateAddDurationCollConditionCol =

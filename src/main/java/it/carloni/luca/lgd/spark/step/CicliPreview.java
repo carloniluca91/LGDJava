@@ -11,6 +11,7 @@ import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.functions;
 
+import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatUDF;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormat;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.toIntCol;
 
@@ -41,6 +42,10 @@ public class CicliPreview extends AbstractStep<DataAUfficioValues> {
         //36
 
         //53
+
+        // ToString(ToDate('$data_a','yyyyMMdd'),'yyyy-MM-dd') as datarif
+        Column dataRifCol = functions.lit(changeDateFormat(dataA, this.dataAPattern, "yyyy-MM-dd")).as("datarif");
+
         // (naturagiuridica_segm != 'CO' AND segmento in ('01','02','03','21')?'IM': (segmento == '10'?'PR':'AL')) as segmento_calc
         Column segmentoCalcCol = functions.when(fposiLoad.col("naturagiuridica_segm").notEqual("CO")
                 .and(fposiLoad.col("segmento").isin("01", "02", "03", "21")), "IM").otherwise(functions.when(
@@ -125,7 +130,7 @@ public class CicliPreview extends AbstractStep<DataAUfficioValues> {
                 .otherwise("C").as("flag_aperto");
 
         Dataset<Row> fposiBase = fposiLoad.select(functions.lit(ufficio).as("ufficio"), functions.col("codicebanca"),
-                functions.lit(dataA).as("datarif"), functions.col("ndgprincipale"), functions.col("datainiziodef"),
+                dataRifCol, functions.col("ndgprincipale"), functions.col("datainiziodef"),
                 functions.col("datafinedef"), functions.col("datainiziopd"), functions.col("datainizioinc"),
                 functions.col("datainizioristrutt"), functions.col("datasofferenza"), functions.col("totaccordatodatdef"),
                 functions.col("totutilizzdatdef"), segmentoCalcCol, cicloSoffCol, statoAnagraficoCol, flagApertoCol);
@@ -145,12 +150,12 @@ public class CicliPreview extends AbstractStep<DataAUfficioValues> {
 
         String oldPattern = "yyyyMMdd";
         String newPattern = "yyyy-MM-dd";
-        Column dataInizioDefCol = changeDateFormat(fposiBase.col("datainiziodef"), oldPattern, newPattern).as("datainiziodef");
-        Column dataFineDefCol = changeDateFormat(fposiBase.col("datafinedef"), oldPattern, newPattern).as("datafinedef");
-        Column dataInizioPdCol = changeDateFormat(fposiBase.col("datainiziopd"), oldPattern, newPattern).as("datainiziopd");
-        Column dataInizioIncCol = changeDateFormat(fposiBase.col("datainizioinc"), oldPattern, newPattern).as("datainizioinc");
-        Column dataInizioRistruttCol = changeDateFormat(fposiBase.col("datainizioristrutt"), oldPattern, newPattern).as("datainizioristrutt");
-        Column dataSofferenzaCol = changeDateFormat(fposiBase.col("datasofferenza"), oldPattern, newPattern).as("datasofferenza");
+        Column dataInizioDefCol = changeDateFormatUDF(fposiBase.col("datainiziodef"), oldPattern, newPattern).as("datainiziodef");
+        Column dataFineDefCol = changeDateFormatUDF(fposiBase.col("datafinedef"), oldPattern, newPattern).as("datafinedef");
+        Column dataInizioPdCol = changeDateFormatUDF(fposiBase.col("datainiziopd"), oldPattern, newPattern).as("datainiziopd");
+        Column dataInizioIncCol = changeDateFormatUDF(fposiBase.col("datainizioinc"), oldPattern, newPattern).as("datainizioinc");
+        Column dataInizioRistruttCol = changeDateFormatUDF(fposiBase.col("datainizioristrutt"), oldPattern, newPattern).as("datainizioristrutt");
+        Column dataSofferenzaCol = changeDateFormatUDF(fposiBase.col("datasofferenza"), oldPattern, newPattern).as("datasofferenza");
 
         /*
         FLATTEN(fposi_base.ufficio)             as ufficio

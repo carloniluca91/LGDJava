@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-public class UDFsFactory {
+public class UDFFactory {
 
     // adds numberOfMonths to a date with pattern datePattern
     // equivalent of PIG function AddDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')

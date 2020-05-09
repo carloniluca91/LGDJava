@@ -9,8 +9,8 @@ import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SaveMode;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.sql.types.*;
-import it.carloni.luca.lgd.spark.udf.UDFsFactory;
-import it.carloni.luca.lgd.spark.udf.UDFsNames;
+import it.carloni.luca.lgd.spark.udf.UDFFactory;
+import it.carloni.luca.lgd.spark.udf.UDFName;
 
 import java.util.Map;
 
@@ -64,13 +64,13 @@ public abstract class AbstractStep<T extends AbstractStepValues> implements Step
 
     private SparkSession registerUDFs(SparkSession sparkSession){
 
-        sparkSession.udf().register(UDFsNames.ADD_DURATION_UDF_NAME, UDFsFactory.addDurationUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFsNames.SUBTRACT_DURATION_UDF_NAME, UDFsFactory.substractDurationUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFsNames.CHANGE_DATE_FORMAT_UDF_NAME, UDFsFactory.changeDateFormatUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFsNames.DAYS_BETWEEN_UDF_NAME, UDFsFactory.daysBetweenUDF(), DataTypes.LongType);
-        sparkSession.udf().register(UDFsNames.GREATEST_DATE_UDF_NAME, UDFsFactory.greatestDateUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFsNames.IS_DATE_BETWEEN_UDF_NAME, UDFsFactory.isDateBetweenLowerDateAndUpperDateUDF(), DataTypes.BooleanType);
-        sparkSession.udf().register(UDFsNames.LEAST_DATE_UDF_NAME, UDFsFactory.leastDateUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.ADD_DURATION.getUdfName(), UDFFactory.addDurationUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.SUBTRACT_DURATION.getUdfName(), UDFFactory.substractDurationUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.CHANGE_DATE_FORMAT.getUdfName(), UDFFactory.changeDateFormatUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.DAYS_BETWEEN.getUdfName(), UDFFactory.daysBetweenUDF(), DataTypes.LongType);
+        sparkSession.udf().register(UDFName.GREATEST_DATE.getUdfName(), UDFFactory.greatestDateUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.LEAST_DATE.getUdfName(), UDFFactory.leastDateUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.IS_DATE_BETWEEN.getUdfName(), UDFFactory.isDateBetweenLowerDateAndUpperDateUDF(), DataTypes.BooleanType);
 
         return sparkSession;
     }
