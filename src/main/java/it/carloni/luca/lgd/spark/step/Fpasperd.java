@@ -40,8 +40,9 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // (int)ToString(AddDuration( ToDate( (chararray)datafinedef,'yyyyMMdd' ),'P2M' ),'yyyyMMdd' )	AS  datafinedef
         Column dataFineDefCol = addDurationUDF(toStringCol(tlbcidefLoad.col("datafinedef")), "yyyyMMdd", 2).as("datafinedef");
         Dataset<Row> tlbcidef = tlbcidefLoad
-                .select(functions.col("codicebanca"), functions.col("ndgprincipale"), functions.col("datainiziodef"),
-                        dataFineDefCol, functions.col("codicebanca_collegato"), functions.col("ndg_collegato"));
+                .select(functions.col("codicebanca"), functions.col("ndgprincipale"),
+                        functions.col("datainiziodef"), dataFineDefCol,
+                        functions.col("codicebanca_collegato"), functions.col("ndg_collegato"));
         // 56
 
         // 63
@@ -96,6 +97,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         Column ndgPrincipaleNullCol = toStringCol(functions.lit(null)).as("ndgprincipale");
         Column dataInizioDefNullCol = toStringCol(functions.lit(null)).as("datainiziodef");
 
+        // ... = JOIN tlbpaspe_filter BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca_collegato, ndg_collegato);
+        // FILTER ... BY tlbcidef::codicebanca IS NOT NULL
         Dataset<Row> fpasperdOtherGen = tlbpaspeFilter.join(tlbcidef, tlbcidefTlbPaspeFilterJoinCondition, "left_semi")
                 .select(tlbpaspeFilter.col("cd_istituto"), tlbpaspeFilter.col("ndg"), tlbpaspeFilter.col("datacont"),
                         tlbpaspeFilter.col("causale"), tlbpaspeFilter.col("importo"), codiceBancaNullCol, ndgPrincipaleNullCol,
@@ -105,6 +108,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
 
         // 152
 
+        // ... = JOIN fpasperd_other_gen BY (cd_istituto, ndg, datacont) LEFT, fpasperd_between_out BY (cd_istituto, ndg, datacont);
+        // FILTER ... BY fpasperd_between_out::cd_istituto IS NULL
         Seq<String> fpasperdOtherGenBetweenOutColSeq = toScalaSeq(Arrays.asList("cd_istituto", "ndg", "datacont"));
         Dataset<Row> fpasperdOtherOut = fpasperdOtherGen.join(fpasperdBetweenOut, fpasperdOtherGenBetweenOutColSeq, "left_anti");
 
@@ -112,6 +117,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
 
         // 175
 
+        // ... = JOIN tlbpaspe_filter BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca_collegato, ndg_collegato);
+        // FILTER ... BY tlbcidef::codicebanca IS NULL
         Dataset<Row> fpasperdNullOut = tlbpaspeFilter.join(tlbcidef, tlbcidefTlbPaspeFilterJoinCondition, "left_anti")
                 .select(tlbpaspeFilter.col("cd_istituto"), tlbpaspeFilter.col("ndg"), tlbpaspeFilter.col("datacont"),
                         tlbpaspeFilter.col("causale"), tlbpaspeFilter.col("importo"), codiceBancaNullCol, ndgPrincipaleNullCol,
@@ -162,11 +169,14 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // 245
 
         // 250
-        // JOIN fpasperd_null_out BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca, ndgprincipale);
+
+
+        // ... = JOIN fpasperd_null_out BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca, ndgprincipale);
+        // FILTER ... BY tlbcidef::codicebanca IS NOT NULL
+
         Column principFpasperdOtherGenJoinCondition =
                 fpasperdNullOut.col("cd_istituto").equalTo(tlbcidef.col("codicebanca"))
                         .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
-
 
         Dataset<Row> principFpasperdOtherGen = fpasperdNullOut.join(tlbcidef, principFpasperdOtherGenJoinCondition, "left_semi")
                 .select(fpasperdNullOut.col("cd_istituto"), fpasperdNullOut.col("ndg"),
@@ -177,12 +187,19 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
 
         // 270
 
+        // JOIN princip_fpasperd_other_gen BY (cd_istituto, ndg, datacont) LEFT, princip_fpasperd_between_out BY (cd_istituto, ndg, datacont);
+        // BY princip_fpasperd_between_out::cd_istituto IS NULL
+
         Seq<String> principFpasperdOtherOutJoinColSeq = toScalaSeq(Arrays.asList("cd_istituto", "ndg", "datacont"));
         Dataset<Row> principFpasperdOtherOut = principFpasperdOtherGen.join(principFpasperdBetweenOut, principFpasperdOtherOutJoinColSeq, "left_anti");
 
         // 288
 
         // 293
+
+        // ... = JOIN fpasperd_null_out BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca, ndgprincipale);
+        // FILTER ... BY tlbcidef::codicebanca IS NULL
+
         Column principFpasperdNullOutJoinCondition = fpasperdNullOut.col("cd_istituto").equalTo(tlbcidef.col("codicebanca"))
                 .and(fpasperdNullOut.col("ndg").equalTo(tlbcidef.col("ndgprincipale")));
 
@@ -222,6 +239,7 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::cd_istituto : fpasperd_out_distinct::cd_istituto ):
         //      tlbpaspeoss::cd_istituto ) as cd_istituto
+
         Column cdIstitutoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 functions.coalesce(tlbpaspeoss.col("_cd_istituto"), fpasperdOutDistinct.col("cd_istituto")))
                 .otherwise(tlbpaspeoss.col("_cd_istituto")).as("cd_istituto");
@@ -229,6 +247,7 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::ndg : fpasperd_out_distinct::ndg ) :
         //      tlbpaspeoss::ndg ) as ndg
+
         Column ndgCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 functions.coalesce(tlbpaspeoss.col("_ndg"), fpasperdOutDistinct.col("ndg")))
                 .otherwise(tlbpaspeoss.col("_ndg")).as("ndg");
@@ -236,6 +255,7 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::datacont : fpasperd_out_distinct::datacont ) :
         //      tlbpaspeoss::datacont ) as datacont
+
         Column dataContCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 functions.coalesce(tlbpaspeoss.col("_datacont"), fpasperdOutDistinct.col("datacont")))
                 .otherwise(tlbpaspeoss.col("_datacont")).as("datacont");
@@ -243,6 +263,7 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::causale : fpasperd_out_distinct::causale ) :
         //      tlbpaspeoss::causale ) as causale
+
         Column causaleCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 functions.coalesce(tlbpaspeoss.col("_causale"), fpasperdOutDistinct.col("causale")))
                 .otherwise(tlbpaspeoss.col("_causale")).as("causale");
@@ -250,6 +271,7 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // ( fpasperd_out_distinct::cd_istituto is not null?
         //      ( tlbpaspeoss::cd_istituto is not null? tlbpaspeoss::importo : fpasperd_out_distinct::importo ) :
         //      tlbpaspeoss::importo ) as importo
+
         Column importoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
                 functions.coalesce(tlbpaspeoss.col("_importo"),  fpasperdOutDistinct.col("importo")))
                 .otherwise(tlbpaspeoss.col("_importo")).as("importo");

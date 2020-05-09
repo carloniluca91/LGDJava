@@ -77,13 +77,15 @@ public class StepRunner {
                     break;
                 }
 
-                case FPASPERD:
+                case FPASPERD: {
 
                     logger.info("Matched step name " + stepnameUC);
 
                     new Fpasperd().run(new EmptyValues());
+                    break;
+                }
 
-                case FRAPP_NDG_MONTHLY:
+                case FRAPP_NDG_MONTHLY: {
 
                     logger.info("Matched step name " + stepnameUC);
 
@@ -97,11 +99,14 @@ public class StepRunner {
 
                     DataANumeroMesi12Values stepvalues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
                     new FrappNdgMonthly().run(stepvalues);
+                    break;
+                }
 
-                default:
+                default: {
 
                     logger.error(String.format("Undefined step name (%s)", stepName));
                     break;
+                }
             }
         }
 
