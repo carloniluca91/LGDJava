@@ -6,7 +6,8 @@ public enum StepName {
 
     CICLILAV_STEP_1("CICLILAV_STEP_1"),
     CICLI_PREVIEW("CICLI_PREVIEW"),
-    FANAG_MONTHLY("FANAG_MONTHLY");
+    FANAG_MONTHLY("FANAG_MONTHLY"),
+    FPASPERD("FPASPERD");
 
     @Getter private String stepName;
 

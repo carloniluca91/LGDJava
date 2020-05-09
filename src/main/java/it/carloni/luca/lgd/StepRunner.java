@@ -77,6 +77,12 @@ public class StepRunner {
                     break;
                 }
 
+                case FPASPERD:
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    new Fpasperd().run(new EmptyValues());
+
                 default:
 
                     logger.error(String.format("Undefined step name (%s)", stepName));

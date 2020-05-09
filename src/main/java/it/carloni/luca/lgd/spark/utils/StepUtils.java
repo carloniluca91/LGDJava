@@ -176,7 +176,7 @@ public class StepUtils {
         return dfCols;
     }
 
-    public static Column substringAndCastToInt(Column column, int startIndex, int length){
+    public static Column substringAndToInt(Column column, int startIndex, int length){
 
         return functions.substring(column, startIndex, length).cast(DataTypes.IntegerType);
     }

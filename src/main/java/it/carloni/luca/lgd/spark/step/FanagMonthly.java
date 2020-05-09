@@ -69,8 +69,8 @@ public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationPrincCol, 0,6)
         Column dtRiferimentoLeastDateAddDurationPrincConditionCol =
-                substringAndCastToInt(toStringCol(tlbuact.col("dt_riferimento")), 0, 6)
-                        .leq(substringAndCastToInt(leastDateAddDurationPrincCol, 0, 6));
+                substringAndToInt(toStringCol(tlbuact.col("dt_riferimento")), 0, 6)
+                        .leq(substringAndToInt(leastDateAddDurationPrincCol, 0, 6));
 
         // 132
 
@@ -137,8 +137,8 @@ public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationPrincCol, 0,6)
         Column dtRiferimentoLeastDateAddDurationCollConditionCol =
-                substringAndCastToInt(toStringCol(tlbuact.col("dt_riferimento")), 0, 6)
-                        .leq(substringAndCastToInt(leastDateAddDurationCollCol, 0, 6));
+                substringAndToInt(toStringCol(tlbuact.col("dt_riferimento")), 0, 6)
+                        .leq(substringAndToInt(leastDateAddDurationCollCol, 0, 6));
 
         // 132
 
