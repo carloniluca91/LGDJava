@@ -178,7 +178,7 @@ public class StepUtils {
 
     public static Column substringAndToInt(Column column, int startIndex, int length){
 
-        return functions.substring(column, startIndex, length).cast(DataTypes.IntegerType);
+        return functions.substring(column.cast(DataTypes.StringType), startIndex, length).cast(DataTypes.IntegerType);
     }
 
     /***

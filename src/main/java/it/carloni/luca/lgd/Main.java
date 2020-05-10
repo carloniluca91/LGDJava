@@ -38,9 +38,9 @@ public class Main {
             logger.error(e);
 
             HelpFormatter helpFormatter = new HelpFormatter();
-            String helpUsageString = OptionEnum.HELP_USAGE_STRING;
-            String helpHeaderString = OptionEnum.HELP_HEADER_STRING + "\n\n";
-            String helpFooterString = OptionEnum.HELP_FOOTER_STRING;
+            String helpUsageString = OptionEnum.HELP_USAGE_STRING.getString();
+            String helpHeaderString = OptionEnum.HELP_HEADER_STRING.getString() + "\n\n";
+            String helpFooterString = OptionEnum.HELP_FOOTER_STRING.getString();
 
             helpFormatter.setWidth(getHelpFormatterWidth(helpHeaderString, helpFooterString));
             helpFormatter.printHelp(helpUsageString, helpHeaderString, stepNameOptions, helpFooterString, true);
@@ -49,7 +49,12 @@ public class Main {
 
     private static int getHelpFormatterWidth(String headerString, String footerString) {
 
-        String usageString =("usage: " + OptionEnum.HELP_USAGE_STRING + " -" + OptionEnum.STEP_NAME_SHORT_OPTION + " <arg>");
+        String usageString = "usage: "
+                + OptionEnum.HELP_USAGE_STRING.getString()
+                + " -"
+                + OptionEnum.STEP_NAME_SHORT_OPTION.getString()
+                + " <arg>";
+
         List<String> helpFormmatterStrings = Arrays.asList(usageString, headerString, footerString);
         List<Integer> helpFormatterStringsLength = helpFormmatterStrings
                 .stream()

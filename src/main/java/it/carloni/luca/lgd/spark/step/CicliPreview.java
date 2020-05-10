@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd.spark.step;
 
-import it.carloni.luca.lgd.parameter.step.DataAUfficioValues;
+import it.carloni.luca.lgd.parameter.step.DataAUfficioValue;
 import it.carloni.luca.lgd.schema.CicliPreviewSchema;
 import it.carloni.luca.lgd.spark.common.AbstractStep;
 import org.apache.log4j.Logger;
@@ -15,12 +15,12 @@ import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatUDF;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormat;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.toIntCol;
 
-public class CicliPreview extends AbstractStep<DataAUfficioValues> {
+public class CicliPreview extends AbstractStep<DataAUfficioValue> {
 
     private final Logger logger = Logger.getLogger(CicliPreview.class);
 
     @Override
-    public void run(DataAUfficioValues dataAUfficioValues){
+    public void run(DataAUfficioValue dataAUfficioValues){
 
         String dataA = dataAUfficioValues.getDataA();
         String ufficio = dataAUfficioValues.getUfficio();

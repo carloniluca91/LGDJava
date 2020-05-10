@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd.spark.common;
 
-import it.carloni.luca.lgd.parameter.common.AbstractStepValues;
+import it.carloni.luca.lgd.parameter.common.AbstractStepValue;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
@@ -14,7 +14,7 @@ import it.carloni.luca.lgd.spark.udf.UDFName;
 
 import java.util.Map;
 
-public abstract class AbstractStep<T extends AbstractStepValues> implements StepInterface<T> {
+public abstract class AbstractStep<T extends AbstractStepValue> implements StepInterface<T> {
 
     private final Logger logger = Logger.getLogger(getClass());
     private final SparkSession sparkSession = getSparkSessionWithUDFs();

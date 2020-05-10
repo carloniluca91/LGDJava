@@ -40,7 +40,7 @@ public class StepRunner {
                     stepParameterOptions.addOption(dataDaOption);
                     stepParameterOptions.addOption(dataAOption);
 
-                    DataDaDataAValues stepValues = stepOptionParser.getDataDaDataAValues(args, stepParameterOptions);
+                    DataDaDataAValue stepValues = stepOptionParser.getDataDaDataAValues(args, stepParameterOptions);
                     new CiclilavStep1().run(stepValues);
                     break;
                 }
@@ -55,7 +55,7 @@ public class StepRunner {
                     stepParameterOptions.addOption(dataAOption);
                     stepParameterOptions.addOption(ufficioOption);
 
-                    DataAUfficioValues stepValues = stepOptionParser.getDataAUfficioValues(args, stepParameterOptions);
+                    DataAUfficioValue stepValues = stepOptionParser.getDataAUfficioValues(args, stepParameterOptions);
                     new CicliPreview().run(stepValues);
                     break;
                 }
@@ -72,7 +72,7 @@ public class StepRunner {
                     stepParameterOptions.addOption(numeroMesi1Option);
                     stepParameterOptions.addOption(numeroMesi2Option);
 
-                    DataANumeroMesi12Values stepValues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
+                    DataANumeroMesi12Value stepValues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
                     new FanagMonthly().run(stepValues);
                     break;
                 }
@@ -81,7 +81,7 @@ public class StepRunner {
 
                     logger.info("Matched step name " + stepnameUC);
 
-                    new Fpasperd().run(new EmptyValues());
+                    new Fpasperd().run(new EmptyValue());
                     break;
                 }
 
@@ -97,8 +97,18 @@ public class StepRunner {
                     stepParameterOptions.addOption(numeroMesi1Option);
                     stepParameterOptions.addOption(numeroMesi2Option);
 
-                    DataANumeroMesi12Values stepvalues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
+                    DataANumeroMesi12Value stepvalues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
                     new FrappNdgMonthly().run(stepvalues);
+                    break;
+                }
+
+                case FRAPP_PUMA: {
+
+                    Option dataAOption = OptionFactory.getDataAOpton();
+
+                    stepParameterOptions.addOption(dataAOption);
+                    DataAValue dataAValue = stepOptionParser.getDataAValue(args, stepParameterOptions);
+                    new FrappPuma().run(dataAValue);
                     break;
                 }
 
@@ -123,9 +133,17 @@ public class StepRunner {
             logger.error(e);
 
             HelpFormatter helpFormatter = new HelpFormatter();
-            String helpUsageString = OptionEnum.HELP_USAGE_STRING + " -" + OptionEnum.STEP_NAME_SHORT_OPTION + " " + stepName;
-            String helpHeaderString = OptionEnum.HELP_HEADER_STRING + ": step " + stepName + "\n\n";
-            String helpFooterString = OptionEnum.HELP_FOOTER_STRING;
+            String helpUsageString = OptionEnum.HELP_USAGE_STRING.getString()
+                    + " -"
+                    + OptionEnum.STEP_NAME_SHORT_OPTION.getString()
+                    + " " + stepName;
+
+            String helpHeaderString = OptionEnum.HELP_HEADER_STRING.getString()
+                    + ": step "
+                    + stepName
+                    + "\n\n";
+
+            String helpFooterString = OptionEnum.HELP_FOOTER_STRING.getString();
             helpFormatter.setWidth(getHelpFormatterWidth(helpUsageString, helpHeaderString, helpFooterString));
             helpFormatter.printHelp(helpUsageString, helpHeaderString, stepParameterOptions, helpFooterString, true);
         }

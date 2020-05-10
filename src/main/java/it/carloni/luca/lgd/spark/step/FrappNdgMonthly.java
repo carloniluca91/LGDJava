@@ -1,23 +1,27 @@
 package it.carloni.luca.lgd.spark.step;
 
-import it.carloni.luca.lgd.parameter.step.DataANumeroMesi12Values;
+import it.carloni.luca.lgd.parameter.step.DataANumeroMesi12Value;
 import it.carloni.luca.lgd.spark.common.AbstractStep;
-import it.carloni.luca.lgd.spark.utils.StepUtils;
 import it.carloni.luca.lgd.schema.FrappNdgMonthlySchema;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
+import org.apache.spark.sql.types.DataTypes;
 
-import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.addDurationUDF;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.subtractDurationUDF;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormat;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.leastDateUDF;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.toStringCol;
 
-public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Values> {
+public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Value> {
 
     private final Logger logger = Logger.getLogger(FrappNdgMonthly.class);
 
     @Override
-    public void run(DataANumeroMesi12Values stepValues) {
+    public void run(DataANumeroMesi12Value stepValues) {
 
         String dataA = stepValues.getDataA();
         Integer numeroMesi1 = stepValues.getNumeroMesi1();
@@ -33,6 +37,8 @@ public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Values> {
         logger.info("frapp.ndg.monthly.tlburtt.csv: " + tlburttCsvPath);
         logger.info("frapp.ndg.monthly.tlbcidef.tlburtt: " + tlbcidefTlburttCsv);
 
+        String YYYYMMDDFormat = "yyyyMMdd";
+
         // 26
         Dataset<Row> tlbcidef = readCsvAtPathUsingSchema(cicliNdgPathCsvPath, FrappNdgMonthlySchema.getTlbcidefPigSchema());
         // 53
@@ -40,6 +46,7 @@ public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Values> {
         // 58
         Dataset<Row> cicliNdgPrinc = tlbcidef.filter(tlbcidef.col("cd_collegamento").isNull());
         Dataset<Row> cicliNdgColl = tlbcidef.filter(tlbcidef.col("cd_collegamento").isNotNull());
+
         // 60
 
         // 69
@@ -50,8 +57,8 @@ public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Values> {
         Dataset<Row> tlburttFilter = tlburtt.filter(tlburtt.col("progr_segmento").equalTo(0));
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-        Column dtRiferimentoFilterPrincCol = tlburttFilter.col("dt_riferimento").geq(
-                toIntCol(subtractDurationUDF(StepUtils.toStringCol(cicliNdgPrinc.col("datainiziodef")), "yyyyMMdd", numeroMesi1)));
+        Column dtRiferimentoFilterPrincCol = toStringCol(tlburttFilter.col("dt_riferimento"))
+                .geq(subtractDurationUDF(toStringCol(cicliNdgPrinc.col("datainiziodef")), YYYYMMDDFormat, numeroMesi1));
 
         /*
         AddDuration(ToDate((chararray)
@@ -64,17 +71,19 @@ public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Values> {
 
         // we need to format $data_a to yyyyMMdd
         String dataAPattern = getValue("params.dataa.pattern");
-        Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, "yyyyMMdd"));
-        Column dataFineDefSubtractDurationPrincCol = subtractDurationUDF(StepUtils.toStringCol(cicliNdgPrinc.col("datafinedef")), "yyyyMMdd", 1);
-        Column leastDateDataFineDefDataAPrincCol = leastDateUDF(dataFineDefSubtractDurationPrincCol, dataACol, "yyyyMMdd");
-        Column addDurationLeastDateDataFineDefDataAPrincCol = addDurationUDF(leastDateDataFineDefDataAPrincCol, "yyyyMMdd", numeroMesi2);
+        Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, YYYYMMDDFormat));
+        Column dataFineDefSubtractDurationPrincCol = subtractDurationUDF(toStringCol(cicliNdgPrinc.col("datafinedef")), YYYYMMDDFormat, 1);
+        Column leastDateDataFineDefDataAPrincCol = leastDateUDF(dataFineDefSubtractDurationPrincCol, dataACol, YYYYMMDDFormat);
+        Column addDurationLeastDateDataFineDefDataAPrincCol = addDurationUDF(leastDateDataFineDefDataAPrincCol, YYYYMMDDFormat, numeroMesi2);
 
         // AND SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(AddDuration(...), 0, 6)
-        Column dataFineDefFilterPrincCol = substringAndToInt(StepUtils.toStringCol(tlburttFilter.col("dt_riferimento")), 0, 6)
-                .leq(substringAndToInt(addDurationLeastDateDataFineDefDataAPrincCol, 0, 6));
+        Column dataFineDefFilterPrincCol = substring06(tlburttFilter.col("dt_riferimento"))
+                .leq(substring06(addDurationLeastDateDataFineDefDataAPrincCol));
 
-        Dataset<Row> tlbcidefUrttPrinc = cicliNdgPrinc.join(tlburttFilter, cicliNdgPrinc.col("codicebanca_collegato").equalTo(
-                tlburttFilter.col("cd_istituto")).and(cicliNdgPrinc.col("ndg_collegato").equalTo(tlburttFilter.col("ndg"))))
+        Column tlbcidefUrttPrincJoinCondition = cicliNdgPrinc.col("codicebanca_collegato").equalTo(tlburttFilter.col("cd_istituto"))
+                .and(cicliNdgPrinc.col("ndg_collegato").equalTo(tlburttFilter.col("ndg")));
+
+        Dataset<Row> tlbcidefUrttPrinc = cicliNdgPrinc.join(tlburttFilter, tlbcidefUrttPrincJoinCondition)
                 .filter(dtRiferimentoFilterPrincCol.and(dataFineDefFilterPrincCol))
                 .select(cicliNdgPrinc.col("codicebanca"), cicliNdgPrinc.col("ndgprincipale"),
                         cicliNdgPrinc.col("codicebanca_collegato"), cicliNdgPrinc.col("ndg_collegato"),
@@ -87,11 +96,12 @@ public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Values> {
                         tlburttFilter.col("period_liquid"), tlburttFilter.col("cd_prodotto_ris"),
                         tlburttFilter.col("durata_originaria"), tlburttFilter.col("divisa"),
                         tlburttFilter.col("durata_residua"), tlburttFilter.col("tp_contr_rapp"));
+
         // 158
 
         // ToDate((chararray)dt_riferimento,'yyyyMMdd') >= SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-        Column dtRiferimentoFilterCollCol = tlburttFilter.col("dt_riferimento")
-                .geq(subtractDurationUDF(StepUtils.toStringCol(cicliNdgColl.col("datainiziodef")), "yyyyMMdd", numeroMesi1));
+        Column dtRiferimentoFilterCollCol = toStringCol(tlburttFilter.col("dt_riferimento"))
+                .geq(subtractDurationUDF(toStringCol(cicliNdgColl.col("datainiziodef")), YYYYMMDDFormat, numeroMesi1));
 
         /*
         AddDuration(ToDate((chararray)
@@ -102,17 +112,18 @@ public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Values> {
 ;
          */
 
-        Column dataFineDefSubtractDurationCollCol = subtractDurationUDF(StepUtils.toStringCol(cicliNdgColl.col("datafinedef")), "yyyyMMdd", 1);
-        Column leastDateDataFineDefDataACollCol = leastDateUDF(dataFineDefSubtractDurationCollCol, dataACol, "yyyyMMdd");
-        Column addDurationLeastDateDataFineDefDataACollCol = addDurationUDF(leastDateDataFineDefDataACollCol, "yyyyMMdd", numeroMesi2);
+        Column dataFineDefSubtractDurationCollCol = subtractDurationUDF(toStringCol(cicliNdgColl.col("datafinedef")), YYYYMMDDFormat, 1);
+        Column leastDateDataFineDefDataACollCol = leastDateUDF(dataFineDefSubtractDurationCollCol, dataACol, YYYYMMDDFormat);
+        Column addDurationLeastDateDataFineDefDataACollCol = addDurationUDF(leastDateDataFineDefDataACollCol, YYYYMMDDFormat, numeroMesi2);
 
         // AND SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(AddDuration(...), 0, 6)
-        Column dataFineDefFilterCollCol = substringAndToInt(StepUtils.toStringCol(tlburttFilter.col("dt_riferimento")), 0, 6)
-                .leq(substringAndToInt(StepUtils.toStringCol(addDurationLeastDateDataFineDefDataACollCol), 0, 6));
+        Column dataFineDefFilterCollCol = substring06(tlburttFilter.col("dt_riferimento"))
+                .leq(substring06(addDurationLeastDateDataFineDefDataACollCol));
 
-        Dataset<Row> tlbcidefUrttColl = cicliNdgColl.join(tlburttFilter,
-                cicliNdgColl.col("codicebanca_collegato").equalTo(tlburttFilter.col("cd_istituto"))
-                        .and(cicliNdgColl.col("ndg_collegato").equalTo(tlburttFilter.col("ndg"))))
+        Column tlbcidefUrttCollJoinCondition = cicliNdgColl.col("codicebanca_collegato").equalTo(tlburttFilter.col("cd_istituto"))
+                .and(cicliNdgColl.col("ndg_collegato").equalTo(tlburttFilter.col("ndg")));
+
+        Dataset<Row> tlbcidefUrttColl = cicliNdgColl.join(tlburttFilter, tlbcidefUrttCollJoinCondition)
                 .filter(dtRiferimentoFilterCollCol.and(dataFineDefFilterCollCol))
                 .select(cicliNdgColl.col("codicebanca"), cicliNdgColl.col("ndgprincipale"),
                         cicliNdgColl.col("codicebanca_collegato"), cicliNdgColl.col("ndg_collegato"),
@@ -126,7 +137,15 @@ public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Values> {
                         tlburttFilter.col("durata_originaria"), tlburttFilter.col("divisa"),
                         tlburttFilter.col("durata_residua"), tlburttFilter.col("tp_contr_rapp"));
 
-        Dataset<Row> tlbcidefTlburtt = tlbcidefUrttPrinc.union(tlbcidefUrttColl).distinct();
+        Dataset<Row> tlbcidefTlburtt = tlbcidefUrttPrinc
+                .union(tlbcidefUrttColl)
+                .distinct();
+
         writeDatasetAsCsvAtPath(tlbcidefTlburtt, tlbcidefTlburttCsv);
+    }
+
+    private Column substring06(Column column) {
+
+        return functions.substring(column.cast(DataTypes.StringType), 0, 6);
     }
 }

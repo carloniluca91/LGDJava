@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd.spark.step;
 
-import it.carloni.luca.lgd.parameter.step.DataDaDataAValues;
+import it.carloni.luca.lgd.parameter.step.DataDaDataAValue;
 import it.carloni.luca.lgd.schema.CicliLavStep1Schema;
 import it.carloni.luca.lgd.spark.common.AbstractStep;
 import org.apache.log4j.Logger;
@@ -17,12 +17,12 @@ import java.util.Arrays;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.parseStringToLocalDate;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.toScalaSeq;
 
-public class CiclilavStep1 extends AbstractStep<DataDaDataAValues> {
+public class CiclilavStep1 extends AbstractStep<DataDaDataAValue> {
 
     private final Logger logger = Logger.getLogger(getClass());
 
     @Override
-    public void run(DataDaDataAValues dataDaDataAValues) {
+    public void run(DataDaDataAValue dataDaDataAValues) {
 
         // REQUIRED PARAMETERS
         String dataDa = dataDaDataAValues.getDataDa();

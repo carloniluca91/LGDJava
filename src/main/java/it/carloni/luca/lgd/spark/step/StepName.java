@@ -8,7 +8,8 @@ public enum StepName {
     CICLI_PREVIEW("CICLI_PREVIEW"),
     FANAG_MONTHLY("FANAG_MONTHLY"),
     FPASPERD("FPASPERD"),
-    FRAPP_NDG_MONTHLY("FRAPP_NDG_MONTHLY");
+    FRAPP_NDG_MONTHLY("FRAPP_NDG_MONTHLY"),
+    FRAPP_PUMA("FRAPP_PUMA");
 
     @Getter private String stepName;
 

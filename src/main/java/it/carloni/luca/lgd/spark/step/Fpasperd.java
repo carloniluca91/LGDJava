@@ -1,13 +1,12 @@
 package it.carloni.luca.lgd.spark.step;
 
-import it.carloni.luca.lgd.parameter.step.EmptyValues;
+import it.carloni.luca.lgd.parameter.step.EmptyValue;
 import it.carloni.luca.lgd.spark.common.AbstractStep;
 import it.carloni.luca.lgd.schema.FpasperdSchema;
 import org.apache.log4j.Logger;
 import org.apache.spark.sql.*;
 import org.apache.spark.sql.expressions.Window;
 import org.apache.spark.sql.expressions.WindowSpec;
-import scala.collection.Seq;
 
 import java.util.Arrays;
 
@@ -17,12 +16,12 @@ import static it.carloni.luca.lgd.spark.utils.StepUtils.substringAndToInt;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.toScalaSeq;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.toStringCol;
 
-public class Fpasperd extends AbstractStep<EmptyValues> {
+public class Fpasperd extends AbstractStep<EmptyValue> {
 
     private final Logger logger = Logger.getLogger(Fpasperd.class);
 
     @Override
-    public void run(EmptyValues emptyValues) {
+    public void run(EmptyValue emptyValues) {
 
         String cicliNdgPathCsv = getValue("fpasperd.cicli.ndg.path.csv");
         String tlbpaspeCsv = getValue("fpasperd.tlbpaspe.filter.csv");
@@ -57,12 +56,12 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
                 .and(tlbpaspeFilter.col("ndg").equalTo(tlbcidef.col("ndg_collegato")));
 
         // BY (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
-        Column fpasperdBetweenGenDataContDataInizioDefFilterCol = substringAndToInt(toStringCol(tlbpaspeFilter.col("datacont")), 0, 6)
-                .geq(substringAndToInt(toStringCol(tlbcidef.col("datainiziodef")), 0, 6));
+        Column fpasperdBetweenGenDataContDataInizioDefFilterCol = substring06ToInt(tlbpaspeFilter.col("datacont"))
+                .geq(substring06ToInt(tlbcidef.col("datainiziodef")));
 
         // AND (int)SUBSTRING((chararray)tlbpaspe_filter::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
-        Column fpasperdBetweenGenDataContDataFineDefFilterCol = substringAndToInt(toStringCol(tlbpaspeFilter.col("datacont")), 0, 6)
-                .lt(substringAndToInt(toStringCol(tlbcidef.col("datafinedef")), 0, 6));
+        Column fpasperdBetweenGenDataContDataFineDefFilterCol = substring06ToInt(tlbpaspeFilter.col("datacont"))
+                .lt(substring06ToInt(tlbcidef.col("datafinedef")));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
         Column fpasperdBetweenGenDaysDiffColl = daysBetweenUDF(toStringCol(tlbcidef.col("datafinedef")), toStringCol(tlbpaspeFilter.col("datacont")), "yyyyMMdd");
@@ -110,8 +109,10 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
 
         // ... = JOIN fpasperd_other_gen BY (cd_istituto, ndg, datacont) LEFT, fpasperd_between_out BY (cd_istituto, ndg, datacont);
         // FILTER ... BY fpasperd_between_out::cd_istituto IS NULL
-        Seq<String> fpasperdOtherGenBetweenOutColSeq = toScalaSeq(Arrays.asList("cd_istituto", "ndg", "datacont"));
-        Dataset<Row> fpasperdOtherOut = fpasperdOtherGen.join(fpasperdBetweenOut, fpasperdOtherGenBetweenOutColSeq, "left_anti");
+
+        Dataset<Row> fpasperdOtherOut = fpasperdOtherGen.join(fpasperdBetweenOut,
+                toScalaSeq(Arrays.asList("cd_istituto", "ndg", "datacont")),
+                "left_anti");
 
         // 170
 
@@ -119,6 +120,7 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
 
         // ... = JOIN tlbpaspe_filter BY (cd_istituto, ndg) LEFT, tlbcidef BY (codicebanca_collegato, ndg_collegato);
         // FILTER ... BY tlbcidef::codicebanca IS NULL
+
         Dataset<Row> fpasperdNullOut = tlbpaspeFilter.join(tlbcidef, tlbcidefTlbPaspeFilterJoinCondition, "left_anti")
                 .select(tlbpaspeFilter.col("cd_istituto"), tlbpaspeFilter.col("ndg"), tlbpaspeFilter.col("datacont"),
                         tlbpaspeFilter.col("causale"), tlbpaspeFilter.col("importo"), codiceBancaNullCol, ndgPrincipaleNullCol,
@@ -134,13 +136,13 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
 
         //  BY (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) >= (int)SUBSTRING((chararray)tlbcidef::datainiziodef,0,6)
         Column principFpasperdBetweenGenDataContDataInizioDefFilterCol =
-                substringAndToInt(toStringCol(fpasperdNullOut.col("datacont")), 0, 6)
-                        .geq(substringAndToInt(toStringCol(tlbcidef.col("datainiziodef")), 0, 6));
+                substring06ToInt(fpasperdNullOut.col("datacont"))
+                        .geq(substring06ToInt(tlbcidef.col("datainiziodef")));
 
         // AND (int)SUBSTRING((chararray)fpasperd_null_out::datacont,0,6) < (int)SUBSTRING( (chararray)tlbcidef::datafinedef,0,6 )
         Column principFpasperdBetweenGenDataContDataFineDefFilterCol =
-                substringAndToInt(toStringCol(fpasperdNullOut.col("datacont")), 0, 6)
-                        .lt(substringAndToInt(toStringCol(tlbcidef.col("datafinedef")), 0, 6));
+                substring06ToInt(fpasperdNullOut.col("datacont"))
+                        .lt(substring06ToInt(tlbcidef.col("datafinedef")));
 
         // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ),
         // ToDate((chararray)fpasperd_null_out::datacont,'yyyyMMdd' ) ) as days_diff
@@ -188,10 +190,11 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         // 270
 
         // JOIN princip_fpasperd_other_gen BY (cd_istituto, ndg, datacont) LEFT, princip_fpasperd_between_out BY (cd_istituto, ndg, datacont);
-        // BY princip_fpasperd_between_out::cd_istituto IS NULL
+        // FILTER BY princip_fpasperd_between_out::cd_istituto IS NULL
 
-        Seq<String> principFpasperdOtherOutJoinColSeq = toScalaSeq(Arrays.asList("cd_istituto", "ndg", "datacont"));
-        Dataset<Row> principFpasperdOtherOut = principFpasperdOtherGen.join(principFpasperdBetweenOut, principFpasperdOtherOutJoinColSeq, "left_anti");
+        Dataset<Row> principFpasperdOtherOut = principFpasperdOtherGen.join(principFpasperdBetweenOut,
+                toScalaSeq(Arrays.asList("cd_istituto", "ndg", "datacont")),
+                "left_anti");
 
         // 288
 
@@ -249,7 +252,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         //      tlbpaspeoss::ndg ) as ndg
 
         Column ndgCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("_ndg"), fpasperdOutDistinct.col("ndg")))
+                functions.when(tlbpaspeoss.col("_cd_istituto").isNotNull(), tlbpaspeoss.col("_ndg"))
+                        .otherwise(fpasperdOutDistinct.col("ndg")))
                 .otherwise(tlbpaspeoss.col("_ndg")).as("ndg");
 
         // ( fpasperd_out_distinct::cd_istituto is not null?
@@ -257,7 +261,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         //      tlbpaspeoss::datacont ) as datacont
 
         Column dataContCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("_datacont"), fpasperdOutDistinct.col("datacont")))
+                functions.when(tlbpaspeoss.col("_cd_istituto").isNotNull(), tlbpaspeoss.col("_datacont"))
+                        .otherwise(fpasperdOutDistinct.col("datacont")))
                 .otherwise(tlbpaspeoss.col("_datacont")).as("datacont");
 
         // ( fpasperd_out_distinct::cd_istituto is not null?
@@ -265,7 +270,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         //      tlbpaspeoss::causale ) as causale
 
         Column causaleCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("_causale"), fpasperdOutDistinct.col("causale")))
+                functions.when(tlbpaspeoss.col("_cd_istituto").isNotNull(), tlbpaspeoss.col("_causale"))
+                        .otherwise(fpasperdOutDistinct.col("causale")))
                 .otherwise(tlbpaspeoss.col("_causale")).as("causale");
 
         // ( fpasperd_out_distinct::cd_istituto is not null?
@@ -273,7 +279,8 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         //      tlbpaspeoss::importo ) as importo
 
         Column importoCol = functions.when(fpasperdOutDistinct.col("cd_istituto").isNotNull(),
-                functions.coalesce(tlbpaspeoss.col("_importo"),  fpasperdOutDistinct.col("importo")))
+                functions.when(tlbpaspeoss.col("_cd_istituto").isNotNull(), tlbpaspeoss.col("_importo"))
+                        .otherwise(fpasperdOutDistinct.col("importo")))
                 .otherwise(tlbpaspeoss.col("_importo")).as("importo");
 
         // ( fpasperd_out_distinct::cd_istituto is not null? fpasperd_out_distinct::codicebanca : NULL ) as codicebanca
@@ -303,5 +310,10 @@ public class Fpasperd extends AbstractStep<EmptyValues> {
         int numberOfColumns = dataset.columns().length;
         String columnNames = String.join(", ", dataset.columns());
         logger.info(String.format("DataFrame %s has %s columns (%s)", datasetName, numberOfColumns, columnNames));
+    }
+
+    private Column substring06ToInt(Column column) {
+
+        return substringAndToInt(column, 0, 6);
     }
 }

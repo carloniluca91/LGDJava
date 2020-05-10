@@ -1,6 +1,6 @@
 package it.carloni.luca.lgd.spark.step;
 
-import it.carloni.luca.lgd.parameter.step.DataANumeroMesi12Values;
+import it.carloni.luca.lgd.parameter.step.DataANumeroMesi12Value;
 import it.carloni.luca.lgd.schema.FanagMonthlySchema;
 import it.carloni.luca.lgd.spark.common.AbstractStep;
 import org.apache.spark.sql.Column;
@@ -8,15 +8,17 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 import org.apache.log4j.Logger;
+import org.apache.spark.sql.types.DataTypes;
 
 import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
 
-public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
+
+public class FanagMonthly extends AbstractStep<DataANumeroMesi12Value> {
 
     private final Logger logger = Logger.getLogger(getClass());
 
     @Override
-    public void run(DataANumeroMesi12Values dataANumeroMesi12Values) {
+    public void run(DataANumeroMesi12Value dataANumeroMesi12Values) {
 
         logger.info(dataANumeroMesi12Values.toString());
 
@@ -68,9 +70,8 @@ public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
         Column leastDateAddDurationPrincCol = addDurationUDF(leastDatePrincCol, Y4M2D2Format, numeroMesi2);
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationPrincCol, 0,6)
-        Column dtRiferimentoLeastDateAddDurationPrincConditionCol =
-                substringAndToInt(toStringCol(tlbuact.col("dt_riferimento")), 0, 6)
-                        .leq(substringAndToInt(leastDateAddDurationPrincCol, 0, 6));
+        Column dtRiferimentoLeastDateAddDurationPrincConditionCol = substring06(tlbuact.col("dt_riferimento"))
+                        .leq(substring06(leastDateAddDurationPrincCol));
 
         // 132
 
@@ -136,9 +137,8 @@ public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
         Column leastDateAddDurationCollCol = addDurationUDF(leastDateCollCol, Y4M2D2Format, numeroMesi2);
 
         // SUBSTRING( (chararray)dt_riferimento,0,6 ) <= SUBSTRING(leastDateAddDurationPrincCol, 0,6)
-        Column dtRiferimentoLeastDateAddDurationCollConditionCol =
-                substringAndToInt(toStringCol(tlbuact.col("dt_riferimento")), 0, 6)
-                        .leq(substringAndToInt(leastDateAddDurationCollCol, 0, 6));
+        Column dtRiferimentoLeastDateAddDurationCollConditionCol = substring06(tlbuact.col("dt_riferimento"))
+                        .leq(substring06(leastDateAddDurationCollCol));
 
         // 132
 
@@ -219,6 +219,11 @@ public class FanagMonthly extends AbstractStep<DataANumeroMesi12Values> {
                         tlbcidefTlbuact.col("datainiziodef").as("datainiziodef"));
 
         writeDatasetAsCsvAtPath(fanagOut, fanagOutPath);
+    }
+
+    private Column substring06(Column column) {
+
+        return functions.substring(column.cast(DataTypes.StringType), 0, 6);
     }
 }
 
