@@ -14,7 +14,7 @@ import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
 
 public class FrappPuma extends AbstractStep<DataAValue> {
 
-    private final Logger logger = Logger.getLogger(FrappPuma.class);
+    private final Logger logger = Logger.getLogger(getClass());
 
     public void run(DataAValue dataAValue) {
 
@@ -37,6 +37,7 @@ public class FrappPuma extends AbstractStep<DataAValue> {
 
         // cicli_ndg_princ = FILTER tlbcidef BY cd_collegamento IS NULL;
         // cicli_ndg_coll = FILTER tlbcidef BY cd_collegamento IS NOT NULL;
+
         Dataset<Row> cicliNdgPrinc = tlbcidef.filter(tlbcidef.col("cd_collegamento").isNull());
         Dataset<Row> cicliNdgColl = tlbcidef.filter(tlbcidef.col("cd_collegamento").isNotNull());
 
@@ -50,7 +51,7 @@ public class FrappPuma extends AbstractStep<DataAValue> {
                 .and(tlbgaran.col("ndg").equalTo(cicliNdgPrinc.col("ndg_collegato")));
 
         // ToDate( (chararray)dt_riferimento,'yyyyMMdd') >= ToDate( (chararray)datainiziodef,'yyyyMMdd' )
-        Column dtRiferimentoDataInizioDefFilterCol = tlbgaran.col("dt_riferimento").geq(tlbcidef.col("datainiziodef"));
+        Column dtRiferimentoDataInizioDefFilterCol = tlbgaran.col("dt_riferimento").geq(cicliNdgPrinc.col("datainiziodef"));
 
         /* and SUBSTRING( (chararray)dt_riferimento,0,6 ) <=
             SUBSTRING( (chararray)LeastDate( (int)ToString(SubtractDuration(ToDate((chararray)datafinedef,'yyyyMMdd' ),'P1M'),'yyyyMMdd') ,
@@ -61,7 +62,7 @@ public class FrappPuma extends AbstractStep<DataAValue> {
         String dataAPattern = getValue("params.dataa.pattern");
         Column dataACol = functions.lit(changeDateFormat(dataA, dataAPattern, "yyyyMMdd"));
         Column dataFineDefDataALeastDateCol = leastDateUDF(
-                subtractDurationUDF(toStringCol(tlbcidef.col("datafinedef")), "yyyyMMdd", 1),
+                subtractDurationUDF(toStringCol(cicliNdgPrinc.col("datafinedef")), "yyyyMMdd", 1),
                 dataACol,
                 "yyyMMdd");
 
@@ -82,7 +83,7 @@ public class FrappPuma extends AbstractStep<DataAValue> {
          ,cicli_ndg_princ::datainiziodef AS	datainiziodef
          */
 
-        Dataset<Row> tlbcidefTlbgaranPrinc = tlbgaran.join(cicliNdgPrinc, tlbcidefTlbgaranPrincJoinCondition, "inner")
+        Dataset<Row> tlbcidefTlbgaranPrinc = tlbgaran.join(cicliNdgPrinc, tlbcidefTlbgaranPrincJoinCondition)
                 .filter(dtRiferimentoDataInizioDefFilterCol.and(dtRiferimentoLeastDateFilterCol))
                 .select(tlbgaran.col("cd_istituto").alias("cd_isti"), tlbgaran.col("ndg"), tlbgaran.col("sportello"),
                         tlbgaran.col("dt_riferimento"), tlbgaran.col("conto_esteso"), tlbgaran.col("cd_puma2"),
@@ -95,14 +96,17 @@ public class FrappPuma extends AbstractStep<DataAValue> {
                 .and(tlbgaran.col("ndg").equalTo(cicliNdgColl.col("ndg_collegato")))
                 .and(tlbgaran.col("dt_riferimento").equalTo(cicliNdgColl.col("dt_rif_udct")));
 
-        Dataset<Row> tlbcidefTlbgaranColl = tlbgaran.join(cicliNdgColl, tlbcidefTlbgaranCollJoinCondition, "inner")
+        Dataset<Row> tlbcidefTlbgaranColl = tlbgaran.join(cicliNdgColl, tlbcidefTlbgaranCollJoinCondition)
                 .select(tlbgaran.col("cd_istituto").alias("cd_isti"), tlbgaran.col("ndg"), tlbgaran.col("sportello"),
                         tlbgaran.col("dt_riferimento"), tlbgaran.col("conto_esteso"), tlbgaran.col("cd_puma2"),
                         tlbgaran.col("ide_garanzia"), tlbgaran.col("importo"), tlbgaran.col("fair_value"),
                         cicliNdgColl.col("codicebanca"), cicliNdgColl.col("ndgprincipale"),
                         cicliNdgColl.col("datainiziodef"));
 
-        Dataset<Row> frappPumaOut = tlbcidefTlbgaranPrinc.union(tlbcidefTlbgaranColl).distinct();
+        Dataset<Row> frappPumaOut = tlbcidefTlbgaranPrinc
+                .union(tlbcidefTlbgaranColl)
+                .distinct();
+
         writeDatasetAsCsvAtPath(frappPumaOut, frappPumaOutPath);
     }
 

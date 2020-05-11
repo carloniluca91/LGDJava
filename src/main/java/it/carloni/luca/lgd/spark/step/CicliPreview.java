@@ -17,7 +17,7 @@ import static it.carloni.luca.lgd.spark.utils.StepUtils.toIntCol;
 
 public class CicliPreview extends AbstractStep<DataAUfficioValue> {
 
-    private final Logger logger = Logger.getLogger(CicliPreview.class);
+    private final Logger logger = Logger.getLogger(getClass());
 
     @Override
     public void run(DataAUfficioValue dataAUfficioValues){

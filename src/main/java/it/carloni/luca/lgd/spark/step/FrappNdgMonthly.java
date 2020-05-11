@@ -18,7 +18,7 @@ import static it.carloni.luca.lgd.spark.utils.StepUtils.toStringCol;
 
 public class FrappNdgMonthly extends AbstractStep<DataANumeroMesi12Value> {
 
-    private final Logger logger = Logger.getLogger(FrappNdgMonthly.class);
+    private final Logger logger = Logger.getLogger(getClass());
 
     @Override
     public void run(DataANumeroMesi12Value stepValues) {

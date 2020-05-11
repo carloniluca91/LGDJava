@@ -18,7 +18,7 @@ import static it.carloni.luca.lgd.spark.utils.StepUtils.toStringCol;
 
 public class Fpasperd extends AbstractStep<EmptyValue> {
 
-    private final Logger logger = Logger.getLogger(Fpasperd.class);
+    private final Logger logger = Logger.getLogger(getClass());
 
     @Override
     public void run(EmptyValue emptyValues) {
