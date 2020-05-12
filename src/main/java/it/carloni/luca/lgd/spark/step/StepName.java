@@ -9,7 +9,8 @@ public enum StepName {
     FANAG_MONTHLY("FANAG_MONTHLY"),
     FPASPERD("FPASPERD"),
     FRAPP_NDG_MONTHLY("FRAPP_NDG_MONTHLY"),
-    FRAPP_PUMA("FRAPP_PUMA");
+    FRAPP_PUMA("FRAPP_PUMA"),
+    MOVIMENTI("MOVIMENTI");
 
     @Getter private String stepName;
 

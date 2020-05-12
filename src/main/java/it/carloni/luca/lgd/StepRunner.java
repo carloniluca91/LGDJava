@@ -107,8 +107,20 @@ public class StepRunner {
                     Option dataAOption = OptionFactory.getDataAOpton();
 
                     stepParameterOptions.addOption(dataAOption);
+
                     DataAValue dataAValue = stepOptionParser.getDataAValue(args, stepParameterOptions);
                     new FrappPuma().run(dataAValue);
+                    break;
+                }
+
+                case MOVIMENTI: {
+
+                    Option dataOsservazioneOption = OptionFactory.getDataOsservazioneOption();
+
+                    stepParameterOptions.addOption(dataOsservazioneOption);
+
+                    DataOsservazioneValue dataOsservazioneValue = stepOptionParser.getDataOsservazioneValue(args, stepParameterOptions);
+                    new Movimenti().run(dataOsservazioneValue);
                     break;
                 }
 

@@ -62,6 +62,16 @@ public class StepOptionParser {
         return new DataAValue(dataA);
     }
 
+    public DataOsservazioneValue getDataOsservazioneValue(String[] args, Options stepOptions) throws ParseException {
+
+        CommandLine commandLine = getCommandLine(args, stepOptions);
+        String dataOsservazione = parseOptionOfTypeString(commandLine, OptionFactory.getDataOsservazioneOption());
+
+        logger.info("Step options parsed correctly");
+
+        return new DataOsservazioneValue(dataOsservazione);
+    }
+
     public DataDaDataAValue getDataDaDataAValues(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
