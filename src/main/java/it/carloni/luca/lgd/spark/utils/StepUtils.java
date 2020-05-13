@@ -145,13 +145,6 @@ public class StepUtils {
         return LocalDate.parse(stringDate, DateTimeFormatter.ofPattern(pattern));
     }
 
-    // replace oldString with newString and convert to Double column
-    public static Column replaceAndConvertToDouble(Dataset<Row> df, String columnName, String oldString, String newString){
-
-        return functions.regexp_replace(df.col(columnName), oldString, newString)
-                .cast(DataTypes.DoubleType).as(columnName);
-    }
-
     // create a list of columns to be selected from the given dataset
     public static List<Column> selectDfColumns(Dataset<Row> df, List<String> columnNames){
 

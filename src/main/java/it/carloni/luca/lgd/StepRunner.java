@@ -104,6 +104,8 @@ public class StepRunner {
 
                 case FRAPP_PUMA: {
 
+                    logger.info("Matched step name " + stepnameUC);
+
                     Option dataAOption = OptionFactory.getDataAOpton();
 
                     stepParameterOptions.addOption(dataAOption);
@@ -115,12 +117,22 @@ public class StepRunner {
 
                 case MOVIMENTI: {
 
+                    logger.info("Matched step name " + stepnameUC);
+
                     Option dataOsservazioneOption = OptionFactory.getDataOsservazioneOption();
 
                     stepParameterOptions.addOption(dataOsservazioneOption);
 
                     DataOsservazioneValue dataOsservazioneValue = stepOptionParser.getDataOsservazioneValue(args, stepParameterOptions);
                     new Movimenti().run(dataOsservazioneValue);
+                    break;
+                }
+
+                case POSAGGR: {
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    new Posaggr().run(new EmptyValue());
                     break;
                 }
 
