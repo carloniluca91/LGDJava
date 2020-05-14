@@ -42,7 +42,7 @@ public class StepOptionParser {
         return relaxedParser.parse(stepOptions, args);
     }
 
-    public StepNameValue getStepNameValue(String[] args, Options stepOptions) throws ParseException {
+    public StepNameValue buildStepNameValue(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
         String stepName = parseOptionOfTypeString(commandLine, OptionFactory.getStepNameOption());
@@ -52,7 +52,7 @@ public class StepOptionParser {
         return new StepNameValue(stepName);
     }
 
-    public DataAValue getDataAValue(String[] args, Options stepOptions) throws ParseException {
+    public DataAValue buildDataAValue(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
         String dataA = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
@@ -62,7 +62,7 @@ public class StepOptionParser {
         return new DataAValue(dataA);
     }
 
-    public DataOsservazioneValue getDataOsservazioneValue(String[] args, Options stepOptions) throws ParseException {
+    public DataOsservazioneValue buildDataOsservazioneValue(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
         String dataOsservazione = parseOptionOfTypeString(commandLine, OptionFactory.getDataOsservazioneOption());
@@ -72,7 +72,7 @@ public class StepOptionParser {
         return new DataOsservazioneValue(dataOsservazione);
     }
 
-    public DataDaDataAValue getDataDaDataAValues(String[] args, Options stepOptions) throws ParseException {
+    public DataDaDataAValue buildDataDaDataAValues(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
         String dataDa = parseOptionOfTypeString(commandLine, OptionFactory.getDataDaOption());
@@ -83,7 +83,7 @@ public class StepOptionParser {
         return new DataDaDataAValue(dataDa, dataA);
     }
 
-    public DataAUfficioValue getDataAUfficioValues(String[] args, Options stepOptions) throws ParseException {
+    public DataAUfficioValue buildDataAUfficioValues(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
         String dataA = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
@@ -94,7 +94,7 @@ public class StepOptionParser {
         return new DataAUfficioValue(dataA, ufficio);
     }
 
-    public DataANumeroMesi12Value getDataANumeroMesi12Values(String[] args, Options stepOptions) throws ParseException {
+    public DataANumeroMesi12Value buildDataANumeroMesi12Values(String[] args, Options stepOptions) throws ParseException {
 
         CommandLine commandLine = getCommandLine(args, stepOptions);
         String dataA = parseOptionOfTypeString(commandLine, OptionFactory.getDataAOpton());
@@ -104,6 +104,15 @@ public class StepOptionParser {
         logger.info("Step options parsed correctly");
 
         return new DataANumeroMesi12Value(dataA, numeroMesi1, numeroMesi2);
+    }
 
+    public UfficioValue buildUfficioValue(String[] args, Options stepOptions) throws ParseException {
+
+        CommandLine commandLine = getCommandLine(args, stepOptions);
+        String ufficio = parseOptionOfTypeString(commandLine, OptionFactory.getUfficioOption());
+
+        logger.info("Step options parsed correctly");
+
+        return new UfficioValue(ufficio);
     }
 }

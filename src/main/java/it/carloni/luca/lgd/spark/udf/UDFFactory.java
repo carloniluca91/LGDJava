@@ -1,7 +1,6 @@
 package it.carloni.luca.lgd.spark.udf;
 
 import org.apache.spark.sql.api.java.UDF3;
-import org.apache.spark.sql.api.java.UDF6;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
@@ -12,7 +11,7 @@ public class UDFFactory {
 
     // adds numberOfMonths to a date with pattern datePattern
     // equivalent of PIG function AddDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-    public static UDF3<String, String, Integer, String> addDurationUDF(){
+    public static UDF3<String, String, Integer, String> buildAddDurationUDF(){
 
         return (UDF3<String, String, Integer, String>) (date, datePattern, numberOfMonths) -> {
 
@@ -27,7 +26,7 @@ public class UDFFactory {
     }
 
     // changed format of date inputDate from oldPattern to newPattern
-    public static UDF3<String, String, String, String> changeDateFormatUDF(){
+    public static UDF3<String, String, String, String> buildChangeDateFormatUDF(){
 
         return (UDF3<String, String, String, String>) (inputDate, oldPattern, newPattern) -> {
 
@@ -42,7 +41,7 @@ public class UDFFactory {
 
     // return the number of days between two dates with same pattern, in absolute value
     // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
-    public static UDF3<String, String, String, Long> daysBetweenUDF(){
+    public static UDF3<String, String, String, Long> buildDaysBetweenUDF(){
 
         return (UDF3<String, String, String, Long>) (stringFirstDate, stringSecondDate, commonPattern) -> {
 
@@ -57,7 +56,7 @@ public class UDFFactory {
     }
 
     // return the greatest date between two dates with same pattern
-    public static UDF3<String, String, String, String> greatestDateUDF(){
+    public static UDF3<String, String, String, String> buildGreatestDateUDF(){
 
         return (UDF3<String, String, String, String>)
                 (stringFirstDate, stringSecondDate, commonPattern) -> {
@@ -69,26 +68,8 @@ public class UDFFactory {
                 };
     }
 
-    // returns true if stringDate (with pattern datePattern) is between
-    // stringLowerDate (with pattern lowerDatePattern) and stringUpperDate (with pattern upperDatePattern)
-    public static UDF6<String, String, String, String, String, String, Boolean> isDateBetweenLowerDateAndUpperDateUDF(){
-
-        return (UDF6<String, String, String, String, String, String, Boolean>)
-                (stringDate, datePattern, stringLowerDate, lowerDatePattern, stringUpperDate, upperDatePattern)-> {
-
-            try {
-
-                LocalDate localDate = LocalDate.parse(stringDate, DateTimeFormatter.ofPattern(datePattern));
-                LocalDate lowerDate = LocalDate.parse(stringLowerDate, DateTimeFormatter.ofPattern(lowerDatePattern));
-                LocalDate upperDate = LocalDate.parse(stringUpperDate, DateTimeFormatter.ofPattern(upperDatePattern));
-                return (localDate.compareTo(lowerDate) >= 0) & (localDate.compareTo(upperDate) <= 0);
-            }
-
-            catch (NullPointerException | DateTimeException e) { return null;}};
-    }
-
     // return the least date between two dates with same pattern
-    public static UDF3<String, String, String, String> leastDateUDF(){
+    public static UDF3<String, String, String, String> buildLeastDateUDF(){
 
         return (UDF3<String, String, String, String>) (stringFirstDate, stringSecondDate, commonPattern) -> {
 
@@ -105,7 +86,7 @@ public class UDFFactory {
 
     // adds numberOfMonths to a date with pattern datePattern
     // equivalent of PIG function SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
-    public static UDF3<String, String, Integer, String> substractDurationUDF(){
+    public static UDF3<String, String, Integer, String> buildSubstractDurationUDF(){
 
         return  (UDF3<String, String, Integer, String>) (date, datePattern, numberOfMonths) -> {
 

@@ -21,20 +21,20 @@ public class Main {
         Logger logger = Logger.getRootLogger();
 
         Option stepNameOption = OptionFactory.getStepNameOption();
-        Options stepNameOptions = new Options();
-        stepNameOptions.addOption(stepNameOption);
+        Options firstStageOptions = new Options();
+        firstStageOptions.addOption(stepNameOption);
 
         StepOptionParser stepOptionParser = new StepOptionParser();
 
         try {
 
-            String stepName = stepOptionParser.getStepNameValue(args, stepNameOptions).getStepName();
+            String stepName = stepOptionParser.buildStepNameValue(args, firstStageOptions).getStepName();
             new StepRunner().run(args, stepName);
 
         } catch (ParseException e) {
 
             // IF NO STEP NAME HAS BEEN PROVIDED
-            logger.error("ParseException (related to step name option ) occurred");
+            logger.error("ParseException (related to step name option) occurred");
             logger.error(e);
 
             HelpFormatter helpFormatter = new HelpFormatter();
@@ -43,7 +43,7 @@ public class Main {
             String helpFooterString = OptionEnum.HELP_FOOTER_STRING.getString();
 
             helpFormatter.setWidth(getHelpFormatterWidth(helpHeaderString, helpFooterString));
-            helpFormatter.printHelp(helpUsageString, helpHeaderString, stepNameOptions, helpFooterString, true);
+            helpFormatter.printHelp(helpUsageString, helpHeaderString, firstStageOptions, helpFooterString, true);
         }
     }
 

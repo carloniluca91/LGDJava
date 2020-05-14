@@ -14,7 +14,7 @@ import it.carloni.luca.lgd.spark.udf.UDFName;
 
 import java.util.Map;
 
-public abstract class AbstractStep<T extends AbstractStepValue> implements StepInterface<T> {
+public abstract class AbstractStep<T extends AbstractStepValue> {
 
     private final Logger logger = Logger.getLogger(getClass());
     private final SparkSession sparkSession = getSparkSessionWithUDFs();
@@ -43,7 +43,7 @@ public abstract class AbstractStep<T extends AbstractStepValue> implements StepI
         }
         catch (ConfigurationException e){
 
-            logger.error("ConfigurationException occurred");
+            logger.error("Could not load application .properties file");
             logger.error(e);
         }
     }
@@ -64,13 +64,12 @@ public abstract class AbstractStep<T extends AbstractStepValue> implements StepI
 
     private SparkSession registerUDFs(SparkSession sparkSession){
 
-        sparkSession.udf().register(UDFName.ADD_DURATION.getUdfName(), UDFFactory.addDurationUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFName.SUBTRACT_DURATION.getUdfName(), UDFFactory.substractDurationUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFName.CHANGE_DATE_FORMAT.getUdfName(), UDFFactory.changeDateFormatUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFName.DAYS_BETWEEN.getUdfName(), UDFFactory.daysBetweenUDF(), DataTypes.LongType);
-        sparkSession.udf().register(UDFName.GREATEST_DATE.getUdfName(), UDFFactory.greatestDateUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFName.LEAST_DATE.getUdfName(), UDFFactory.leastDateUDF(), DataTypes.StringType);
-        sparkSession.udf().register(UDFName.IS_DATE_BETWEEN.getUdfName(), UDFFactory.isDateBetweenLowerDateAndUpperDateUDF(), DataTypes.BooleanType);
+        sparkSession.udf().register(UDFName.ADD_DURATION.getName(), UDFFactory.buildAddDurationUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.SUBTRACT_DURATION.getName(), UDFFactory.buildSubstractDurationUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.CHANGE_DATE_FORMAT.getName(), UDFFactory.buildChangeDateFormatUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.DAYS_BETWEEN.getName(), UDFFactory.buildDaysBetweenUDF(), DataTypes.LongType);
+        sparkSession.udf().register(UDFName.GREATEST_DATE.getName(), UDFFactory.buildGreatestDateUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.LEAST_DATE.getName(), UDFFactory.buildLeastDateUDF(), DataTypes.StringType);
 
         return sparkSession;
     }
@@ -107,15 +106,18 @@ public abstract class AbstractStep<T extends AbstractStepValue> implements StepI
 
     private StructType fromPigSchemaToStructType(Map<String, String> pigSchema){
 
-        StructType schema = new StructType();
-        for (Map.Entry<String, String> pigSchemaEntry : pigSchema.entrySet()){
+        StructField[] structFields = pigSchema.entrySet()
+                .stream()
+                .map(entry -> {
 
-            String columnName = pigSchemaEntry.getKey();
-            DataType dataType = resolveDataType(pigSchemaEntry.getValue());
-            schema = schema.add(new StructField(columnName, dataType, true, Metadata.empty()));
-        }
+                    String columnName = entry.getKey();
+                    DataType dataType = resolveDataType(entry.getValue());
+                    return new StructField(columnName, dataType, true, Metadata.empty());
 
-        return schema;
+                })
+                .toArray(StructField[]::new);
+
+        return new StructType(structFields);
     }
 
     private DataType resolveDataType(String pigColumnType){
@@ -127,4 +129,6 @@ public abstract class AbstractStep<T extends AbstractStepValue> implements StepI
             default: return DataTypes.StringType;
         }
     }
+
+    public abstract void run(T t);
 }

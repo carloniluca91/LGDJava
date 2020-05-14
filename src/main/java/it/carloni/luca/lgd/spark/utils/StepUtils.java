@@ -1,21 +1,15 @@
 package it.carloni.luca.lgd.spark.utils;
 
+import it.carloni.luca.lgd.spark.udf.UDFName;
 import org.apache.spark.sql.Column;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.expressions.WindowSpec;
 import org.apache.spark.sql.functions;
-import org.apache.spark.sql.types.*;
+import org.apache.spark.sql.types.DataTypes;
 import scala.collection.JavaConversions;
 import scala.collection.Seq;
-import it.carloni.luca.lgd.spark.udf.UDFName;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class StepUtils {
 
@@ -29,7 +23,7 @@ public class StepUtils {
 
     public static Column addDurationUDF(Column dateCol, String dateColFormat, int numberOfMonths){
 
-        return functions.callUDF(UDFName.ADD_DURATION.getUdfName(),
+        return functions.callUDF(UDFName.ADD_DURATION.getName(),
                 dateCol,
                 functions.lit(dateColFormat),
                 functions.lit(numberOfMonths));
@@ -45,68 +39,16 @@ public class StepUtils {
 
     public static Column changeDateFormatUDF(Column dateColumn, String oldPattern, String newPattern){
 
-        return functions.callUDF(UDFName.CHANGE_DATE_FORMAT.getUdfName(),
-                dateColumn, functions.lit(oldPattern),
+        return functions.callUDF(UDFName.CHANGE_DATE_FORMAT.getName(),
+                dateColumn,
+                functions.lit(oldPattern),
                 functions.lit(newPattern));
     }
-
-    /***
-     * format a String expressing a date from one format to antoher
-     * @param date: String object expressing a date
-     * @param oldPattern: old format of date
-     * @param newPattern: new format of date
-     * @return: date with format updated to newPattern
-     */
 
     public static String changeDateFormat(String date, String oldPattern, String newPattern){
 
         return LocalDate.parse(date, DateTimeFormatter.ofPattern(oldPattern))
                 .format(DateTimeFormatter.ofPattern(newPattern));
-    }
-
-    /***
-     * calls a previously registered UDF in order to check if a date with pattern dateColumnPattern is within defined by
-     * lowerDate (with pattern lowerDatePattern) and upperDate (with pattern upperDatePattern)
-     * @param dateColumn: String column expressing a date
-     * @param dateColumnPattern: format of String column
-     * @param lowerDate: lower date (String)
-     * @param lowerDatePattern: lower date pattern
-     * @param upperDate: upper date (String)
-     * @param upperDatePattern: upper date pattern
-     * @return: boolean column
-     */
-
-    public static Column isDateBetweenUDF(Column dateColumn, String dateColumnPattern,
-                                          String lowerDate, String lowerDatePattern,
-                                          String upperDate, String upperDatePattern){
-
-        return functions.callUDF(UDFName.IS_DATE_BETWEEN.getUdfName(),
-                dateColumn, functions.lit(dateColumnPattern),
-                functions.lit(lowerDate), functions.lit(lowerDatePattern),
-                functions.lit(upperDate), functions.lit(upperDatePattern));
-    }
-
-    /***
-     * UDF that checks if a date with pattern dateColumnPattern is within the range defined by
-     * lowerDate (with pattern lowerDatePattern) and upperDate (with pattern upperDatePattern)
-     * @param dateColumn: String column expressing a date
-     * @param dateColumnPattern: format of String column
-     * @param lowerDate: lower date (Column)
-     * @param lowerDatePattern: lower date pattern
-     * @param upperDate: upper date (Column)
-     * @param upperDatePattern: upper date pattern
-     * @return: boolean column
-     */
-
-    // check if a date is within a given interval
-    public static Column isDateBetweenUDF(Column dateColumn, String dateColumnPattern,
-                                          Column lowerDate, String lowerDatePattern,
-                                          Column upperDate, String upperDatePattern){
-
-        return functions.callUDF(UDFName.IS_DATE_BETWEEN.getUdfName(),
-                dateColumn, functions.lit(dateColumnPattern),
-                lowerDate, functions.lit(lowerDatePattern),
-                upperDate, functions.lit(upperDatePattern));
     }
 
     /***
@@ -119,8 +61,10 @@ public class StepUtils {
 
     public static Column daysBetweenUDF(Column dateCol1, Column dateCol2, String commonPattern){
 
-        return functions.callUDF(UDFName.DAYS_BETWEEN.getUdfName(),
-                dateCol1, dateCol2, functions.lit(commonPattern));
+        return functions.callUDF(UDFName.DAYS_BETWEEN.getName(),
+                dateCol1,
+                dateCol2,
+                functions.lit(commonPattern));
     }
 
     /***
@@ -133,40 +77,15 @@ public class StepUtils {
 
     public static Column leastDateUDF(Column dateColumn1, Column dateColumn2, String commonDateFormat){
 
-        return functions.callUDF(UDFName.LEAST_DATE.getUdfName(),
+        return functions.callUDF(UDFName.LEAST_DATE.getName(),
                 dateColumn1,
                 dateColumn2,
                 functions.lit(commonDateFormat));
     }
 
-    // convert a string into a LocalDate object
     public static LocalDate parseStringToLocalDate(String stringDate, String pattern){
 
         return LocalDate.parse(stringDate, DateTimeFormatter.ofPattern(pattern));
-    }
-
-    // create a list of columns to be selected from the given dataset
-    public static List<Column> selectDfColumns(Dataset<Row> df, List<String> columnNames){
-
-        List<Column> dfCols = new ArrayList<>();
-        for (String columnName: columnNames){
-            dfCols.add(df.col(columnName));
-        }
-
-        return dfCols;
-    }
-
-    // create a list of columns to be selected from the given dataset, giving an alias to each column
-    public static List<Column> selectDfColumns(Dataset<Row> df, Map<String,String> columnMap){
-
-        List<Column> dfCols = new ArrayList<>();
-        Set<Map.Entry<String, String>> entryList = columnMap.entrySet();
-        for (Map.Entry<String, String> entry: entryList){
-
-            dfCols.add(df.col(entry.getKey()).alias(entry.getValue()));
-        }
-
-        return dfCols;
     }
 
     public static Column substringAndToInt(Column column, int startIndex, int length){
@@ -184,7 +103,7 @@ public class StepUtils {
 
     public static Column subtractDurationUDF(Column dateCol, String dateColFormat, int numberOfMonths) {
 
-        return functions.callUDF(UDFName.SUBTRACT_DURATION.getUdfName(),
+        return functions.callUDF(UDFName.SUBTRACT_DURATION.getName(),
                 dateCol,
                 functions.lit(dateColFormat),
                 functions.lit(numberOfMonths));
@@ -203,18 +122,6 @@ public class StepUtils {
     public static Column toStringCol(Column column){
 
         return column.cast(DataTypes.StringType);
-    }
-
-    // creates a list of aggregate column expressions to be used over windowspec w on dataframe df
-    public static List<Column> windowSum(Dataset<Row> df, Map<String, String> columnMap, WindowSpec w){
-
-        List<Column> columnList = new ArrayList<>();
-        Set<Map.Entry<String, String>> entryList = columnMap.entrySet();
-        for (Map.Entry<String, String> entry: entryList){
-
-            columnList.add(functions.sum(df.col(entry.getKey())).over(w).alias(entry.getValue()));
-        }
-        return columnList;
     }
 }
 

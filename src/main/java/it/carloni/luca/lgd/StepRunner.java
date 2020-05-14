@@ -27,8 +27,8 @@ public class StepRunner {
         try {
 
             String stepnameUC = stepName.toUpperCase();
-            StepName stepNameElem = StepName.valueOf(stepnameUC);
-            switch (stepNameElem) {
+            Step stepElem = Step.valueOf(stepnameUC);
+            switch (stepElem) {
 
                 case CICLILAV_STEP_1: {
 
@@ -40,7 +40,7 @@ public class StepRunner {
                     stepParameterOptions.addOption(dataDaOption);
                     stepParameterOptions.addOption(dataAOption);
 
-                    DataDaDataAValue stepValues = stepOptionParser.getDataDaDataAValues(args, stepParameterOptions);
+                    DataDaDataAValue stepValues = stepOptionParser.buildDataDaDataAValues(args, stepParameterOptions);
                     new CiclilavStep1().run(stepValues);
                     break;
                 }
@@ -55,7 +55,7 @@ public class StepRunner {
                     stepParameterOptions.addOption(dataAOption);
                     stepParameterOptions.addOption(ufficioOption);
 
-                    DataAUfficioValue stepValues = stepOptionParser.getDataAUfficioValues(args, stepParameterOptions);
+                    DataAUfficioValue stepValues = stepOptionParser.buildDataAUfficioValues(args, stepParameterOptions);
                     new CicliPreview().run(stepValues);
                     break;
                 }
@@ -72,7 +72,7 @@ public class StepRunner {
                     stepParameterOptions.addOption(numeroMesi1Option);
                     stepParameterOptions.addOption(numeroMesi2Option);
 
-                    DataANumeroMesi12Value stepValues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
+                    DataANumeroMesi12Value stepValues = stepOptionParser.buildDataANumeroMesi12Values(args, stepParameterOptions);
                     new FanagMonthly().run(stepValues);
                     break;
                 }
@@ -97,7 +97,7 @@ public class StepRunner {
                     stepParameterOptions.addOption(numeroMesi1Option);
                     stepParameterOptions.addOption(numeroMesi2Option);
 
-                    DataANumeroMesi12Value stepvalues = stepOptionParser.getDataANumeroMesi12Values(args, stepParameterOptions);
+                    DataANumeroMesi12Value stepvalues = stepOptionParser.buildDataANumeroMesi12Values(args, stepParameterOptions);
                     new FrappNdgMonthly().run(stepvalues);
                     break;
                 }
@@ -110,7 +110,7 @@ public class StepRunner {
 
                     stepParameterOptions.addOption(dataAOption);
 
-                    DataAValue dataAValue = stepOptionParser.getDataAValue(args, stepParameterOptions);
+                    DataAValue dataAValue = stepOptionParser.buildDataAValue(args, stepParameterOptions);
                     new FrappPuma().run(dataAValue);
                     break;
                 }
@@ -123,7 +123,7 @@ public class StepRunner {
 
                     stepParameterOptions.addOption(dataOsservazioneOption);
 
-                    DataOsservazioneValue dataOsservazioneValue = stepOptionParser.getDataOsservazioneValue(args, stepParameterOptions);
+                    DataOsservazioneValue dataOsservazioneValue = stepOptionParser.buildDataOsservazioneValue(args, stepParameterOptions);
                     new Movimenti().run(dataOsservazioneValue);
                     break;
                 }
@@ -133,6 +133,76 @@ public class StepRunner {
                     logger.info("Matched step name " + stepnameUC);
 
                     new Posaggr().run(new EmptyValue());
+                    break;
+                }
+
+                case QUAD_FCOLL: {
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    new QuadFcoll().run(new EmptyValue());
+                    break;
+                }
+
+                case QUAD_FCOLL_CICLI: {
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    Option ufficioOption = OptionFactory.getUfficioOption();
+
+                    stepParameterOptions.addOption(ufficioOption);
+
+                    UfficioValue ufficioValue = stepOptionParser.buildUfficioValue(args, stepParameterOptions);
+                    new QuadFcollCicli().run(ufficioValue);
+                    break;
+                }
+
+                case QUAD_FPOSI: {
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    Option ufficioOption = OptionFactory.getUfficioOption();
+
+                    stepParameterOptions.addOption(ufficioOption);
+
+                    UfficioValue ufficioValue = stepOptionParser.buildUfficioValue(args, stepParameterOptions);
+                    new QuadFposi().run(ufficioValue);
+                    break;
+                }
+
+                case QUAD_FRAPP: {
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    Option ufficioOption = OptionFactory.getUfficioOption();
+
+                    stepParameterOptions.addOption(ufficioOption);
+
+                    UfficioValue ufficioValue = stepOptionParser.buildUfficioValue(args, stepParameterOptions);
+                    new QuadFrapp().run(ufficioValue);
+                    break;
+                }
+
+                case RACC_INC: {
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    new RaccInc().run(new EmptyValue());
+                    break;
+                }
+
+                case SOFFERENZE_PREVIEW: {
+
+                    logger.info("Matched step name " + stepnameUC);
+
+                    Option dataAOption = OptionFactory.getDataAOpton();
+                    Option ufficioOption = OptionFactory.getUfficioOption();
+
+                    stepParameterOptions.addOption(dataAOption);
+                    stepParameterOptions.addOption(ufficioOption);
+
+                    DataAUfficioValue dataAUfficioValue = stepOptionParser.buildDataAUfficioValues(args, stepParameterOptions);
+                    new SofferenzePreview().run(dataAUfficioValue);
                     break;
                 }
 
@@ -153,7 +223,7 @@ public class StepRunner {
         catch (ParseException e) {
 
             // IF THE PROVIDED STEP PARAMETERS ARE INCORRECT
-            logger.error("ParseException occurred");
+            logger.error("ParseException occurred while trying to parse step options");
             logger.error(e);
 
             HelpFormatter helpFormatter = new HelpFormatter();

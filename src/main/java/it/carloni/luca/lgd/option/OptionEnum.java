@@ -1,7 +1,9 @@
 package it.carloni.luca.lgd.option;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@AllArgsConstructor
 public enum OptionEnum {
 
     STEP_NAME_SHORT_OPTION("s"),
@@ -37,7 +39,4 @@ public enum OptionEnum {
     HELP_FOOTER_STRING("\nCreated by Carloni Luca");
 
     @Getter private String string;
-
-    OptionEnum(String value) { this.string = value; }
-
 }

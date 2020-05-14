@@ -1,7 +1,9 @@
 package it.carloni.luca.lgd.spark.udf;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
+@AllArgsConstructor
 public enum UDFName {
 
     ADD_DURATION("ADD_DURATION"),
@@ -12,9 +14,5 @@ public enum UDFName {
     LEAST_DATE("LEAST_DATE"),
     IS_DATE_BETWEEN("IS_DATE_BETWEEN");
 
-    @Getter private final String udfName;
-
-    UDFName(String udfName) {
-        this.udfName = udfName;
-    }
+    @Getter private final String name;
 }
