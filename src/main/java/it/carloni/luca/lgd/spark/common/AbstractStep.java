@@ -67,6 +67,7 @@ public abstract class AbstractStep<T extends AbstractStepValue> {
         sparkSession.udf().register(UDFName.ADD_DURATION.getName(), UDFFactory.buildAddDurationUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFName.SUBTRACT_DURATION.getName(), UDFFactory.buildSubstractDurationUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFName.CHANGE_DATE_FORMAT.getName(), UDFFactory.buildChangeDateFormatUDF(), DataTypes.StringType);
+        sparkSession.udf().register(UDFName.CHANGE_DATE_FORMAT_FROM_Y2_TO_Y4.getName(), UDFFactory.buildChangeDateFormatFromY2toY4(), DataTypes.StringType);
         sparkSession.udf().register(UDFName.DAYS_BETWEEN.getName(), UDFFactory.buildDaysBetweenUDF(), DataTypes.LongType);
         sparkSession.udf().register(UDFName.GREATEST_DATE.getName(), UDFFactory.buildGreatestDateUDF(), DataTypes.StringType);
         sparkSession.udf().register(UDFName.LEAST_DATE.getName(), UDFFactory.buildLeastDateUDF(), DataTypes.StringType);
@@ -94,8 +95,8 @@ public abstract class AbstractStep<T extends AbstractStepValue> {
         logger.info("Starting to write data at path " + path);
 
         dataset.coalesce(1)
-                .write().
-                format(csvFormat)
+                .write()
+				.format(csvFormat)
                 .option("sep", csvDelimiter)
                 .option("header", true)
                 .mode(SaveMode.Overwrite)

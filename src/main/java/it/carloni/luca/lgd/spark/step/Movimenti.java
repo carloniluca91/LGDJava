@@ -1,16 +1,19 @@
 package it.carloni.luca.lgd.spark.step;
 
 import it.carloni.luca.lgd.parameter.step.DataOsservazioneValue;
-import it.carloni.luca.lgd.spark.common.AbstractStep;
 import it.carloni.luca.lgd.schema.MovimentiSchema;
+import it.carloni.luca.lgd.spark.common.AbstractStep;
 import org.apache.log4j.Logger;
-import org.apache.spark.sql.*;
+import org.apache.spark.sql.Column;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.functions;
 import scala.collection.Seq;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static it.carloni.luca.lgd.spark.utils.StepUtils.*;
 
@@ -66,16 +69,14 @@ public class Movimenti extends AbstractStep<DataOsservazioneValue> {
                 .distinct();
 
         writeDatasetAsCsvAtPath(movOutDist, movOutDistPath);
-
     }
 
     private Seq<Column> getRenamedColumnSeq(Map<String, String> renamingMap) {
 
-        List<Column> renamedColumnList = new ArrayList<>();
-        for (Map.Entry<String, String> entry: renamingMap.entrySet()) {
-
-            renamedColumnList.add(functions.col(entry.getKey()).as(entry.getValue()));
-        }
+        List<Column> renamedColumnList = renamingMap.entrySet()
+                .stream()
+                .map(entry -> functions.col(entry.getKey()).as(entry.getValue()))
+                .collect(Collectors.toList());
 
         return toScalaSeq(renamedColumnList);
     }

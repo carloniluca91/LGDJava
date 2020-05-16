@@ -9,7 +9,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 
-import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatUDF;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatFromY2toY4UDF;
 
 public class QuadFposi extends AbstractStep<UfficioValue> {
 
@@ -52,11 +52,11 @@ public class QuadFposi extends AbstractStep<UfficioValue> {
 
         String oldDatePattern = "yy-MM-dd";
         String newDatePattern = "yyyyMMdd";
-        Column DATAINIZIODEFCol = changeDateFormatUDF(oldfposiLoad.col("datainizioDEF"), oldDatePattern, newDatePattern).alias("DATAINIZIODEF");
-        Column DATAFINEDEFCol = changeDateFormatUDF(oldfposiLoad.col("dataFINEDEF"), oldDatePattern, newDatePattern).alias("DATAFINEDEF");
-        Column DATAINIZIOPDCol = changeDateFormatUDF(oldfposiLoad.col("dataINIZIOPD"), oldDatePattern, newDatePattern).alias("DATAINIZIOPD");
-        Column DATAINIZIOINCCol = changeDateFormatUDF(oldfposiLoad.col("datainizioinc"), oldDatePattern, newDatePattern).alias("DATAINIZIOINC");
-        Column DATASOFFERENZACol = changeDateFormatUDF(oldfposiLoad.col("dataSOFFERENZA"), oldDatePattern, newDatePattern).alias("DATASOFFERENZA");
+        Column DATAINIZIODEFCol = changeDateFormatFromY2toY4UDF(oldfposiLoad.col("datainizioDEF"), oldDatePattern, newDatePattern).alias("DATAINIZIODEF");
+        Column DATAFINEDEFCol = changeDateFormatFromY2toY4UDF(oldfposiLoad.col("dataFINEDEF"), oldDatePattern, newDatePattern).alias("DATAFINEDEF");
+        Column DATAINIZIOPDCol = changeDateFormatFromY2toY4UDF(oldfposiLoad.col("dataINIZIOPD"), oldDatePattern, newDatePattern).alias("DATAINIZIOPD");
+        Column DATAINIZIOINCCol = changeDateFormatFromY2toY4UDF(oldfposiLoad.col("datainizioinc"), oldDatePattern, newDatePattern).alias("DATAINIZIOINC");
+        Column DATASOFFERENZACol = changeDateFormatFromY2toY4UDF(oldfposiLoad.col("dataSOFFERENZA"), oldDatePattern, newDatePattern).alias("DATASOFFERENZA");
 
         Dataset<Row> oldFposiGen = oldfposiLoad.select(DATAINIZIODEFCol, DATAFINEDEFCol, DATAINIZIOPDCol, DATAINIZIOINCCol, DATASOFFERENZACol,
                 oldfposiLoad.col("codicebanca").alias("CODICEBANCA"), oldfposiLoad.col("ndgprincipale").alias("NDGPRINCIPALE"),

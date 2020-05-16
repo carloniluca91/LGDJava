@@ -37,9 +37,26 @@ public class StepUtils {
      * @return: dateColumn with format updated to newPattern
      */
 
-    public static Column changeDateFormatUDF(Column dateColumn, String oldPattern, String newPattern){
+    public static Column changeDateFormatUDF(Column dateColumn, String oldPattern, String newPattern) {
 
         return functions.callUDF(UDFName.CHANGE_DATE_FORMAT.getName(),
+                dateColumn,
+                functions.lit(oldPattern),
+                functions.lit(newPattern));
+    }
+
+    /***
+     * UDF that formats a String expressing a date from oldPattern to newPattern
+     * To be used for converting a date from a format with yy to another with yyyy
+     * @param dateColumn: String column expressing a date
+     * @param oldPattern: old format of String column
+     * @param newPattern: new format of String column
+     * @return: dateColumn with format updated to newPattern
+     */
+
+    public static Column changeDateFormatFromY2toY4UDF(Column dateColumn, String oldPattern, String newPattern) {
+
+        return functions.callUDF(UDFName.CHANGE_DATE_FORMAT_FROM_Y2_TO_Y4.getName(),
                 dateColumn,
                 functions.lit(oldPattern),
                 functions.lit(newPattern));

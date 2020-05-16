@@ -9,8 +9,8 @@ import java.time.format.DateTimeParseException;
 
 public class UDFFactory {
 
-    // adds numberOfMonths to a date with pattern datePattern
-    // equivalent of PIG function AddDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
+    // ADDS NUMBEROFMONTHS TO A DATE WITH PATTERN DATEPATTERN
+    // EQUIVALENT OF PIG FUNCTION ADDDURATION(TODATE((CHARARRAY)DATAINIZIODEF,'YYYYMMDD'),'$NUMERO_MESI_1')
     public static UDF3<String, String, Integer, String> buildAddDurationUDF(){
 
         return (UDF3<String, String, Integer, String>) (date, datePattern, numberOfMonths) -> {
@@ -25,7 +25,7 @@ public class UDFFactory {
             catch (NullPointerException | DateTimeParseException e) { return null; }};
     }
 
-    // changed format of date inputDate from oldPattern to newPattern
+    // CHANGES FORMAT OF DATE (EXPRESSED BY A STRING) FROM OLDPATTERN TO NEWPATTERN
     public static UDF3<String, String, String, String> buildChangeDateFormatUDF(){
 
         return (UDF3<String, String, String, String>) (inputDate, oldPattern, newPattern) -> {
@@ -39,8 +39,26 @@ public class UDFFactory {
            catch (NullPointerException | DateTimeException e) { return null; }};
     }
 
-    // return the number of days between two dates with same pattern, in absolute value
-    // DaysBetween( ToDate((chararray)tlbcidef::datafinedef,'yyyyMMdd' ), ToDate((chararray)tlbpaspe_filter::datacont,'yyyyMMdd' ) ) as days_diff
+    // CHANGES FORMAT OF DATE (EXPRESSED BY A STRING) FROM OLDPATTERN TO NEWPATTERN
+    // TO BE USED WHEN PASSING FROM yy TO yyyy YEAR FORMAT
+    public static UDF3<String, String, String, String> buildChangeDateFormatFromY2toY4() {
+
+        return (UDF3<String, String, String, String>) (inputDate, oldPattern, newPattern) -> {
+
+            try {
+
+                DateTimeFormatter newPatternFormatter = DateTimeFormatter.ofPattern(newPattern);
+                LocalDate inputDateAsLocalDate = LocalDate.parse(inputDate, DateTimeFormatter.ofPattern(oldPattern));
+                return inputDateAsLocalDate.isAfter(LocalDate.now()) ?
+                        inputDateAsLocalDate.minusYears(100).format(newPatternFormatter):
+                        inputDateAsLocalDate.format(newPatternFormatter);
+            }
+
+            catch (NullPointerException | DateTimeException e) {return null; }};
+    }
+
+    // RETURNS THE NUMBER OF DAYS BETWEEN TWO DATES WITH SAME PATTERN, IN ABSOLUTE VALUE
+    // DAYSBETWEEN( TODATE((CHARARRAY)TLBCIDEF::DATAFINEDEF,'YYYYMMDD' ), TODATE((CHARARRAY)TLBPASPE_FILTER::DATACONT,'YYYYMMDD' ) ) AS DAYS_DIFF
     public static UDF3<String, String, String, Long> buildDaysBetweenUDF(){
 
         return (UDF3<String, String, String, Long>) (stringFirstDate, stringSecondDate, commonPattern) -> {
@@ -55,7 +73,7 @@ public class UDFFactory {
             catch (NullPointerException | DateTimeException e) { return null;} };
     }
 
-    // return the greatest date between two dates with same pattern
+    // RETURN THE GREATEST DATE BETWEEN TWO DATES WITH SAME PATTERN
     public static UDF3<String, String, String, String> buildGreatestDateUDF(){
 
         return (UDF3<String, String, String, String>)
@@ -68,7 +86,7 @@ public class UDFFactory {
                 };
     }
 
-    // return the least date between two dates with same pattern
+    // RETURN THE LEAST DATE BETWEEN TWO DATES WITH SAME PATTERN
     public static UDF3<String, String, String, String> buildLeastDateUDF(){
 
         return (UDF3<String, String, String, String>) (stringFirstDate, stringSecondDate, commonPattern) -> {
@@ -84,8 +102,8 @@ public class UDFFactory {
             catch (NullPointerException | DateTimeException e) { return null;}};
     }
 
-    // adds numberOfMonths to a date with pattern datePattern
-    // equivalent of PIG function SubtractDuration(ToDate((chararray)datainiziodef,'yyyyMMdd'),'$numero_mesi_1')
+    // ADDS NUMBEROFMONTHS TO A DATE WITH PATTERN DATEPATTERN
+    // EQUIVALENT OF PIG FUNCTION SUBTRACTDURATION(TODATE((CHARARRAY)DATAINIZIODEF,'YYYYMMDD'),'$NUMERO_MESI_1')
     public static UDF3<String, String, Integer, String> buildSubstractDurationUDF(){
 
         return  (UDF3<String, String, Integer, String>) (date, datePattern, numberOfMonths) -> {

@@ -79,14 +79,14 @@ public class Posaggr extends AbstractStep<EmptyValue> {
         // JOIN tblcomp_tlbaggr BY (dt_riferimento,cd_istituto,ndg), tlbposi BY (dt_riferimento,cd_istituto,ndg);
         Seq<String> joinColumnSeq = toScalaSeq((Arrays.asList("dt_riferimento", "cd_istituto", "ndg")));
 
-        Dataset<Row> tblcompTlbaggrTlbposi = tlbcompTlbaggr.join(tlbposi, joinColumnSeq, "inner")
+        Dataset<Row> tblcompTlbaggrTlbposi = tlbcompTlbaggr.join(tlbposi, joinColumnSeq)
                 .select(tlbcompTlbaggr.col("dt_riferimento"), tlbcompTlbaggr.col("cd_istituto"),
                         tlbcompTlbaggr.col("ndg"), tlbcompTlbaggr.col("c_key_aggr"), tlbcompTlbaggr.col("tipo_segmne_aggr"),
-                        tlbcompTlbaggr.col("segmento"), tlbcompTlbaggr.col("tp_ndg"),
-                        functions.trim(tlbcompTlbaggr.col("tp_ndg")).as("tp_ndg"), tlbposi.col("bo_acco"),
-                        tlbposi.col("bo_util"), tlbposi.col("tot_add_sosp"), tlbposi.col("tot_val_intr"),
-                        tlbposi.col("ca_acco"), tlbposi.col("ca_util"), tlbposi.col("util_cassa"),
-                        tlbposi.col("fido_op_cassa"), tlbposi.col("utilizzo_titoli"), tlbposi.col("esposizione_titoli"));
+                        tlbcompTlbaggr.col("segmento"), functions.trim(tlbcompTlbaggr.col("tp_ndg")).as("tp_ndg"),
+                        tlbposi.col("bo_acco"), tlbposi.col("bo_util"), tlbposi.col("tot_add_sosp"),
+                        tlbposi.col("tot_val_intr"), tlbposi.col("ca_acco"), tlbposi.col("ca_util"),
+                        tlbposi.col("util_cassa"), tlbposi.col("fido_op_cassa"), tlbposi.col("utilizzo_titoli"),
+                        tlbposi.col("esposizione_titoli"));
 
         // 167
         /*
@@ -125,11 +125,15 @@ public class Posaggr extends AbstractStep<EmptyValue> {
     private Column replaceAndToDouble(Dataset<Row> df, String columnName){
 
         return functions.regexp_replace(df.col(columnName), ",", ".")
-                .cast(DataTypes.DoubleType).as(columnName);
+                .cast(DataTypes.DoubleType)
+                .as(columnName);
     }
 
     private Column sumOverWindowAndToDouble(Column column, String alias, WindowSpec windowSpec) {
 
-        return functions.sum(column).over(windowSpec).cast(DataTypes.DoubleType).as(alias);
+        return functions.sum(column)
+                .over(windowSpec)
+                .cast(DataTypes.DoubleType)
+                .as(alias);
     }
 }

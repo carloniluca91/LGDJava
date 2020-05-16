@@ -9,6 +9,7 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 
+import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatFromY2toY4UDF;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatUDF;
 
 public class QuadFcoll extends AbstractStep<EmptyValue> {
@@ -52,8 +53,8 @@ public class QuadFcoll extends AbstractStep<EmptyValue> {
         // ToString(ToDate( datainizioDEF,'yy-MM-dd'),'yyyyMMdd')   as datainizioDEF
         // ToString(ToDate( dataFINEDEF,'yy-MM-dd'),'yyyyMMdd')   as dataFINEDEF
         Dataset<Row> oldFposi = oldFposiLoad.filter(filterConditionCol)
-                .withColumn("datainizioDEF", changeDateFormatUDF(functions.col("datainizioDEF"), "yy-MM-dd", newPattern))
-                .withColumn("dataFINEDEF", changeDateFormatUDF(functions.col("dataFINEDEF"), "yy-MM-dd", newPattern));
+                .withColumn("datainizioDEF", changeDateFormatFromY2toY4UDF(functions.col("datainizioDEF"), "yy-MM-dd", newPattern))
+                .withColumn("dataFINEDEF", changeDateFormatFromY2toY4UDF(functions.col("dataFINEDEF"), "yy-MM-dd", newPattern));
 
         // 76
 
@@ -77,9 +78,9 @@ public class QuadFcoll extends AbstractStep<EmptyValue> {
 
         // JOIN oldfposi BY (cumulo) LEFT, fcoll BY (cumulo);
         Dataset<Row> fileOutDist = oldFposi.join(fcoll, oldFposi.col("cumulo").equalTo(fcoll.col("cumulo")), "left")
-                .select(functions.col("codicebanca"), functions.col("ndgprincipale"), functions.col("datainizioDEF"),
-                        functions.col("dataFINEDEF"), dataDefaultCol, istitutoCollegatoCol, ndgCollegatoCol, dataCollegamentoCol,
-                        functions.col("cumulo"))
+                .select(oldFposi.col("codicebanca"), oldFposi.col("ndgprincipale"), oldFposi.col("datainizioDEF"),
+                        oldFposi.col("dataFINEDEF"), dataDefaultCol, istitutoCollegatoCol, ndgCollegatoCol, dataCollegamentoCol,
+                        fcoll.col("cumulo"))
                 .distinct();
 
         writeDatasetAsCsvAtPath(fileOutDist, fileoutdist);
