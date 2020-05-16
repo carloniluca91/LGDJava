@@ -9,8 +9,11 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 
+import java.util.Collections;
+
 import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatFromY2toY4UDF;
 import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatUDF;
+import static it.carloni.luca.lgd.spark.utils.StepUtils.toScalaSeq;
 
 public class QuadFcoll extends AbstractStep<EmptyValue> {
 
@@ -77,7 +80,7 @@ public class QuadFcoll extends AbstractStep<EmptyValue> {
                 .otherwise(fcoll.col("data_collegamento")).alias("DATA_COLLEGAMENTO");
 
         // JOIN oldfposi BY (cumulo) LEFT, fcoll BY (cumulo);
-        Dataset<Row> fileOutDist = oldFposi.join(fcoll, oldFposi.col("cumulo").equalTo(fcoll.col("cumulo")), "left")
+        Dataset<Row> fileOutDist = oldFposi.join(fcoll, toScalaSeq(Collections.singletonList("cumulo")), "left")
                 .select(oldFposi.col("codicebanca"), oldFposi.col("ndgprincipale"), oldFposi.col("datainizioDEF"),
                         oldFposi.col("dataFINEDEF"), dataDefaultCol, istitutoCollegatoCol, ndgCollegatoCol, dataCollegamentoCol,
                         fcoll.col("cumulo"))
