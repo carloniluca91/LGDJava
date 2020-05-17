@@ -35,7 +35,7 @@ public class RaccInc extends AbstractStep<EmptyValue> {
                         toStringCol(functions.lit(null)).as("num_ric_inc"), tlbmign.col("cd_isti_ced").as("ist_ced_inc"),
                         tlbmign.col("ndg_ced").as("ndg_ced_inc"), toStringCol(functions.lit(null)).as("num_ced_inc"),
                         tlbmign.col("data_migraz"))
-                .withColumn("month_up", monthUpCol)
+                .withColumn("data_fine_primo_mese_ric", monthUpCol)
                 .drop("data_migraz");
 
         writeDatasetAsCsvAtPath(raccIncOut, raccIncOutPath);

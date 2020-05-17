@@ -9,6 +9,8 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.functions;
 
+import java.util.stream.Stream;
+
 import static it.carloni.luca.lgd.spark.utils.StepUtils.changeDateFormatFromY2toY4UDF;
 
 public class QuadFposi extends AbstractStep<UfficioValue> {
@@ -78,9 +80,10 @@ public class QuadFposi extends AbstractStep<UfficioValue> {
         // 85
 
         // JOIN hadoop_fposi BY (codicebanca, ndgprincipale, datainiziodef) FULL OUTER, oldfposi BY (CODICEBANCA, NDGPRINCIPALE, DATAINIZIODEF);
-        Column joinCondition = hadoopFposi.col("codicebanca").equalTo(oldFposi.col("CODICEBANCA"))
-                .and(hadoopFposi.col("ndgprincipale").equalTo(oldFposi.col("NDGPRINCIPALE")))
-                .and(hadoopFposi.col("datainiziodef").equalTo(oldFposi.col("DATAINIZIODEF")));
+        Column joinCondition = Stream.of("codicebanca", "ndgprincipale", "datainiziodef")
+                .map(columnName -> hadoopFposi.col(columnName).equalTo(oldFposi.col(columnName.toUpperCase())))
+                .reduce(Column::and)
+                .get();
 
         Dataset<Row> hadoopFposiOldFposiJoin = hadoopFposi.join(oldFposi, joinCondition, "full_outer");
 
@@ -90,9 +93,13 @@ public class QuadFposi extends AbstractStep<UfficioValue> {
                 .filter(oldFposi.col("CODICEBANCA").isNull())
                 .select(ufficioCol, hadoopFposi.col("*"), oldFposi.col("*"));
 
+        hadoopFposiOut.show();
+
         Dataset<Row> oldFposiOut = hadoopFposiOldFposiJoin
                 .filter(hadoopFposi.col("codicebanca").isNull())
                 .select(ufficioCol, hadoopFposi.col("*"), oldFposi.col("*"));
+
+        oldFposiOut.show();
 
         /*
         FILTER hadoop_fposi_oldfposi_join

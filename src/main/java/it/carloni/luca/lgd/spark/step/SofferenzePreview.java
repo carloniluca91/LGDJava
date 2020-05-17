@@ -100,7 +100,7 @@ public class SofferenzePreview extends AbstractStep<DataAUfficioValue> {
 
         Dataset<Row> soffSintGen2 = soffBase.groupBy(soffBase.col("ufficio"), soffBase.col("datarif"),
                 soffBase.col("istituto"), meseInizioCol, meseFineCol, soffBase.col("statopratica"))
-                .agg(functions.count(soffBase.col("saldoposizione")).as("row_count"),
+                .agg(functions.count(soffBase.col("*")).as("row_count"),
                         functions.sum(soffBase.col("saldoposizione")).as("saldoposizione"),
                         functions.sum(soffBase.col("saldoposizionecontab")).as("saldoposizionecontab"));
 
