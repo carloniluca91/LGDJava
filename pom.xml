@@ -10,7 +10,7 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <spark.version>2.2.3</spark.version>
+        <spark.version>2.4.8</spark.version>
         <lombok.version>1.18.10</lombok.version>
     </properties>
 
